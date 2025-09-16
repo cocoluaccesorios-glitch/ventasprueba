@@ -1,4 +1,7 @@
--- Procedimiento simplificado para procesar ventas sin tabla clientes
+-- Funciones esenciales para Ventas Cocolú
+-- Solo las funciones necesarias sin crear tablas nuevas
+
+-- Procedimiento simplificado para procesar ventas
 CREATE OR REPLACE FUNCTION procesar_venta_simple(venta_data JSONB)
 RETURNS INTEGER
 LANGUAGE plpgsql
@@ -12,11 +15,6 @@ DECLARE
     total_calculado DECIMAL(10,2);
     cliente_id_temp INTEGER := 1; -- Cliente temporal fijo
 BEGIN
-    -- Validar que venta_data tenga productos
-    IF NOT (venta_data ? 'productos') OR jsonb_array_length(venta_data->'productos') = 0 THEN
-        RAISE EXCEPTION 'No se proporcionaron productos para la venta';
-    END IF;
-    
     -- 1. Calcular subtotal
     FOR item IN SELECT * FROM jsonb_array_elements(venta_data->'productos')
     LOOP
@@ -25,7 +23,7 @@ BEGIN
         
         -- Si es producto manual, usar el precio del item directamente
         IF (item->>'id')::TEXT = 'MANUAL' THEN
-            producto_precio := COALESCE((item->>'precio_unitario')::DECIMAL, 0);
+            producto_precio := (item->>'precio_unitario')::DECIMAL;
         ELSE
             -- Obtener precio del producto de la base de datos
             SELECT precio_usd INTO producto_precio
@@ -33,19 +31,18 @@ BEGIN
             
             -- Si no se encuentra el producto, usar el precio del item como fallback
             IF producto_precio IS NULL THEN
-                producto_precio := COALESCE((item->>'precio_unitario')::DECIMAL, 0);
+                producto_precio := (item->>'precio_unitario')::DECIMAL;
             END IF;
         END IF;
         
         -- Sumar al subtotal
-        subtotal := subtotal + (producto_precio * COALESCE((item->>'cantidad')::INTEGER, 0));
+        subtotal := subtotal + (producto_precio * (item->>'cantidad')::INTEGER);
     END LOOP;
     
     -- 2. Calcular total
     total_calculado := subtotal 
         - COALESCE((venta_data->>'monto_descuento_usd')::DECIMAL, 0) 
-        + COALESCE((venta_data->>'monto_iva_usd')::DECIMAL, 0)
-        + COALESCE((venta_data->>'monto_delivery_usd')::DECIMAL, 0);
+        + COALESCE((venta_data->>'monto_iva_usd')::DECIMAL, 0);
     
     IF total_calculado < 0 THEN 
         total_calculado := 0; 
@@ -100,7 +97,7 @@ BEGIN
         
         -- Si es producto manual, usar el precio del item directamente
         IF (item->>'id')::TEXT = 'MANUAL' THEN
-            producto_precio := COALESCE((item->>'precio_unitario')::DECIMAL, 0);
+            producto_precio := (item->>'precio_unitario')::DECIMAL;
         ELSE
             -- Obtener precio del producto de la base de datos
             SELECT precio_usd INTO producto_precio
@@ -108,11 +105,10 @@ BEGIN
             
             -- Si no se encuentra el producto, usar el precio del item como fallback
             IF producto_precio IS NULL THEN
-                producto_precio := COALESCE((item->>'precio_unitario')::DECIMAL, 0);
+                producto_precio := (item->>'precio_unitario')::DECIMAL;
             END IF;
         END IF;
         
-        -- Insertar detalles del pedido
         INSERT INTO detalles_pedido (
             pedido_id, 
             producto_id, 
@@ -127,17 +123,17 @@ BEGIN
                 WHEN (item->>'id')::TEXT = 'MANUAL' THEN NULL 
                 ELSE (item->>'id')::INTEGER 
             END,
-            COALESCE((item->>'cantidad')::INTEGER, 0),
+            (item->>'cantidad')::INTEGER,
             producto_precio,
-            producto_precio * COALESCE((item->>'cantidad')::INTEGER, 0),
-            COALESCE(item->>'nombre', 'Producto'),
-            COALESCE(item->>'sku', 'N/A')
+            producto_precio * (item->>'cantidad')::INTEGER,
+            item->>'nombre',
+            item->>'sku'
         );
         
         -- 5. Actualizar stock si no es producto manual
         IF (item->>'id')::TEXT != 'MANUAL' THEN
             UPDATE productos 
-            SET stock_actual = stock_actual - COALESCE((item->>'cantidad')::INTEGER, 0)
+            SET stock_actual = stock_actual - (item->>'cantidad')::INTEGER
             WHERE id = (item->>'id')::INTEGER;
         END IF;
     END LOOP;
@@ -146,7 +142,7 @@ BEGIN
 END;
 $$;
 
--- Procedimiento simplificado para anular pedido
+-- Función para anular pedido
 CREATE OR REPLACE FUNCTION anular_pedido_simple(p_pedido_id INTEGER)
 RETURNS BOOLEAN
 LANGUAGE plpgsql
@@ -279,54 +275,6 @@ BEGIN
     RETURN TRUE;
 END;
 $$;
-
--- Asegurar que las tablas tengan las columnas necesarias para inventario
--- Agregar columnas si no existen
-DO $$ 
-BEGIN
-    -- Agregar columna activo a productos si no existe
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
-                   WHERE table_name = 'productos' AND column_name = 'activo') THEN
-        ALTER TABLE productos ADD COLUMN activo BOOLEAN DEFAULT true;
-    END IF;
-    
-    -- Agregar columna categoria_id a productos si no existe
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
-                   WHERE table_name = 'productos' AND column_name = 'categoria_id') THEN
-        ALTER TABLE productos ADD COLUMN categoria_id INTEGER;
-    END IF;
-    
-    -- Crear tabla de categorías si no existe
-    IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'categorias_producto') THEN
-        CREATE TABLE categorias_producto (
-            id SERIAL PRIMARY KEY,
-            nombre VARCHAR(100) NOT NULL UNIQUE,
-            descripcion TEXT,
-            activa BOOLEAN DEFAULT true,
-            created_at TIMESTAMP DEFAULT NOW()
-        );
-        
-        -- Insertar categorías por defecto
-        INSERT INTO categorias_producto (nombre, descripcion) VALUES
-        ('Electrónicos', 'Productos electrónicos y tecnológicos'),
-        ('Hogar', 'Artículos para el hogar'),
-        ('Deportes', 'Equipos y accesorios deportivos'),
-        ('Ropa', 'Vestimenta y accesorios');
-    END IF;
-    
-    -- Crear tabla de tasa de cambio si no existe
-    IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'tasa_cambio') THEN
-        CREATE TABLE tasa_cambio (
-            id SERIAL PRIMARY KEY,
-            fecha DATE DEFAULT CURRENT_DATE,
-            tasa_bcv DECIMAL(10,2) NOT NULL,
-            created_at TIMESTAMP DEFAULT NOW()
-        );
-        
-        -- Insertar tasa por defecto
-        INSERT INTO tasa_cambio (tasa_bcv) VALUES (36.0);
-    END IF;
-END $$;
 
 -- Función para cambiar estado de pedido
 CREATE OR REPLACE FUNCTION cambiar_estado_pedido(

@@ -36,10 +36,17 @@ yarn install
 
 3. **Configurar variables de entorno**
 ```bash
-# Crear archivo .env
+# Crear archivo .env en la raíz del proyecto
 VITE_SUPABASE_URL=https://tu-proyecto.supabase.co
 VITE_SUPABASE_ANON_KEY=tu-clave-anonima
+
+# Configuración opcional
+VITE_APP_NAME=Cocolú Ventas
+VITE_APP_VERSION=1.0.0
+VITE_USE_MOCK_DATA=false
 ```
+
+**⚠️ Importante:** Si no tienes acceso a Supabase o hay problemas de conexión, puedes cambiar `VITE_USE_MOCK_DATA=true` en el archivo `.env` para usar datos de prueba.
 
 4. **Configurar base de datos**
 - Ejecutar el script `supabase-simple.sql` en tu proyecto de Supabase

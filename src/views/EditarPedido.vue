@@ -17,43 +17,47 @@
         <div class="col-md-6">
           <h6>Información del Pedido</h6>
           <table class="table table-sm">
-            <tr>
-              <td><strong>ID:</strong></td>
-              <td>{{ pedido.id }}</td>
-            </tr>
-            <tr>
-              <td><strong>Fecha:</strong></td>
-              <td>{{ new Date(pedido.fecha_pedido).toLocaleString('es-VE') }}</td>
-            </tr>
-            <tr>
-              <td><strong>Estado:</strong></td>
-              <td>
-                <span class="badge" :class="estadoClass(pedido.estado_entrega)">
-                  {{ pedido.estado_entrega }}
-                </span>
-              </td>
-            </tr>
-            <tr>
-              <td><strong>Total:</strong></td>
-              <td>${{ pedido.total_usd?.toFixed(2) || '0.00' }}</td>
-            </tr>
+            <tbody>
+              <tr>
+                <td><strong>ID:</strong></td>
+                <td>{{ pedido.id }}</td>
+              </tr>
+              <tr>
+                <td><strong>Fecha:</strong></td>
+                <td>{{ new Date(pedido.fecha_pedido).toLocaleString('es-VE') }}</td>
+              </tr>
+              <tr>
+                <td><strong>Estado:</strong></td>
+                <td>
+                  <span class="badge" :class="estadoClass(pedido.estado_entrega)">
+                    {{ pedido.estado_entrega }}
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Total:</strong></td>
+                <td>${{ pedido.total_usd?.toFixed(2) || '0.00' }}</td>
+              </tr>
+            </tbody>
           </table>
         </div>
         <div class="col-md-6">
           <h6>Información del Cliente</h6>
           <table class="table table-sm">
-            <tr>
-              <td><strong>Nombre:</strong></td>
-              <td>{{ pedido.cliente?.nombre || 'N/A' }}</td>
-            </tr>
-            <tr>
-              <td><strong>Apellido:</strong></td>
-              <td>{{ pedido.cliente?.apellido || 'N/A' }}</td>
-            </tr>
-            <tr>
-              <td><strong>Teléfono:</strong></td>
-              <td>{{ pedido.cliente?.telefono || 'N/A' }}</td>
-            </tr>
+            <tbody>
+              <tr>
+                <td><strong>Nombre:</strong></td>
+                <td>{{ pedido.cliente?.nombre || 'N/A' }}</td>
+              </tr>
+              <tr>
+                <td><strong>Apellido:</strong></td>
+                <td>{{ pedido.cliente?.apellido || 'N/A' }}</td>
+              </tr>
+              <tr>
+                <td><strong>Teléfono:</strong></td>
+                <td>{{ pedido.cliente?.telefono || 'N/A' }}</td>
+              </tr>
+            </tbody>
           </table>
         </div>
       </div>

@@ -1,21 +1,52 @@
 <template>
-  <div class="card shadow-sm">
-    <div class="card-header"><h4 class="mb-0">Historial de Pedidos</h4></div>
+  <div class="card">
+    <div class="card-header">
+      <h4 class="mb-0">📋 Historial de Pedidos</h4>
+    </div>
     <div class="card-body">
-      <div v-if="loading" class="text-center"><div class="spinner-border" role="status"><span class="visually-hidden">Cargando...</span></div></div>
+      <div v-if="loading" class="text-center">
+        <div class="spinner-border" role="status">
+          <span class="visually-hidden">Cargando...</span>
+        </div>
+        <p class="mt-2">Cargando pedidos...</p>
+      </div>
       <div v-else class="table-responsive">
-        <table class="table table-hover">
-          <thead><tr><th># Pedido</th><th>Fecha</th><th>Cliente</th><th>Total</th><th>Estado</th><th>Acciones</th></tr></thead>
+        <table class="table">
+          <thead>
+            <tr>
+              <th># Pedido</th>
+              <th>Fecha</th>
+              <th>Cliente</th>
+              <th>Total</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
           <tbody>
             <tr v-for="pedido in pedidos" :key="pedido.id">
-              <td>{{ pedido.id }}</td>
+              <td><strong>{{ pedido.id }}</strong></td>
               <td>{{ new Date(pedido.fecha_pedido).toLocaleDateString('es-VE') }}</td>
               <td>{{ pedido.clientes.nombre }} {{ pedido.clientes.apellido || '' }}</td>
-              <td>${{ pedido.total_usd.toFixed(2) }}</td>
-              <td><span class="badge" :class="estadoClass(pedido.estado_entrega)">{{ pedido.estado_entrega }}</span></td>
+              <td><strong>${{ pedido.total_usd.toFixed(2) }}</strong></td>
               <td>
-                <router-link :to="'/pedidos/' + pedido.id + '/editar'" class="btn btn-sm btn-outline-primary me-2" title="Editar"><i class="bi bi-pencil"></i></router-link>
-                <button class="btn btn-sm btn-outline-danger" @click="confirmarAnulacion(pedido.id)" :disabled="pedido.estado_entrega === 'anulado'" title="Anular"><i class="bi bi-trash"></i></button>
+                <span class="badge" :class="estadoClass(pedido.estado_entrega)">
+                  {{ pedido.estado_entrega }}
+                </span>
+              </td>
+              <td>
+                <div class="d-flex gap-2">
+                  <router-link :to="'/pedidos/' + pedido.id + '/editar'" 
+                               class="btn btn-primary btn-sm" 
+                               title="Editar">
+                    ✏️
+                  </router-link>
+                  <button class="btn btn-danger btn-sm" 
+                          @click="confirmarAnulacion(pedido.id)" 
+                          :disabled="pedido.estado_entrega === 'anulado'" 
+                          title="Anular">
+                    🗑️
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>

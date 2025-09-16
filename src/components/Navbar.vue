@@ -12,12 +12,32 @@
         <ul class="navbar-nav">
           <li class="nav-item">
             <router-link class="nav-link" to="/">
+              <i class="bi bi-speedometer2"></i> Dashboard
+            </router-link>
+          </li>
+          <li class="nav-item">
+            <router-link class="nav-link" to="/ventas">
               <i class="bi bi-cart-plus-fill"></i> Nueva Venta
             </router-link>
           </li>
           <li class="nav-item">
             <router-link class="nav-link" to="/pedidos">
               <i class="bi bi-list-ul"></i> Ver Pedidos
+            </router-link>
+          </li>
+          <li class="nav-item">
+            <router-link class="nav-link" to="/inventario">
+              <i class="bi bi-box-seam"></i> Inventario
+            </router-link>
+          </li>
+          <li class="nav-item">
+            <router-link class="nav-link" to="/clientes">
+              <i class="bi bi-people"></i> Clientes
+            </router-link>
+          </li>
+          <li class="nav-item">
+            <router-link class="nav-link" to="/ingresos">
+              <i class="bi bi-cash-stack"></i> Ingresos
             </router-link>
           </li>
         </ul>

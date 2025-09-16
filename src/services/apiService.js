@@ -172,3 +172,71 @@ export async function getTasaCambio() {
   
   return data?.tasa_bcv || 36.0;
 }
+
+// Actualizar pedido
+export async function updatePedido(cambios) {
+  try {
+    const { data, error } = await supabase.rpc('actualizar_pedido', {
+      p_pedido_id: cambios.id,
+      p_motivo: cambios.motivo,
+      p_productos: cambios.productos,
+      p_nuevo_total: cambios.nuevo_total
+    });
+    
+    if (error) {
+      console.error('Error al actualizar pedido:', error);
+      Swal.fire('Error', `No se pudo actualizar el pedido: ${error.message}`, 'error');
+      throw new Error(error.message);
+    }
+    
+    Swal.fire('¡Éxito!', 'Pedido actualizado correctamente', 'success');
+    return data;
+  } catch (err) {
+    console.error('Error en updatePedido:', err);
+    throw err;
+  }
+}
+
+// Anular pedido con motivo
+export async function anularPedidoConMotivo(pedidoId, motivo) {
+  try {
+    const { error } = await supabase.rpc('anular_pedido_con_motivo', {
+      p_pedido_id: pedidoId,
+      p_motivo: motivo
+    });
+    
+    if (error) {
+      console.error('Error al anular pedido:', error);
+      Swal.fire('Error', `No se pudo anular el pedido: ${error.message}`, 'error');
+      throw new Error(error.message);
+    }
+    
+    Swal.fire('¡Anulado!', 'El pedido ha sido anulado correctamente', 'success');
+    return true;
+  } catch (err) {
+    console.error('Error en anularPedidoConMotivo:', err);
+    throw err;
+  }
+}
+
+// Cambiar estado de pedido
+export async function cambiarEstadoPedido(pedidoId, nuevoEstado) {
+  try {
+    const { error } = await supabase
+      .from('pedidos')
+      .update({ estado_entrega: nuevoEstado })
+      .eq('id', pedidoId);
+    
+    if (error) {
+      console.error('Error al cambiar estado:', error);
+      Swal.fire('Error', `No se pudo cambiar el estado: ${error.message}`, 'error');
+      throw new Error(error.message);
+    }
+    
+    Swal.fire('¡Éxito!', 'Estado del pedido actualizado', 'success');
+    return true;
+  } catch (err) {
+    console.error('Error en cambiarEstadoPedido:', err);
+    throw err;
+  }
+}

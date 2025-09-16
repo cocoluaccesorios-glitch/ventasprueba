@@ -223,3 +223,19 @@ export function getEstadisticasClientes() {
     recientes: clientes.value.length // Simplificado ya que no tenemos fecha_creacion en la estructura actual
   }
 }
+
+// Composable para usar el servicio de clientes
+export function useClientesService() {
+  return {
+    clientes,
+    getClientes,
+    getClientePorCedula,
+    buscarClientePorCriterio,
+    agregarCliente,
+    actualizarCliente,
+    eliminarCliente,
+    getEstadisticasClientes,
+    // Función específica para búsqueda en tiempo real
+    buscarClientes: buscarClientePorCriterio
+  }
+}

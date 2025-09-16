@@ -83,7 +83,8 @@
             </label>
             <div class="date-container">
               <input type="date" class="date-input" 
-                     v-model="fechaVencimiento"
+                     :value="fechaVencimiento"
+                     @input="$emit('fecha-vencimiento-cambiada', $event.target.value)"
                      :min="fechaMinima"
                      required>
             </div>
@@ -132,7 +133,8 @@
             </label>
             <div class="date-container">
               <input type="date" class="date-input" 
-                     v-model="fechaVencimiento"
+                     :value="fechaVencimiento"
+                     @input="$emit('fecha-vencimiento-cambiada', $event.target.value)"
                      :min="fechaMinima"
                      required>
             </div>

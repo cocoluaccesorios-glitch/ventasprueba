@@ -4,7 +4,7 @@
     <SalesHeader
       :cliente-seleccionado="clienteSeleccionado"
       @cliente-seleccionado="seleccionarCliente"
-      @cliente-removido="quitarClienteSeleccionado"
+      @cliente-removido="handleQuitarClienteSeleccionado"
       @nuevo-cliente="nuevoCliente"
     />
     
@@ -26,7 +26,7 @@
               @producto-limpiado="onProductCleared"
               @cantidad-cambiada="cantidadSeleccionada = $event"
               @precio-cambiado="precioSeleccionado = $event"
-              @agregar-producto="agregarProducto"
+              @agregar-producto="handleAgregarProducto"
               @abrir-modal-manual="abrirModalProductoManual"
             />
             
@@ -35,7 +35,7 @@
               :detalles-pedido="detallesPedido"
               @cantidad-cambiada="validarCantidad"
               @precio-cambiado="validarPrecio"
-              @producto-eliminado="eliminarProducto"
+              @producto-eliminado="handleEliminarProducto"
             />
             
             <!-- Configuración de Pago y Entrega -->
@@ -281,6 +281,28 @@ const { showSuccess, showError } = useNotifier()
 const productos = ref([])
 const isSubmitting = ref(false)
 const showClientModal = ref(false)
+
+// Funciones wrapper para manejar notificaciones
+function handleAgregarProducto() {
+  const success = agregarProducto()
+  if (success) {
+    showSuccess('Producto Agregado', 'Producto agregado al pedido')
+  } else {
+    showError('Error', 'Debes seleccionar un producto y una cantidad válida')
+  }
+}
+
+function handleEliminarProducto(index) {
+  const producto = eliminarProducto(index)
+  if (producto) {
+    showSuccess('Producto Eliminado', `${producto.nombre} eliminado del pedido`)
+  }
+}
+
+function handleQuitarClienteSeleccionado() {
+  quitarClienteSeleccionado()
+  showSuccess('Cliente Removido', 'El cliente ha sido removido de la venta')
+}
 
 // Funciones
 async function handleSubmit() {

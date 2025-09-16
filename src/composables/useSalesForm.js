@@ -1,8 +1,6 @@
 import { ref, computed, reactive } from 'vue'
-import { useNotifier } from './useNotifier'
 
 export function useSalesForm() {
-  const { showSuccess, showError } = useNotifier()
   
   // Estado principal de la venta
   const venta = reactive({
@@ -93,7 +91,6 @@ export function useSalesForm() {
     clienteSearchQuery.value = ''
     resultadosBusqueda.value = []
     mostrarResultados.value = false
-    showSuccess('Cliente Removido', 'El cliente ha sido removido de la venta')
   }
 
   // Funciones de productos
@@ -111,8 +108,7 @@ export function useSalesForm() {
 
   function agregarProducto() {
     if (!productoSeleccionado.value || cantidadSeleccionada.value < 1) {
-      showError('Error', 'Debes seleccionar un producto y una cantidad válida')
-      return
+      return false
     }
 
     const nuevoItem = {
@@ -126,13 +122,12 @@ export function useSalesForm() {
 
     detallesPedido.value.push(nuevoItem)
     limpiarSeleccionProducto()
-    showSuccess('Producto Agregado', `${nuevoItem.nombre} agregado al pedido`)
+    return true
   }
 
   function agregarProductoManual() {
     if (!productoManual.nombre.trim() || productoManual.precio <= 0 || productoManual.cantidad < 1) {
-      showError('Error', 'Debes completar todos los campos del producto manual')
-      return
+      return false
     }
 
     const nuevoItem = {
@@ -146,13 +141,13 @@ export function useSalesForm() {
 
     detallesPedido.value.push(nuevoItem)
     limpiarProductoManual()
-    showSuccess('Producto Manual Agregado', `${nuevoItem.nombre} agregado al pedido`)
+    return true
   }
 
   function eliminarProducto(index) {
     const producto = detallesPedido.value[index]
     detallesPedido.value.splice(index, 1)
-    showSuccess('Producto Eliminado', `${producto.nombre} eliminado del pedido`)
+    return producto
   }
 
   function validarCantidad(index) {

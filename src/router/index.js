@@ -4,7 +4,7 @@ import CrearVenta from '../views/CrearVenta.vue'
 import ListaPedidos from '../views/ListaPedidos.vue'
 import EditarPedido from '../views/EditarPedido.vue'
 import Inventario from '../views/Inventario.vue'
-import Clientes from '../views/Clientes.vue'
+import GestionClientes from '../views/GestionClientes.vue'
 import Ingresos from '../views/Ingresos.vue'
 
 const routes = [
@@ -13,7 +13,7 @@ const routes = [
   { path: '/pedidos', name: 'ListaPedidos', component: ListaPedidos },
   { path: '/pedidos/:id/editar', name: 'EditarPedido', component: EditarPedido, props: true },
   { path: '/inventario', name: 'Inventario', component: Inventario },
-  { path: '/clientes', name: 'Clientes', component: Clientes },
+  { path: '/clientes', name: 'GestionClientes', component: GestionClientes },
   { path: '/ingresos', name: 'Ingresos', component: Ingresos },
 ]
 const router = createRouter({

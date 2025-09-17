@@ -155,6 +155,17 @@ export async function createSale(ventaData) {
         aplica_iva: ventaData.aplica_iva || false,
         metodo_pago: ventaData.metodo_pago || 'efectivo',
         referencia_pago: ventaData.referencia_pago || null,
+        
+        // Campos para abono
+        es_abono: ventaData.es_abono || false,
+        tipo_pago_abono: ventaData.tipo_pago_abono || null,
+        metodo_pago_abono: ventaData.metodo_pago_abono || null,
+        monto_abono_simple: ventaData.monto_abono_simple || 0,
+        monto_abono_usd: ventaData.monto_abono_usd || 0,
+        monto_abono_ves: ventaData.monto_abono_ves || 0,
+        total_abono_usd: ventaData.total_abono_usd || 0,
+        fecha_vencimiento: ventaData.fecha_vencimiento || null,
+        
         // Campos para pago mixto
         es_pago_mixto: ventaData.es_pago_mixto || false,
         monto_mixto_usd: ventaData.monto_mixto_usd || 0,

@@ -243,6 +243,8 @@ function verDetalle(pedido) {
                 `$${pedido.monto_abono_simple.toFixed(2)} USD` : 
                 `$${(pedido.monto_abono_usd || 0).toFixed(2)} USD + ${(pedido.monto_abono_ves || 0).toFixed(2)} Bs`}</p>
               <p><strong>Total Abono:</strong> $${(pedido.total_abono_usd || 0).toFixed(2)} USD</p>
+              <p><strong>Método del Abono:</strong> ${pedido.metodo_pago_abono || 'No especificado'}</p>
+              ${pedido.referencia_pago ? `<p><strong>Referencia:</strong> ${pedido.referencia_pago}</p>` : ''}
             ` : `
               <p><strong>Estado:</strong> <span style="color: #dc3545;">⚠️ Datos de abono incompletos</span></p>
               <p><strong>Problema:</strong> El abono no se guardó correctamente en la base de datos</p>
@@ -252,7 +254,6 @@ function verDetalle(pedido) {
           <div class="col-md-6">
             ${(pedido.total_abono_usd && pedido.total_abono_usd > 0) ? `
               <p><strong>Saldo Pendiente:</strong> <span style="color: #dc3545; font-weight: bold;">$${((pedido.total_usd || 0) - (pedido.total_abono_usd || 0)).toFixed(2)} USD</span></p>
-              <p><strong>Método del Abono:</strong> ${pedido.metodo_pago_abono || 'No especificado'}</p>
               <p><strong>Fecha Límite:</strong> ${pedido.fecha_vencimiento ? 
                 new Date(pedido.fecha_vencimiento).toLocaleDateString('es-VE') : 
                 'Sin fecha límite'}</p>

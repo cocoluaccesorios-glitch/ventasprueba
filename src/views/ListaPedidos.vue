@@ -248,7 +248,8 @@ function verDetalle(pedido) {
             ` : `
               <p><strong>Estado:</strong> <span style="color: #dc3545;">⚠️ Datos de abono incompletos</span></p>
               <p><strong>Problema:</strong> El abono no se guardó correctamente en la base de datos</p>
-              <p><strong>Estimado:</strong> Total del pedido indica que es un abono</p>
+              <p><strong>Causa:</strong> Pedido creado antes de las correcciones del sistema</p>
+              <p><strong>Solución:</strong> Crear nuevo pedido con datos correctos</p>
             `}
           </div>
           <div class="col-md-6">

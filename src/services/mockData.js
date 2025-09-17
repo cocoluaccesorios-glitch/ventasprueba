@@ -108,6 +108,131 @@ export const mockCategorias = [
 
 export const mockPedidos = [
   {
+    id: 25,
+    fecha_pedido: new Date().toISOString(),
+    total_usd: 20.44,
+    estado_entrega: 'pendiente',
+    cliente_id: 1,
+    cliente_nombre: 'Ana',
+    cliente_apellido: 'Pérez',
+    cliente_telefono: 'No disponible',
+    cliente_email: 'ana.perez@email.com',
+    cliente_direccion: 'Dirección de prueba',
+    subtotal_usd: 15.50,
+    monto_descuento_usd: 0.47,
+    monto_iva_usd: 2.41,
+    monto_delivery_usd: 3.00,
+    aplica_iva: true,
+    metodo_pago: 'Abono',
+    referencia_pago: 'No aplica',
+    tasa_bcv: 160,
+    comentarios_generales: 'Sin comentarios',
+    comentarios_descuento: 'porque si !',
+    
+    // Campos de abono
+    es_abono: true,
+    tipo_pago_abono: 'simple',
+    metodo_pago_abono: 'efectivo',
+    monto_abono_simple: 10.00,
+    monto_abono_usd: 0,
+    monto_abono_ves: 0,
+    total_abono_usd: 10.00,
+    fecha_vencimiento: '2025-10-17',
+    
+    // Campos de pago mixto (no aplica)
+    es_pago_mixto: false,
+    monto_mixto_usd: 0,
+    monto_mixto_ves: 0,
+    metodo_pago_mixto_usd: null,
+    metodo_pago_mixto_ves: null,
+    referencia_mixto_usd: null,
+    referencia_mixto_ves: null,
+    
+    clientes: {
+      nombre: 'Ana',
+      apellido: 'Pérez',
+      telefono: 'No disponible',
+      email: 'ana.perez@email.com',
+      cedula: 'V-12345678',
+      direccion: 'Dirección de prueba'
+    },
+    detalles_pedido: [
+      {
+        id: 1,
+        cantidad: 1,
+        precio_unitario_usd: 15.50,
+        nombre_producto: 'Producto de Prueba 2',
+        sku_producto: 'PROD002'
+      }
+    ]
+  },
+  {
+    id: 24,
+    fecha_pedido: new Date().toISOString(),
+    total_usd: 38.91,
+    estado_entrega: 'pendiente',
+    cliente_id: 2,
+    cliente_nombre: 'Luis',
+    cliente_apellido: 'Silva',
+    cliente_telefono: 'No disponible',
+    cliente_email: 'luisxsilva56@gmail.com',
+    cliente_direccion: 'Dirección de prueba',
+    subtotal_usd: 33.49,
+    monto_descuento_usd: 1.67,
+    monto_iva_usd: 5.09,
+    monto_delivery_usd: 2.00,
+    aplica_iva: true,
+    metodo_pago: 'Abono',
+    referencia_pago: 'No aplica',
+    tasa_bcv: 160,
+    comentarios_generales: 'Sin comentarios',
+    comentarios_descuento: 'porque si',
+    
+    // Campos de abono
+    es_abono: true,
+    tipo_pago_abono: 'simple',
+    metodo_pago_abono: 'efectivo',
+    monto_abono_simple: 20.00,
+    monto_abono_usd: 0,
+    monto_abono_ves: 0,
+    total_abono_usd: 20.00,
+    fecha_vencimiento: '2025-10-17',
+    
+    // Campos de pago mixto (no aplica)
+    es_pago_mixto: false,
+    monto_mixto_usd: 0,
+    monto_mixto_ves: 0,
+    metodo_pago_mixto_usd: null,
+    metodo_pago_mixto_ves: null,
+    referencia_mixto_usd: null,
+    referencia_mixto_ves: null,
+    
+    clientes: {
+      nombre: 'Luis',
+      apellido: 'Silva',
+      telefono: 'No disponible',
+      email: 'luisxsilva56@gmail.com',
+      cedula: '26899386',
+      direccion: 'Dirección de prueba'
+    },
+    detalles_pedido: [
+      {
+        id: 2,
+        cantidad: 1,
+        precio_unitario_usd: 25.99,
+        nombre_producto: 'Producto de Prueba 1',
+        sku_producto: 'PROD001'
+      },
+      {
+        id: 3,
+        cantidad: 3,
+        precio_unitario_usd: 2.50,
+        nombre_producto: 'Coca-Cola 2L (desde DB)',
+        sku_producto: 'COCA001'
+      }
+    ]
+  },
+  {
     id: 1,
     fecha_pedido: new Date().toISOString(),
     total_usd: 85.49,

@@ -35,8 +35,32 @@
                 </td>
               </tr>
               <tr>
+                <td><strong>Subtotal:</strong></td>
+                <td>${{ pedido.subtotal_usd?.toFixed(2) || '0.00' }}</td>
+              </tr>
+              <tr>
+                <td><strong>Descuento:</strong></td>
+                <td>${{ pedido.monto_descuento_usd?.toFixed(2) || '0.00' }}</td>
+              </tr>
+              <tr>
+                <td><strong>IVA:</strong></td>
+                <td>${{ pedido.monto_iva_usd?.toFixed(2) || '0.00' }}</td>
+              </tr>
+              <tr>
+                <td><strong>Delivery:</strong></td>
+                <td>${{ pedido.monto_delivery_usd?.toFixed(2) || '0.00' }}</td>
+              </tr>
+              <tr>
                 <td><strong>Total:</strong></td>
                 <td>${{ pedido.total_usd?.toFixed(2) || '0.00' }}</td>
+              </tr>
+              <tr>
+                <td><strong>Método de Pago:</strong></td>
+                <td>{{ pedido.metodo_pago || 'N/A' }}</td>
+              </tr>
+              <tr>
+                <td><strong>Aplica IVA:</strong></td>
+                <td>{{ pedido.aplica_iva ? 'Sí' : 'No' }}</td>
               </tr>
             </tbody>
           </table>
@@ -47,15 +71,27 @@
             <tbody>
               <tr>
                 <td><strong>Nombre:</strong></td>
-                <td>{{ pedido.cliente?.nombre || 'N/A' }}</td>
+                <td>{{ pedido.cliente_nombre || 'N/A' }}</td>
               </tr>
               <tr>
                 <td><strong>Apellido:</strong></td>
-                <td>{{ pedido.cliente?.apellido || 'N/A' }}</td>
+                <td>{{ pedido.cliente_apellido || 'N/A' }}</td>
               </tr>
               <tr>
                 <td><strong>Teléfono:</strong></td>
-                <td>{{ pedido.cliente?.telefono || 'N/A' }}</td>
+                <td>{{ pedido.cliente_telefono || 'N/A' }}</td>
+              </tr>
+              <tr>
+                <td><strong>Email:</strong></td>
+                <td>{{ pedido.cliente_email || 'N/A' }}</td>
+              </tr>
+              <tr>
+                <td><strong>Cédula:</strong></td>
+                <td>{{ pedido.cliente_cedula || 'N/A' }}</td>
+              </tr>
+              <tr>
+                <td><strong>Dirección:</strong></td>
+                <td>{{ pedido.cliente_direccion || 'N/A' }}</td>
               </tr>
             </tbody>
           </table>

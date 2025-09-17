@@ -3,7 +3,7 @@ import { mockProducts, mockPedidos, mockCategorias } from './mockData.js';
 import Swal from 'sweetalert2';
 
 // Modo de desarrollo - usar datos de prueba si no hay conexión
-const USE_MOCK_DATA = true; // Cambiar a true para usar datos de prueba
+const USE_MOCK_DATA = false; // Cambiar a true para usar datos de prueba
 
 // Obtener productos (sin categorías por ahora)
 export async function getProducts() {
@@ -111,41 +111,105 @@ export async function getCategorias() {
 // Crear venta con el esquema simplificado
 export async function createSale(ventaData) {
   try {
-    const { data, error } = await supabase.rpc('procesar_venta_simple', { 
-      venta_data: ventaData 
-    });
+    console.log('🔄 Creando venta con datos:', ventaData);
     
-    if (error) { 
-      console.error('Error en procesar_venta_simple:', error);
+    // Primero intentar con la función RPC
+    try {
+      const { data, error } = await supabase.rpc('procesar_venta_simple', { 
+        venta_data: ventaData 
+      });
       
-      // Manejar errores específicos
-      if (error.message.includes('producto_record')) {
-        throw new Error('Error en el procesamiento de productos. Verifica que todos los productos existan.');
+      if (error) {
+        console.warn('Error en procesar_venta_simple, intentando inserción directa:', error);
+        throw new Error('RPC failed');
       }
       
-      if (error.message.includes('stock')) {
-        throw new Error('Stock insuficiente para uno o más productos.');
+      if (data) {
+        Swal.fire({
+          title: '¡Éxito!',
+          text: `Pedido #${data} creado correctamente.`,
+          icon: 'success',
+          confirmButtonText: 'Continuar'
+        });
+        return data;
       }
-      
-      if (error.message.includes('401') || error.message.includes('JWT')) {
-        throw new Error('Error de autenticación. Verifica tu conexión a la base de datos.');
-      }
-      
-      throw new Error(error.message);
+    } catch (rpcError) {
+      console.log('⚠️ RPC falló, usando inserción directa...');
     }
     
-    if (!data) {
-      throw new Error('No se recibió respuesta del servidor');
+    // Si RPC falla, insertar directamente
+    const { data: pedidoData, error: pedidoError } = await supabase
+      .from('pedidos')
+      .insert({
+        cliente_cedula: ventaData.cliente_cedula,
+        cliente_nombre: ventaData.cliente_nombre,
+        cliente_apellido: ventaData.cliente_apellido,
+        cliente_telefono: ventaData.cliente_telefono,
+        cliente_email: ventaData.cliente_email,
+        cliente_direccion: ventaData.cliente_direccion,
+        subtotal_usd: ventaData.subtotal_usd || 0,
+        monto_descuento_usd: ventaData.monto_descuento_usd || 0,
+        monto_iva_usd: ventaData.monto_iva_usd || 0,
+        monto_delivery_usd: ventaData.monto_delivery_usd || 0,
+        total_usd: ventaData.total_usd || 0,
+        aplica_iva: ventaData.aplica_iva || false,
+        metodo_pago: ventaData.metodo_pago || 'efectivo',
+        referencia_pago: ventaData.referencia_pago || null,
+        // Campos para pago mixto
+        es_pago_mixto: ventaData.es_pago_mixto || false,
+        monto_mixto_usd: ventaData.monto_mixto_usd || 0,
+        monto_mixto_ves: ventaData.monto_mixto_ves || 0,
+        metodo_pago_mixto_usd: ventaData.metodo_pago_mixto_usd || null,
+        metodo_pago_mixto_ves: ventaData.metodo_pago_mixto_ves || null,
+        referencia_mixto_usd: ventaData.referencia_mixto_usd || null,
+        referencia_mixto_ves: ventaData.referencia_mixto_ves || null,
+        tasa_bcv: ventaData.tasa_bcv || 160,
+        estado_entrega: ventaData.estado_entrega || 'pendiente',
+        comentarios_generales: ventaData.comentarios_generales || null,
+        comentarios_descuento: ventaData.comentarios_descuento || null,
+        fecha_pedido: new Date().toISOString()
+      })
+      .select()
+      .single();
+    
+    if (pedidoError) {
+      console.error('Error al crear pedido:', pedidoError);
+      throw new Error(pedidoError.message);
+    }
+    
+    const pedidoId = pedidoData.id;
+    
+    // Insertar detalles de productos
+    if (ventaData.productos && ventaData.productos.length > 0) {
+      const detallesParaInsertar = ventaData.productos.map(producto => ({
+        pedido_id: pedidoId,
+        producto_id: producto.id,
+        cantidad: producto.cantidad,
+        precio_unitario_usd: producto.precio_unitario,
+        nombre_producto: producto.nombre,
+        sku_producto: producto.sku || null
+      }));
+      
+      const { error: detallesError } = await supabase
+        .from('detalles_pedido')
+        .insert(detallesParaInsertar);
+      
+      if (detallesError) {
+        console.error('Error al insertar detalles:', detallesError);
+        // Intentar eliminar el pedido creado
+        await supabase.from('pedidos').delete().eq('id', pedidoId);
+        throw new Error(detallesError.message);
+      }
     }
     
     Swal.fire({
       title: '¡Éxito!',
-      text: `Pedido #${data} creado correctamente.`,
+      text: `Pedido #${pedidoId} creado correctamente.`,
       icon: 'success',
       confirmButtonText: 'Continuar'
     });
     
-    return data;
+    return pedidoId;
   } catch (err) {
     console.error('Error en createSale:', err);
     
@@ -162,25 +226,32 @@ export async function createSale(ventaData) {
 
 // Obtener pedidos con información del cliente
 export async function getPedidos() {
+  console.log('🔍 Iniciando carga de pedidos...');
+  
   if (USE_MOCK_DATA) {
     console.log('🔧 Usando datos de prueba para pedidos');
+    console.log('📊 Datos mock:', mockPedidos);
     return mockPedidos;
   }
   
   try {
+    console.log('🌐 Intentando conectar con Supabase...');
     const { data, error } = await supabase
       .from('pedidos')
       .select(`
-        id, 
-        fecha_pedido, 
-        total_usd, 
-        estado_entrega,
-        cliente_id,
-        cliente_nombre,
-        cliente_apellido,
-        cliente_telefono
+        *,
+        detalles_pedido(
+          id,
+          cantidad,
+          precio_unitario_usd,
+          nombre_producto,
+          sku_producto
+        )
       `)
       .order('fecha_pedido', { ascending: false });
+    
+    console.log('📊 Datos recibidos de Supabase:', data);
+    console.log('❌ Error de Supabase:', error);
     
     if (error) { 
       console.error('Error al cargar pedidos:', error);
@@ -196,14 +267,25 @@ export async function getPedidos() {
     }
     
     // Usar información real del cliente si está disponible
-    return (data || []).map(pedido => ({
+    const pedidosFormateados = (data || []).map(pedido => ({
       ...pedido,
       clientes: {
         nombre: pedido.cliente_nombre || `Cliente #${pedido.cliente_id}`,
         apellido: pedido.cliente_apellido || '',
-        telefono: pedido.cliente_telefono || ''
-      }
+        telefono: pedido.cliente_telefono || '',
+        email: pedido.cliente_email || '',
+        cedula: pedido.cliente_cedula || '',
+        direccion: pedido.cliente_direccion || ''
+      },
+      // Agregar campos adicionales que necesitamos
+      tipo_pago: pedido.metodo_pago || 'No especificado',
+      referencia: pedido.referencia || 'No aplica',
+      tasa_bcv: pedido.tasa_bcv || null
+      // detalles_pedido ya viene de la consulta, no lo sobrescribimos
     }));
+    
+    console.log('✅ Pedidos formateados:', pedidosFormateados);
+    return pedidosFormateados;
   } catch (err) {
     console.error('Error de conexión:', err);
     console.warn('Usando datos mock debido a error de conexión');
@@ -290,26 +372,70 @@ export async function getTasaCambio() {
   }
 }
 
-// Actualizar pedido
+// Actualizar pedido directamente en la tabla
 export async function updatePedido(cambios) {
   try {
-    const { data, error } = await supabase.rpc('actualizar_pedido', {
-      p_pedido_id: cambios.id,
-      p_motivo: cambios.motivo,
-      p_productos: cambios.productos,
-      p_nuevo_total: cambios.nuevo_total
-    });
+    console.log('🔄 Actualizando pedido:', cambios);
     
-    if (error) {
-      console.error('Error al actualizar pedido:', error);
-      Swal.fire('Error', `No se pudo actualizar el pedido: ${error.message}`, 'error');
-      throw new Error(error.message);
+    // Actualizar la tabla pedidos directamente
+    const { data: pedidoData, error: pedidoError } = await supabase
+      .from('pedidos')
+      .update({
+        subtotal_usd: cambios.subtotal_usd,
+        monto_descuento_usd: cambios.monto_descuento_usd,
+        monto_iva_usd: cambios.monto_iva_usd,
+        monto_delivery_usd: cambios.monto_delivery_usd,
+        total_usd: cambios.total_usd,
+        aplica_iva: cambios.aplica_iva,
+        comentarios_generales: cambios.comentarios_generales,
+        comentarios_descuento: cambios.comentarios_descuento
+      })
+      .eq('id', cambios.id)
+      .select();
+    
+    if (pedidoError) {
+      console.error('Error al actualizar pedido:', pedidoError);
+      throw new Error(pedidoError.message);
+    }
+    
+    // Si hay cambios en productos, actualizar detalles_pedido
+    if (cambios.productos && cambios.productos.length > 0) {
+      // Eliminar detalles existentes
+      const { error: deleteError } = await supabase
+        .from('detalles_pedido')
+        .delete()
+        .eq('pedido_id', cambios.id);
+      
+      if (deleteError) {
+        console.error('Error al eliminar detalles:', deleteError);
+        throw new Error(deleteError.message);
+      }
+      
+      // Insertar nuevos detalles
+      const detallesParaInsertar = cambios.productos.map(producto => ({
+        pedido_id: cambios.id,
+        producto_id: producto.id,
+        cantidad: producto.cantidad,
+        precio_unitario_usd: producto.precio_unitario,
+        nombre_producto: producto.nombre,
+        sku_producto: producto.sku || null
+      }));
+      
+      const { error: insertError } = await supabase
+        .from('detalles_pedido')
+        .insert(detallesParaInsertar);
+      
+      if (insertError) {
+        console.error('Error al insertar detalles:', insertError);
+        throw new Error(insertError.message);
+      }
     }
     
     Swal.fire('¡Éxito!', 'Pedido actualizado correctamente', 'success');
-    return data;
+    return pedidoData;
   } catch (err) {
     console.error('Error en updatePedido:', err);
+    Swal.fire('Error', `No se pudo actualizar el pedido: ${err.message}`, 'error');
     throw err;
   }
 }

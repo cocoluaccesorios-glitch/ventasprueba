@@ -52,7 +52,7 @@ export async function getClientes() {
     const { data, error } = await supabase
       .from('clientes')
       .select('*')
-      .order('fecha_registro', { ascending: false })
+      .order('id', { ascending: false })
 
     if (error) {
       console.error('Error al cargar clientes:', error)
@@ -60,7 +60,20 @@ export async function getClientes() {
       throw new Error(error.message)
     }
 
-    return data || []
+    // Mapear los campos de la base de datos a la estructura esperada
+    const clientesFormateados = (data || []).map(cliente => ({
+      id: cliente.id,
+      cedula: cliente.cedula_rif,
+      nombre: cliente.nombre,
+      apellido: cliente.apellido,
+      telefono: cliente.telefono,
+      email: cliente.email,
+      direccion: cliente.direccion,
+      fecha_registro: new Date().toISOString(), // Fecha actual como fallback
+      estado: 'activo' // Estado por defecto
+    }));
+
+    return clientesFormateados;
   } catch (err) {
     console.error('Error en getClientes:', err)
     if (err.message.includes('fetch failed')) {
@@ -83,7 +96,7 @@ export async function buscarClientePorCedula(cedula) {
     const { data, error } = await supabase
       .from('clientes')
       .select('*')
-      .eq('cedula', cedula)
+      .eq('cedula_rif', cedula)
       .single()
 
     if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
@@ -91,7 +104,22 @@ export async function buscarClientePorCedula(cedula) {
       throw new Error(error.message)
     }
 
-    return data || null
+    // Mapear el resultado si existe
+    if (data) {
+      return {
+        id: data.id,
+        cedula: data.cedula_rif,
+        nombre: data.nombre,
+        apellido: data.apellido,
+        telefono: data.telefono,
+        email: data.email,
+        direccion: data.direccion,
+        fecha_registro: new Date().toISOString(),
+        estado: 'activo'
+      };
+    }
+
+    return null;
   } catch (err) {
     console.error('Error en buscarClientePorCedula:', err)
     if (err.message.includes('fetch failed')) {

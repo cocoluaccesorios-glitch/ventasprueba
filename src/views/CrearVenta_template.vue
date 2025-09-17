@@ -111,21 +111,21 @@
         <!-- Formulario Principal -->
         <div class="form-container">
           <form @submit.prevent="handleSubmit" class="sales-form">
-          <!-- Sección Productos Rediseñada -->
-          <div class="modern-products-section">
-            <div class="section-header">
-              <div class="header-icon" style="display: none;">
-                <i class="bi bi-boxes"></i>
-            </div>
-              <div class="header-content">
-                <h2>Añadir Productos</h2>
-                <p>Selecciona productos para la venta</p>
-            </div>
-            </div>
-            
-            <div class="products-form-container">
-              <!-- Buscador de Producto - FILA COMPLETA -->
-              <div class="form-group product-search-group full-width">
+            <!-- Sección Productos Rediseñada -->
+            <div class="modern-products-section">
+              <div class="section-header">
+                <div class="header-icon" style="display: none;">
+                  <i class="bi bi-boxes"></i>
+                </div>
+                <div class="header-content">
+                  <h2>Añadir Productos</h2>
+                  <p>Selecciona productos para la venta</p>
+                </div>
+              </div>
+              
+              <div class="products-form-container">
+                <!-- Buscador de Producto - FILA COMPLETA -->
+                <div class="form-group product-search-group full-width">
                 <label class="modern-label">
                   <i class="bi bi-search"></i>
                   Buscar Producto
@@ -164,10 +164,13 @@
                     <i class="bi bi-currency-dollar"></i>
                     Precio Unit.
                   </label>
-                  <input type="number" class="price-input readonly-input" 
-                         v-model.number="precioSeleccionado" step="0.01" min="0"
-                         readonly
-                         placeholder="">
+                  <div class="price-container readonly">
+                    <span class="currency-symbol">$</span>
+                    <input type="number" class="price-input readonly-input" 
+                           v-model.number="precioSeleccionado" step="0.01" min="0"
+                           readonly
+                           placeholder="">
+            </div>
                 </div>
                 
                 <!-- Botones de Acción - APILADOS -->
@@ -234,9 +237,9 @@
                     
                     <!-- Columna Precio Unitario -->
                     <td class="price-cell">
-                      <input type="number" class="table-price-input readonly" 
+                      <input type="number" class="table-price-input" 
                            v-model.number="item.precio_unitario" step="0.01" min="0"
-                         readonly
+                         @change="validarPrecio(index)"
                          placeholder="">
                   </td>
                     
@@ -267,6 +270,7 @@
             </div>
             <h4>Aún no has añadido productos</h4>
             <p>Selecciona productos del inventario o crea un producto manual para comenzar</p>
+          </div>
           </div>
           <!-- Configuración de Pago y Entrega Rediseñada -->
           <div class="modern-payment-section">
@@ -379,7 +383,7 @@
                 </div>
               </div>
               
-              <!-- Segunda fila: Tipo de Pago, Método de Pago, Referencia -->
+              <!-- Segunda fila: Tipo de Pago, Referencia -->
               <div class="form-row">
                 <!-- Tipo de Pago -->
                 <div class="form-group payment-type-group">
@@ -392,46 +396,116 @@
                       <option value="">-- Seleccione --</option>
                       <option value="Contado">Contado</option>
                       <option value="Abono">Abono</option>
-                      <option value="Mixto">Mixto</option>
               </select>
                     <i class="bi bi-chevron-down select-icon"></i>
             </div>
           </div>
                 
-                <!-- Método de Pago (solo si NO es abono y NO es mixto) -->
-                <div v-if="venta.tipo_pago !== 'Abono' && venta.tipo_pago !== 'Mixto'" class="form-group payment-method-group">
+                <!-- Referencia -->
+                <div class="form-group reference-group">
+                  <label class="modern-label">
+                    <i class="bi bi-hash"></i>
+                    Referencia
+                  </label>
+                  <div class="input-container">
+                    <input type="text" class="modern-input" 
+                           v-model="venta.referencia_pago" 
+                           placeholder="Número de referencia">
+        </div>
+                </div>
+                </div>
+              
+              <!-- Tercera fila: Método de Pago (USD) -->
+              <div class="form-row" v-if="!esPagoMixto">
+                <!-- Método de Pago USD -->
+                <div class="form-group payment-method-group">
                   <label class="modern-label">
                     <i class="bi bi-wallet2"></i>
-                    Método de Pago *
+                    Método de Pago USD *
                   </label>
                   <div class="select-container">
-                    <select class="modern-select" v-model="venta.metodo_pago" required>
+                    <select class="modern-select" v-model="venta.metodo_pago_usd" required>
                 <option value="">-- Seleccione --</option>
                 <option value="Efectivo (USD)">Efectivo (USD)</option>
                 <option value="Zelle (USD)">Zelle (USD)</option>
+                    </select>
+                    <i class="bi bi-chevron-down select-icon"></i>
+          </div>
+        </div>
+                
+                <!-- Método de Pago VES -->
+                <div class="form-group payment-method-group">
+                  <label class="modern-label">
+                    <i class="bi bi-wallet2"></i>
+                    Método de Pago VES *
+                  </label>
+                  <div class="select-container">
+                    <select class="modern-select" v-model="venta.metodo_pago_ves" required>
+                      <option value="">-- Seleccione --</option>
                 <option value="Punto de Venta (VES)">Punto de Venta (VES)</option>
                 <option value="Pago Móvil (VES)">Pago Móvil (VES)</option>
                 <option value="Transferencia (VES)">Transferencia (VES)</option>
               </select>
                     <i class="bi bi-chevron-down select-icon"></i>
-        </div>
+            </div>
+            </div>
+            </div>
+              
+              <!-- Tercera fila: Método de Pago (Mixto) -->
+              <div class="form-row" v-if="esPagoMixto">
+                <!-- Método de Pago USD -->
+                <div class="form-group payment-method-group">
+                  <label class="modern-label">
+                    <i class="bi bi-wallet2"></i>
+                    Método de Pago USD *
+                  </label>
+                  <div class="select-container">
+                    <select class="modern-select" v-model="venta.metodo_pago_usd" required>
+                      <option value="">-- Seleccione --</option>
+                      <option value="Efectivo (USD)">Efectivo (USD)</option>
+                      <option value="Zelle (USD)">Zelle (USD)</option>
+                    </select>
+                    <i class="bi bi-chevron-down select-icon"></i>
+          </div>
                 </div>
                 
-                <!-- Referencia (solo para métodos que la requieren y NO es abono y NO es mixto) -->
-                <div v-if="requiereReferencia && venta.tipo_pago !== 'Abono' && venta.tipo_pago !== 'Mixto'" class="form-group reference-group">
+                <!-- Método de Pago VES -->
+                <div class="form-group payment-method-group">
                   <label class="modern-label">
-                    <i class="bi bi-hash"></i>
-                    Referencia *
+                    <i class="bi bi-wallet2"></i>
+                    Método de Pago VES *
                   </label>
-                  <div class="input-container">
-                    <input type="text" class="modern-input" 
-                           v-model="venta.referencia_pago" 
-                           placeholder="Número de referencia"
-                           required>
+                  <div class="select-container">
+                    <select class="modern-select" v-model="venta.metodo_pago_ves" required>
+                      <option value="">-- Seleccione --</option>
+                      <option value="Punto de Venta (VES)">Punto de Venta (VES)</option>
+                      <option value="Pago Móvil (VES)">Pago Móvil (VES)</option>
+                      <option value="Transferencia (VES)">Transferencia (VES)</option>
+                    </select>
+                    <i class="bi bi-chevron-down select-icon"></i>
+                  </div>
                 </div>
-          </div>
-        </div>
+              </div>
               
+              <!-- Checkbox para Pago Mixto -->
+              <div class="form-row">
+                <div class="form-group">
+                  <div class="checkbox-container">
+                    <div class="modern-checkbox">
+                      <input type="checkbox" id="pago-mixto" v-model="esPagoMixto">
+                      <label for="pago-mixto">
+                        <div class="checkbox-custom">
+                          <i class="bi bi-check"></i>
+                        </div>
+                        <span class="checkbox-label">
+                          <i class="bi bi-currency-exchange"></i>
+                          Pago Mixto (USD + VES)
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
               
               <!-- Configuración de Abono -->
               <div v-if="venta.tipo_pago === 'Abono'" class="installment-section">
@@ -496,31 +570,19 @@
                           <i class="bi bi-currency-dollar"></i>
                           Monto del Abono *
                         </label>
-                        <input type="number" class="amount-input" 
-                               v-model.number="montoAbonoSimple" step="0.01" min="0.01"
-                               :max="metodoPagoAbono.includes('USD') ? totalVenta : totalVenta * venta.tasa_bcv"
-                               placeholder=""
-                               required>
+                        <div class="amount-container">
+                          <span class="currency-symbol">{{ metodoPagoAbono.includes('USD') ? '$' : 'Bs.' }}</span>
+                          <input type="number" class="amount-input" 
+                                 v-model.number="montoAbonoSimple" step="0.01" min="0.01"
+                                 :max="metodoPagoAbono.includes('USD') ? totalVenta : totalVenta * venta.tasa_bcv"
+                                 placeholder=""
+                                 required>
+                        </div>
                         <!-- Conversión de moneda -->
                         <div v-if="conversionAbonoSimple" class="conversion-display">
                           {{ conversionAbonoSimple }}
                         </div>
                       </div>
-                      
-                      <!-- Referencia para abono (solo si el método la requiere) -->
-                      <div v-if="requiereReferenciaAbono" class="form-group reference-group">
-                        <label class="modern-label">
-                          <i class="bi bi-hash"></i>
-                          Referencia del Abono *
-                        </label>
-                        <div class="input-container">
-                          <input type="text" class="modern-input" 
-                                 v-model="venta.referencia_pago" 
-                                 placeholder="Número de referencia del abono"
-                                 required>
-                        </div>
-                      </div>
-                      
                     </div>
                   </div>
                   
@@ -533,11 +595,13 @@
                           <i class="bi bi-currency-dollar"></i>
                           Monto en USD
                         </label>
-                        <input type="number" class="amount-input" 
-                               v-model.number="montoAbonoUSD" step="0.01" min="0"
-                               :max="totalVenta"
-                               placeholder=""
-                               @input="calcularRestanteAbonoUSD">
+                        <div class="amount-container">
+                          <span class="currency-symbol">$</span>
+                          <input type="number" class="amount-input" 
+                                 v-model.number="montoAbonoUSD" step="0.01" min="0"
+                                 :max="totalVenta"
+                                 placeholder="">
+                        </div>
                       </div>
                       
                       <!-- Monto en VES -->
@@ -546,13 +610,13 @@
                           <i class="bi bi-currency-exchange"></i>
                           Monto en VES
                         </label>
-                        <input type="number" class="amount-input" 
-                               v-model.number="montoAbonoVES" step="0.01" min="0"
-                               :max="totalVenta * venta.tasa_bcv"
-                               placeholder=""
-                               @input="calcularRestanteAbonoVES">
-                      </div>
-                      
+                        <div class="amount-container">
+                          <span class="currency-symbol">Bs.</span>
+                          <input type="number" class="amount-input" 
+                                 v-model.number="montoAbonoVES" step="0.01" min="0"
+                                 :max="totalVenta * venta.tasa_bcv"
+                                 placeholder="">
+                        </div>
                     </div>
                     
                     <!-- Total del Abono Mixto -->
@@ -605,7 +669,7 @@
               </div>
               
               <!-- Configuración de Pago Mixto -->
-              <div v-if="venta.tipo_pago === 'Mixto'" class="mixed-payment-section">
+              <div v-if="esPagoMixto && venta.tipo_pago === 'Contado'" class="mixed-payment-section">
                 <div class="installment-header">
                   <h4>
                     <i class="bi bi-currency-exchange"></i>
@@ -629,15 +693,18 @@
                           <i class="bi bi-currency-dollar"></i>
                           Monto en USD *
                         </label>
-                        <input 
-                          type="number" 
-                          class="modern-input" 
-                          v-model="montoMixtoUSD" 
-                          step="0.01" 
-                          min="0"
-                          placeholder=""
-                          @input="calcularRestanteUSD"
-                          required>
+                        <div class="input-container">
+                          <span class="currency-symbol">$</span>
+                          <input 
+                            type="number" 
+                            class="modern-input" 
+                            v-model="montoMixtoUSD" 
+                            step="0.01" 
+                            min="0"
+                            placeholder=""
+                            @input="calcularRestanteUSD"
+                            required>
+                        </div>
                       </div>
                       
                       <div class="form-group">
@@ -645,91 +712,20 @@
                           <i class="bi bi-currency-exchange"></i>
                           Monto en VES *
                         </label>
-                        <input 
-                          type="number" 
-                          class="modern-input" 
-                          v-model="montoMixtoVES" 
-                          step="0.01" 
-                          min="0"
-                          placeholder=""
-                          @input="calcularRestanteVES"
-                          required>
+                        <div class="input-container">
+                          <span class="currency-symbol">Bs</span>
+                          <input 
+                            type="number" 
+                            class="modern-input" 
+                            v-model="montoMixtoVES" 
+                            step="0.01" 
+                            min="0"
+                            placeholder=""
+                            @input="calcularRestanteVES"
+                            required>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  
-                  <!-- Métodos de Pago Mixtos -->
-                  <div class="mixed-payment-methods-section">
-                    <div class="form-row">
-                      <!-- Método de Pago USD (si hay monto USD) -->
-                      <div v-if="montoMixtoUSD > 0" class="form-group">
-                        <label class="modern-label">
-                          <i class="bi bi-credit-card"></i>
-                          Método de Pago USD *
-                        </label>
-                        <select 
-                          class="modern-input" 
-                          v-model="metodoPagoMixtoUSD" 
-                          required>
-                          <option value="">-- Seleccione --</option>
-                          <option 
-                            v-for="opcion in opcionesMetodoPagoUSD" 
-                            :key="opcion.value" 
-                            :value="opcion.value">
-                            {{ opcion.label }}
-                </option>
-              </select>
-            </div>
-                      
-                      <!-- Método de Pago VES (si hay monto VES) -->
-                      <div v-if="montoMixtoVES > 0" class="form-group">
-                        <label class="modern-label">
-                          <i class="bi bi-credit-card"></i>
-                          Método de Pago VES *
-                        </label>
-                        <select 
-                          class="modern-input" 
-                          v-model="metodoPagoMixtoVES" 
-                          required>
-                          <option value="">-- Seleccione --</option>
-                          <option 
-                            v-for="opcion in opcionesMetodoPagoVES" 
-                            :key="opcion.value" 
-                            :value="opcion.value">
-                            {{ opcion.label }}
-                          </option>
-                        </select>
-          </div>
-        </div>
-                </div>
-                  
-                  <!-- Referencias Múltiples para Pago Mixto -->
-                  <div class="mixed-references-section">
-                    <div class="form-row">
-                      <!-- Referencia USD (si hay monto USD y método requiere referencia) -->
-                      <div v-if="montoMixtoUSD > 0 && metodoPagoMixtoUSD === 'zelle'" class="form-group">
-                        <label class="modern-label">
-                          <i class="bi bi-hash"></i>
-                          Referencia USD *
-                        </label>
-                        <input type="text" class="modern-input" 
-                               v-model="referenciaMixtoUSD" 
-                               placeholder="Referencia del pago en USD"
-                               required>
-                </div>
-                      
-                      <!-- Referencia VES (si hay monto VES y método requiere referencia) -->
-                      <div v-if="montoMixtoVES > 0 && (metodoPagoMixtoVES === 'pago_movil' || metodoPagoMixtoVES === 'transferencia')" class="form-group">
-                        <label class="modern-label">
-                          <i class="bi bi-hash"></i>
-                          Referencia VES *
-                        </label>
-                        <input type="text" class="modern-input" 
-                               v-model="referenciaMixtoVES" 
-                               placeholder="Referencia del pago en VES"
-                               required>
-          </div>
-        </div>
                   </div>
                   
                   <!-- Resumen del Pago Mixto -->
@@ -792,6 +788,20 @@
               </div>
             </div>
                 
+                <div class="option-group">
+                  <div class="modern-checkbox">
+                    <input type="checkbox" id="aplica-iva" v-model="venta.aplica_iva">
+                    <label for="aplica-iva">
+                      <div class="checkbox-custom">
+                        <i class="bi bi-check"></i>
+                      </div>
+                      <span class="checkbox-label">
+                        <i class="bi bi-percent"></i>
+                  Aplicar IVA (16%)
+                      </span>
+                </label>
+              </div>
+            </div>
           </div>
             </div>
           </div>
@@ -804,10 +814,11 @@
               <span>{{ isSubmitting ? 'Procesando...' : 'Registrar Venta' }}</span>
             </button>
           </div>
-      </form>
+          </form>
         </div>
+      </div>
         
-        <!-- Modal para Producto Manual -->
+      <!-- Modal para Producto Manual -->
         <div v-if="mostrarModalProductoManual" class="modal-overlay" @click="cerrarModalProductoManual">
           <div class="modal-content" @click.stop>
             <div class="modal-header">
@@ -879,6 +890,7 @@
             </div>
           </div>
         </div>
+          </div>
         
         <!-- Panel de Resumen -->
         <div class="summary-container">
@@ -901,18 +913,18 @@
             <div class="calc-row">
               <span class="calc-label">Subtotal</span>
               <span class="calc-value">${{ subtotal.toFixed(2) }}</span>
-            </div>
+                </div>
             
             <!-- Descuento (solo si aplica) -->
             <div v-if="venta.monto_descuento_usd > 0" class="calc-row discount-row">
               <span class="calc-label">Descuento</span>
-              <span class="calc-value discount-value">-${{ montoDescuentoCalculado.toFixed(2) }}</span>
+                <span class="calc-value discount-value">-${{ montoDescuentoCalculado.toFixed(2) }}</span>
             </div>
             
             <!-- IVA (solo si aplica) -->
-            <div v-if="venta.aplica_iva && ivaCalculado > 0" class="calc-row iva-row">
+            <div v-if="venta.aplica_iva && montoIVACalculado > 0" class="calc-row iva-row">
               <span class="calc-label">IVA (16%)</span>
-              <span class="calc-value iva-value">${{ ivaCalculado.toFixed(2) }}</span>
+              <span class="calc-value iva-value">${{ montoIVACalculado.toFixed(2) }}</span>
             </div>
             
             <!-- Delivery (solo si aplica) -->
@@ -926,73 +938,18 @@
               <span class="calc-label">Total</span>
               <span class="calc-value total-value">${{ totalVenta.toFixed(2) }}</span>
             </div>
-            
-            <!-- Tasa BCV (Editable) -->
-            <div class="calc-row rate-row editable-rate">
-              <span class="calc-label">Tasa BCV</span>
-              <div class="rate-input-container">
-                <input 
-                  type="number" 
-                  class="rate-input-field" 
-                  v-model.number="venta.tasa_bcv" 
-                  step="0.01" 
-                  min="0"
-                  placeholder="160.00"
-                  @change="validarTasaBCV"
-                >
-                <span class="rate-currency">Bs/USD</span>
-              </div>
-            </div>
-            
-            <!-- Total en Bolívares (solo para métodos VES o mixto) -->
-            <div v-if="esMetodoVES || venta.tipo_pago === 'Mixto'" class="calc-row ves-row">
-              <span class="calc-label">Total en Bolívares</span>
-              <span class="calc-value ves-value">Bs. {{ totalVES.toFixed(2) }}</span>
-            </div>
           </div>
           
           <!-- Información de Pago -->
           <div class="payment-info-section">
-            <!-- Método de Pago Normal -->
-            <div v-if="venta.metodo_pago !== 'Mixto'" class="payment-method-info">
+            <div class="payment-method-info">
               <span class="info-label">Método:</span>
               <span class="info-value">{{ venta.metodo_pago || 'No seleccionado' }}</span>
-            </div>
-            
-            <!-- Desglose Pago Mixto -->
-            <div v-if="venta.metodo_pago === 'Mixto'" class="mixed-payment-breakdown">
-              <div class="mixed-method-title">
-                <span class="info-label">Método: Mixto</span>
-              </div>
-              <div class="mixed-amounts-display">
-                <div class="mixed-amount-item">
-                  <span class="currency-label">USD:</span>
-                  <span class="currency-value">${{ montoMixtoUSD.toFixed(2) }}</span>
-                  <span class="method-detail">({{ metodoPagoMixtoUSD === 'zelle' ? 'Zelle' : 'Efectivo' }})</span>
-                </div>
-                <div class="mixed-amount-item">
-                  <span class="currency-label">VES:</span>
-                  <span class="currency-value">Bs. {{ montoMixtoVES.toFixed(2) }}</span>
-                  <span class="method-detail">({{ metodoPagoMixtoVES === 'pago_movil' ? 'Pago Móvil' : 'Transferencia' }})</span>
-                </div>
-              </div>
             </div>
             
             <div v-if="venta.referencia_pago" class="payment-reference-info">
               <span class="info-label">Ref:</span>
               <span class="info-value">{{ venta.referencia_pago }}</span>
-            </div>
-            
-            <!-- Referencias Mixtas -->
-            <div v-if="venta.metodo_pago === 'Mixto'" class="mixed-references">
-              <div v-if="referenciaMixtoUSD && metodoPagoMixtoUSD === 'zelle'" class="ref-item">
-                <span class="ref-label">Ref USD:</span>
-                <span class="ref-value">{{ referenciaMixtoUSD }}</span>
-              </div>
-              <div v-if="referenciaMixtoVES && (metodoPagoMixtoVES === 'pago_movil' || metodoPagoMixtoVES === 'transferencia')" class="ref-item">
-                <span class="ref-label">Ref VES:</span>
-                <span class="ref-value">{{ referenciaMixtoVES }}</span>
-              </div>
             </div>
             
             <div class="delivery-status-info">
@@ -1001,42 +958,7 @@
             </div>
           </div>
         </div>
-        </div>
       </div>
-      
-      <!-- Sección de Comentarios -->
-      <div class="comments-section">
-        <div class="comments-header">
-          <div class="comments-icon">
-            <i class="bi bi-chat-text"></i>
-          </div>
-          <div class="comments-title">
-            <h3>Comentarios</h3>
-            <p>Notas adicionales</p>
-          </div>
-        </div>
-        
-        <div class="comments-content">
-          <div class="form-group">
-            <label class="modern-label">
-              <i class="bi bi-pencil"></i>
-              Comentarios
-            </label>
-            <textarea 
-              class="modern-textarea" 
-              v-model="venta.comentarios" 
-              placeholder="Agregar comentarios sobre la venta..."
-              rows="4"
-              maxlength="500">
-            </textarea>
-            <div class="character-count">
-              {{ venta.comentarios.length }}/500 caracteres
-            </div>
-          </div>
-        </div>
-      </div>
-      </div>
-    </div>
     </div>
   </div>
 </template>
@@ -2113,102 +2035,10 @@ legend {
 /* Panel de resumen estilo Bootstrap estándar */
 .summary-container {
   position: fixed;
-  top: 200px; /* Posición fija a la derecha */
+  top: 200px; /* Justo en la línea que separa la sección de cliente con "Añadir Productos" */
   right: 120px; /* 40 puntos más a la izquierda desde right: 80px */
   width: 480px; /* Más ancho */
-  max-height: calc(100vh - 250px); /* Altura máxima para permitir scroll interno */
-  overflow-y: auto; /* Barra de desplazamiento vertical */
-  overflow-x: hidden; /* Sin barra horizontal */
-}
-
-/* Sección de comentarios */
-.comments-section {
-  margin-top: 1.5rem;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.comments-header {
-  display: flex;
-  align-items: center;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 2px solid #e9ecef;
-}
-
-.comments-icon {
-  width: 48px;
-  height: 48px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 1rem;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-}
-
-.comments-icon i {
-  font-size: 1.5rem;
-  color: white;
-}
-
-.comments-title h3 {
-  margin: 0;
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: #2c3e50;
-  line-height: 1.2;
-}
-
-.comments-title p {
-  margin: 0.25rem 0 0 0;
-  font-size: 0.9rem;
-  color: #6c757d;
-  font-weight: 500;
-}
-
-.comments-content {
-  padding: 0;
-}
-
-.modern-textarea {
-  width: 100%;
-  min-height: 120px;
-  padding: 1rem;
-  border: 2px solid #e9ecef;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: #2c3e50;
-  background: white;
-  transition: all 0.3s ease;
-  resize: vertical;
-  font-family: inherit;
-  line-height: 1.5;
-}
-
-.modern-textarea:focus {
-  outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-  background: #f8f9ff;
-}
-
-.modern-textarea::placeholder {
-  color: #adb5bd;
-  font-weight: 400;
-}
-
-.character-count {
-  text-align: right;
-  font-size: 0.8rem;
-  color: #6c757d;
-  margin-top: 0.5rem;
-  font-weight: 500;
+  height: fit-content;
   z-index: 1000;
 }
 
@@ -2353,47 +2183,6 @@ legend {
 .calc-value {
   color: #212529;
   font-weight: 700;
-}
-
-/* Subtotal más pequeño */
-.calc-row:first-child .calc-label {
-  font-size: 0.9rem;
-  color: #6c757d;
-}
-
-.calc-row:first-child .calc-value {
-  font-size: 0.9rem;
-  color: #6c757d;
-  font-weight: 600;
-}
-
-/* Delivery, Descuento e IVA más pequeños */
-.discount-row .calc-label,
-.discount-row .discount-value,
-.iva-row .calc-label,
-.iva-row .iva-value,
-.delivery-row .calc-label,
-.delivery-row .delivery-value {
-  font-size: 0.9rem;
-  font-weight: 600;
-}
-
-/* Descuento en rojo */
-.discount-row .calc-label {
-  color: #6c757d;
-}
-
-.discount-row .discount-value {
-  color: #dc3545;
-  font-weight: 600;
-}
-
-/* IVA y Delivery en gris */
-.iva-row .calc-label,
-.iva-row .iva-value,
-.delivery-row .calc-label,
-.delivery-row .delivery-value {
-  color: #6c757d;
 }
 
 /* Inputs de productos - ALINEACIÓN PERFECTA */
@@ -2564,9 +2353,9 @@ legend {
 
 /* Filas especiales */
 .discount-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5rem;
 }
 
 /* Inputs del panel de resumen */
@@ -2612,93 +2401,16 @@ legend {
   margin-top: 0.5rem;
 }
 
-/* Tasa BCV */
-.rate-row {
-  background: #e3f2fd;
-  border: 1px solid #2196f3;
-  border-radius: 4px;
-  padding: 0.75rem;
-  margin-top: 0.5rem;
-  font-weight: 600;
-}
-
-.rate-value {
-  color: #1976d2;
-  font-weight: 700;
-}
-
-/* Tasa BCV Editable */
-.editable-rate {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.rate-input-container {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.rate-currency {
-  color: #1976d2;
-  font-weight: 700;
-  font-size: 0.9rem;
-}
-
-.rate-input-field {
-  width: 80px;
-  padding: 0.25rem 0.5rem;
-  border: 1px solid #2196f3;
-  border-radius: 4px;
-  background: white;
-  color: #1976d2;
-  font-weight: 700;
-  font-size: 0.9rem;
-  text-align: center;
-}
-
-.rate-input-field:focus {
-  outline: none;
-  border-color: #1565c0;
-  box-shadow: 0 0 0 2px rgba(21, 101, 192, 0.2);
-}
-
-/* Total en Bolívares */
-.ves-row {
-  background: #fff3e0;
-  border: 1px solid #ff9800;
-  border-radius: 4px;
-  padding: 1rem;
-  margin-top: 0.5rem;
-  font-weight: 600;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.ves-row .calc-label {
-  font-size: 1.3rem;
-  color: #212529;
-  font-weight: 800;
-}
-
-.ves-value {
-  color: #f57c00;
-  font-weight: 800;
-  font-size: 1.4rem;
-}
-
 .total-label {
-  font-size: 1.3rem;
+  font-size: 1.1rem;
   color: #212529;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .total-value {
-  font-size: 1.4rem;
+  font-size: 1.2rem;
   color: #28a745;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .ves-row {
@@ -3124,18 +2836,6 @@ legend {
   box-shadow: 0 0 0 0.2rem rgba(168, 230, 168, 0.25);
 }
 
-.table-price-input.readonly {
-  background-color: #f8f9fa;
-  color: #6c757d;
-  cursor: not-allowed;
-  border-color: #e9ecef;
-}
-
-.table-price-input.readonly:focus {
-  border-color: #e9ecef;
-  box-shadow: none;
-}
-
 .subtotal-cell {
   width: 15%;
   text-align: right;
@@ -3244,10 +2944,6 @@ input[type=number] {
     right: auto;
     width: 100%;
     margin-top: 2rem;
-  }
-  
-  .comments-section {
-    margin-top: 1rem;
   }
   
   .centered-layout {
@@ -3454,32 +3150,7 @@ input[type=number] {
   margin-top: 1rem;
 }
 
-/* Sección de métodos de pago mixtos */
-.mixed-payment-methods-section {
-  margin-top: 1rem;
-  padding: 1rem;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.mixed-payment-methods-section .form-row {
-  gap: 1rem;
-}
-
 /* Total del abono mixto */
-.mixed-references-section {
-  margin-top: 1rem;
-  padding: 1rem;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.mixed-references-section .form-row {
-  gap: 1rem;
-}
-
 .mixed-total-section {
   margin-top: 1rem;
 }
@@ -4207,1472 +3878,3 @@ input[type=number] {
 </style>
 
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue';
-import { getProducts, createSale, getTasaCambio } from '../services/apiService.js';
-import { getClientePorCedula, buscarClientePorCriterio as buscarClientePorCriterioService, getClientes } from '../services/clientesService.js';
-import ProductSearch from '../components/ProductSearch.vue';
-import ClientSearch from '../components/ClientSearch.vue';
-import { useNotifier } from '../composables/useNotifier.js';
-import Swal from 'sweetalert2';
-
-// Usar el composable de notificaciones
-const { showSuccess, showError, showWarning, confirmDelete } = useNotifier();
-
-const productos = ref([]);
-const clientes = ref([]);
-const productoSeleccionado = ref(null);
-const cantidadSeleccionada = ref(1);
-const precioSeleccionado = ref(0);
-const detallesPedido = ref([]);
-
-// Variables para autocompletado de cliente
-const clienteSearchQuery = ref('');
-const resultadosBusqueda = ref([]);
-const mostrarResultados = ref(false);
-const clientSearchInput = ref(null);
-
-// Variable para controlar si el precio es editable
-const precioEditable = ref(true);
-
-// Variables para modal de producto manual - Actualizado
-const mostrarModalProductoManual = ref(false);
-const productoManual = ref({
-  descripcion: '',
-  precio: 0,
-  cantidad: 1
-});
-const isSubmitting = ref(false);
-const productSearchRef = ref(null);
-const clientSearchRef = ref(null);
-
-// Variables para cálculos
-const descuentoPorcentaje = ref(true); // Por defecto porcentaje
-const quiereDelivery = ref(false);
-const quiereDescuento = ref(false);
-
-// Función para generar el estado inicial del formulario
-const getInitialVentaState = () => ({
-  cliente_cedula: '',
-  cliente_nombre: '',
-  cliente_apellido: '',
-  cliente_telefono: '',
-  cliente_email: '',
-  cliente_direccion: '',
-  tipo_pago: '',
-  metodo_pago: '',
-  referencia_pago: '',
-  tasa_bcv: 160.0,
-  entrega_inmediata: false,
-  aplica_iva: false,
-  monto_descuento_usd: null,
-  monto_delivery_usd: null,
-  comentarios_descuento: '',
-  comentarios: '',
-  // Campos para abono
-  monto_abono: null,
-  fecha_vencimiento: ''
-});
-
-const venta = ref(getInitialVentaState());
-
-// Variable computada para el cliente seleccionado
-const clienteSeleccionado = computed(() => {
-  if (venta.value.cliente_nombre && venta.value.cliente_apellido && venta.value.cliente_cedula) {
-    return {
-      nombre: venta.value.cliente_nombre,
-      apellido: venta.value.cliente_apellido,
-      cedula_rif: venta.value.cliente_cedula,
-      telefono: venta.value.cliente_telefono,
-      email: venta.value.cliente_email,
-      direccion: venta.value.cliente_direccion
-    };
-  }
-  return null;
-});
-
-onMounted(async () => {
-  console.log('🚀 Iniciando carga de datos...');
-  productos.value = await getProducts();
-  console.log('📦 Productos cargados:', productos.value.length);
-  
-  clientes.value = await getClientes();
-  console.log('👥 Clientes cargados:', clientes.value.length);
-  console.log('👥 Lista de clientes:', clientes.value);
-  
-  // Cargar tasa de cambio actual
-  const tasa = await getTasaCambio();
-  if (tasa) {
-    venta.value.tasa_bcv = tasa;
-  } else {
-    // Usar tasa por defecto si no hay tasa en la base de datos
-    venta.value.tasa_bcv = 160.0;
-  }
-  console.log('✅ Carga de datos completada');
-});
-
-// Watchers para actualizar precios automáticamente
-watch(productoSeleccionado, (nuevoProducto) => {
-  if (nuevoProducto) {
-    precioSeleccionado.value = nuevoProducto.precio_usd;
-  }
-});
-
-// Watcher para limpiar delivery cuando se desmarca
-watch(quiereDelivery, (nuevoValor) => {
-  if (!nuevoValor) {
-    venta.value.monto_delivery_usd = null;
-  }
-});
-
-// Watcher para limpiar descuento cuando se desmarca
-watch(quiereDescuento, (nuevoValor) => {
-  if (!nuevoValor) {
-    venta.value.monto_descuento_usd = null;
-  }
-});
-
-// Watcher para sincronizar tipo_pago con metodo_pago
-watch(() => venta.value.tipo_pago, (nuevoTipo) => {
-  if (nuevoTipo === 'Mixto') {
-    venta.value.metodo_pago = 'Mixto';
-  } else if (nuevoTipo === 'Abono') {
-    venta.value.metodo_pago = 'Abono';
-  } else if (nuevoTipo === 'Contado') {
-    // Para contado, limpiar metodo_pago para que se seleccione manualmente
-    if (venta.value.metodo_pago === 'Mixto' || venta.value.metodo_pago === 'Abono') {
-      venta.value.metodo_pago = '';
-    }
-  }
-});
-
-// Computed properties simplificadas
-const subtotal = computed(() => 
-  detallesPedido.value.reduce((acc, item) => acc + (item.cantidad * item.precio_unitario), 0)
-);
-
-const montoDescuentoCalculado = computed(() => {
-  if (descuentoPorcentaje.value) {
-    return (subtotal.value * (venta.value.monto_descuento_usd || 0)) / 100;
-  }
-  return venta.value.monto_descuento_usd || 0;
-});
-
-const ivaCalculado = computed(() => {
-  if (!venta.value.aplica_iva) return 0;
-  const baseImponible = subtotal.value - montoDescuentoCalculado.value;
-  return baseImponible * 0.16;
-});
-
-const total = computed(() => {
-  const baseImponible = subtotal.value - montoDescuentoCalculado.value;
-  const iva = venta.value.aplica_iva ? baseImponible * 0.16 : 0;
-  const delivery = venta.value.monto_delivery_usd || 0;
-  const totalCalculado = baseImponible + iva + delivery;
-  return totalCalculado < 0 ? 0 : totalCalculado;
-});
-
-const totalVES = computed(() => {
-  return total.value * (venta.value.tasa_bcv || 160.0);
-});
-
-// Verificar si el método de pago es en VES
-const esMetodoVES = computed(() => {
-  if (!venta.value.metodo_pago) return false;
-  return venta.value.metodo_pago.toLowerCase().includes('ves');
-});
-
-// Verificar si el método de pago del abono requiere referencia
-const requiereReferenciaAbono = computed(() => {
-  if ((venta.value.tipo_pago !== 'Abono' && venta.value.metodo_pago !== 'Abono') || !metodoPagoAbono.value) return false;
-  const metodosConReferencia = ['zelle', 'pago móvil', 'transferencia'];
-  return metodosConReferencia.some(metodo => 
-    metodoPagoAbono.value.toLowerCase().includes(metodo.toLowerCase())
-  );
-});
-
-// Validaciones dinámicas
-const requiereReferencia = computed(() => {
-  const metodosConReferencia = ['zelle', 'pago móvil', 'transferencia'];
-  return metodosConReferencia.some(metodo => 
-    venta.value.metodo_pago.toLowerCase().includes(metodo.toLowerCase())
-  );
-});
-
-const requiereComentariosDescuento = computed(() => {
-  return venta.value.monto_descuento_usd > 0;
-});
-
-// Validación para referencias múltiples en pago mixto
-const requiereReferenciasMixtas = computed(() => {
-  if (venta.value.tipo_pago !== 'Mixto') return false;
-  
-  const necesitaReferenciaUSD = montoMixtoUSD.value > 0 && 
-    metodoPagoMixtoUSD.value === 'zelle' && 
-    !referenciaMixtoUSD.value.trim();
-  
-  const necesitaReferenciaVES = montoMixtoVES.value > 0 && 
-    (metodoPagoMixtoVES.value === 'pago_movil' || metodoPagoMixtoVES.value === 'transferencia') && 
-    !referenciaMixtoVES.value.trim();
-  
-  return necesitaReferenciaUSD || necesitaReferenciaVES;
-});
-
-// Variables computadas para abono
-const totalVenta = computed(() => total.value);
-
-const fechaMinima = computed(() => {
-  const hoy = new Date();
-  hoy.setDate(hoy.getDate() + 1); // Mínimo mañana
-  return hoy.toISOString().split('T')[0];
-});
-
-// Variables para manejo de abonos mejorado
-const tipoPagoAbono = ref('simple'); // 'simple' o 'mixto'
-
-// Variables para pago simple
-const metodoPagoAbono = ref('');
-const montoAbonoSimple = ref(0);
-
-// Variables para pago mixto
-const montoAbonoUSD = ref(0);
-const montoAbonoVES = ref(0);
-
-// Variables para pago mixto independiente
-const montoMixtoUSD = ref(0);
-const montoMixtoVES = ref(0);
-
-// Variables para referencias múltiples en pago mixto
-const referenciaMixtoUSD = ref('');
-const referenciaMixtoVES = ref('');
-
-// Variables para métodos de pago mixtos
-const metodoPagoMixtoUSD = ref('');
-const metodoPagoMixtoVES = ref('');
-
-// Opciones de métodos de pago para USD
-const opcionesMetodoPagoUSD = [
-  { value: 'zelle', label: 'Zelle' },
-  { value: 'efectivo', label: 'Efectivo' }
-];
-
-// Opciones de métodos de pago para VES
-const opcionesMetodoPagoVES = [
-  { value: 'pago_movil', label: 'Pago Móvil' },
-  { value: 'transferencia', label: 'Transferencia' }
-];
-
-// Cálculos para pago simple
-const conversionAbonoSimple = computed(() => {
-  if (!montoAbonoSimple.value || montoAbonoSimple.value <= 0) return '';
-  
-  const tasaBCV = venta.value.tasa_bcv || 160.0;
-  
-  // Los métodos en USD son: Efectivo y Zelle
-  const metodosUSD = ['efectivo', 'zelle'];
-  const esMetodoUSD = metodosUSD.some(metodo => 
-    metodoPagoAbono.value.toLowerCase().includes(metodo)
-  );
-  
-  if (esMetodoUSD) {
-    const montoVES = montoAbonoSimple.value * tasaBCV;
-    return `Equivale a Bs. ${montoVES.toFixed(2)}`;
-  } else {
-    // Es método VES (Pago Móvil, Transferencia)
-    const montoUSD = montoAbonoSimple.value / tasaBCV;
-    return `Equivale a $${montoUSD.toFixed(2)}`;
-  }
-});
-
-// Cálculos para pago mixto
-const totalAbonoMixto = computed(() => {
-  const montoUSD = montoAbonoUSD.value || 0;
-  const montoVESEnUSD = venta.value.tasa_bcv > 0 ? (montoAbonoVES.value || 0) / venta.value.tasa_bcv : 0;
-  return montoUSD + montoVESEnUSD;
-});
-
-// Total del abono calculado (para ambos tipos)
-const totalAbonoCalculado = computed(() => {
-  if (tipoPagoAbono.value === 'simple') {
-    // Los métodos en USD son: Efectivo y Zelle
-    // Los métodos en VES son: Pago Móvil y Transferencia
-    const metodosUSD = ['efectivo', 'zelle'];
-    const esMetodoUSD = metodosUSD.some(metodo => 
-      metodoPagoAbono.value.toLowerCase().includes(metodo)
-    );
-    
-    if (esMetodoUSD) {
-      return montoAbonoSimple.value || 0;
-    } else {
-      // Es método VES (Pago Móvil, Transferencia)
-      return venta.value.tasa_bcv > 0 ? (montoAbonoSimple.value || 0) / venta.value.tasa_bcv : 0;
-    }
-  } else {
-    return totalAbonoMixto.value;
-  }
-});
-
-// Cálculo para pago mixto independiente
-const totalMixtoCalculado = computed(() => {
-  const usdAmount = montoMixtoUSD.value || 0;
-  const vesAmount = montoMixtoVES.value || 0;
-  const vesInUSD = venta.value.tasa_bcv > 0 ? vesAmount / venta.value.tasa_bcv : 0;
-  return usdAmount + vesInUSD;
-});
-
-// Funciones para cálculo automático del pago mixto
-function calcularRestanteUSD() {
-  if (venta.value.tasa_bcv > 0 && montoMixtoUSD.value > 0) {
-    const totalVentaUSD = totalVenta.value;
-    const restanteUSD = totalVentaUSD - montoMixtoUSD.value;
-    
-    if (restanteUSD > 0) {
-      // Calcular el equivalente en VES
-      const restanteVES = restanteUSD * venta.value.tasa_bcv;
-      montoMixtoVES.value = Math.round(restanteVES * 100) / 100; // Redondear a 2 decimales
-    } else {
-      montoMixtoVES.value = 0;
-    }
-  }
-}
-
-function calcularRestanteVES() {
-  if (venta.value.tasa_bcv > 0 && montoMixtoVES.value > 0) {
-    const totalVentaUSD = totalVenta.value;
-    const vesEnUSD = montoMixtoVES.value / venta.value.tasa_bcv;
-    const restanteUSD = totalVentaUSD - vesEnUSD;
-    
-    if (restanteUSD > 0) {
-      montoMixtoUSD.value = Math.round(restanteUSD * 100) / 100; // Redondear a 2 decimales
-    } else {
-      montoMixtoUSD.value = 0;
-    }
-  }
-}
-
-// Funciones para cálculo automático del abono mixto
-function calcularRestanteAbonoUSD() {
-  if (venta.value.tasa_bcv > 0 && montoAbonoUSD.value > 0) {
-    const totalVentaUSD = totalVenta.value;
-    const restanteUSD = totalVentaUSD - montoAbonoUSD.value;
-    
-    if (restanteUSD > 0) {
-      // Calcular el equivalente en VES
-      const restanteVES = restanteUSD * venta.value.tasa_bcv;
-      montoAbonoVES.value = Math.round(restanteVES * 100) / 100; // Redondear a 2 decimales
-    } else {
-      montoAbonoVES.value = 0;
-    }
-  }
-}
-
-function calcularRestanteAbonoVES() {
-  if (venta.value.tasa_bcv > 0 && montoAbonoVES.value > 0) {
-    const totalVentaUSD = totalVenta.value;
-    const vesEnUSD = montoAbonoVES.value / venta.value.tasa_bcv;
-    const restanteUSD = totalVentaUSD - vesEnUSD;
-    
-    if (restanteUSD > 0) {
-      montoAbonoUSD.value = Math.round(restanteUSD * 100) / 100; // Redondear a 2 decimales
-    } else {
-      montoAbonoUSD.value = 0;
-    }
-  }
-}
-
-// Saldo pendiente actualizado
-const saldoPendiente = computed(() => {
-  return Math.max(0, totalVenta.value - totalAbonoCalculado.value);
-});
-
-// Validación de abono mejorada
-const esAbonoValido = computed(() => {
-  if (venta.value.tipo_pago !== 'Abono' && venta.value.metodo_pago !== 'Abono') return true;
-  
-  if (tipoPagoAbono.value === 'simple') {
-    const montoValido = montoAbonoSimple.value > 0 && totalAbonoCalculado.value <= totalVenta.value;
-    const metodoValido = metodoPagoAbono.value !== '';
-    const referenciaValida = !requiereReferenciaAbono.value || venta.value.referencia_pago.trim();
-    return montoValido && metodoValido && referenciaValida;
-  } else {
-    const montoValido = (montoAbonoUSD.value > 0 || montoAbonoVES.value > 0) && 
-                       totalAbonoCalculado.value <= totalVenta.value;
-    return montoValido;
-  }
-});
-
-// Validación para pago mixto independiente
-const esMixtoValido = computed(() => {
-  if (!venta.value.metodo_pago || venta.value.metodo_pago !== 'Mixto') return true;
-  
-  // Validar que al menos un monto esté ingresado
-  const tieneMontos = montoMixtoUSD.value > 0 || montoMixtoVES.value > 0;
-  
-  // Validar que si hay monto USD, tenga método de pago
-  const metodoPagoUSDValido = montoMixtoUSD.value <= 0 || metodoPagoMixtoUSD.value !== '';
-  
-  // Validar que si hay monto VES, tenga método de pago
-  const metodoPagoVESValido = montoMixtoVES.value <= 0 || metodoPagoMixtoVES.value !== '';
-  
-  // Validar que el total no exceda el total de la venta (con tolerancia para precisión decimal)
-  const totalValido = totalMixtoCalculado.value <= totalVenta.value + 0.01;
-  
-  // Validar referencias si son requeridas
-  const referenciaUSDValida = montoMixtoUSD.value <= 0 || 
-    metodoPagoMixtoUSD.value !== 'zelle' || 
-    referenciaMixtoUSD.value.trim() !== '';
-  
-  const referenciaVESValida = montoMixtoVES.value <= 0 || 
-    (metodoPagoMixtoVES.value !== 'pago_movil' && metodoPagoMixtoVES.value !== 'transferencia') || 
-    referenciaMixtoVES.value.trim() !== '';
-  
-  return tieneMontos && metodoPagoUSDValido && metodoPagoVESValido && totalValido && referenciaUSDValida && referenciaVESValida;
-});
-
-// Funciones para cálculos - simplificadas
-// Los cálculos ahora se manejan directamente en las computed properties
-
-// Funciones para manejar la selección de clientes
-function onClientSelected(client) {
-  venta.value.cliente_cedula = client.cedula_rif;
-  venta.value.cliente_nombre = client.nombre;
-  venta.value.cliente_apellido = client.apellido;
-  venta.value.cliente_telefono = client.telefono || '';
-  venta.value.cliente_email = client.email || '';
-  venta.value.cliente_direccion = client.direccion || '';
-}
-
-function onClientCleared() {
-  venta.value.cliente_cedula = '';
-  venta.value.cliente_nombre = '';
-  venta.value.cliente_apellido = '';
-  venta.value.cliente_telefono = '';
-  venta.value.cliente_email = '';
-  venta.value.cliente_direccion = '';
-}
-
-function abrirModalNuevoCliente() {
-  Swal.fire({
-    title: 'Nuevo Cliente',
-    html: `
-      <div class="mb-3">
-        <label class="form-label">Cédula/RIF *</label>
-        <input id="swal-cedula" class="form-control" placeholder="Ej: V12345678">
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Nombre *</label>
-        <input id="swal-nombre" class="form-control" placeholder="Nombre del cliente">
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Apellido</label>
-        <input id="swal-apellido" class="form-control" placeholder="Apellido del cliente">
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Teléfono</label>
-        <input id="swal-telefono" class="form-control" placeholder="Ej: 0412-1234567">
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Email</label>
-        <input id="swal-email" class="form-control" placeholder="cliente@email.com">
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Dirección</label>
-        <input id="swal-direccion" class="form-control" placeholder="Dirección del cliente">
-      </div>
-    `,
-    focusConfirm: false,
-    showCancelButton: true,
-    confirmButtonText: 'Guardar Cliente',
-    cancelButtonText: 'Cancelar',
-    preConfirm: () => {
-      const cedula = document.getElementById('swal-cedula').value;
-      const nombre = document.getElementById('swal-nombre').value;
-      const apellido = document.getElementById('swal-apellido').value;
-      const telefono = document.getElementById('swal-telefono').value;
-      const email = document.getElementById('swal-email').value;
-      const direccion = document.getElementById('swal-direccion').value;
-      
-      if (!cedula || !nombre) {
-        Swal.showValidationMessage('Cédula y nombre son obligatorios');
-        return false;
-      }
-      
-      return { cedula, nombre, apellido, telefono, email, direccion };
-    }
-  }).then(async (result) => {
-    if (result.isConfirmed) {
-      try {
-        // Aquí podrías agregar el cliente a la base de datos
-        // Por ahora, solo lo agregamos al formulario
-        venta.value.cliente_cedula = result.value.cedula;
-        venta.value.cliente_nombre = result.value.nombre;
-        venta.value.cliente_apellido = result.value.apellido;
-        venta.value.cliente_telefono = result.value.telefono;
-        venta.value.cliente_email = result.value.email;
-        venta.value.cliente_direccion = result.value.direccion;
-        
-        // Actualizar la lista de clientes
-        clientes.value = await getClientes();
-        
-        Swal.fire('¡Éxito!', 'Cliente creado y seleccionado', 'success');
-      } catch (error) {
-        console.error('Error al crear cliente:', error);
-        Swal.fire('Error', 'No se pudo crear el cliente', 'error');
-      }
-    }
-  });
-}
-
-// Funciones para manejar la selección de productos
-function onProductSelected(product) {
-  productoSeleccionado.value = product;
-  precioSeleccionado.value = product.precio_usd;
-  // El precio no es editable para productos de inventario
-  precioEditable.value = false;
-}
-
-function onProductCleared() {
-  productoSeleccionado.value = null;
-  precioSeleccionado.value = 0;
-  // El precio vuelve a ser editable cuando no hay producto seleccionado
-  precioEditable.value = true;
-}
-
-function agregarProducto() {
-  if (!productoSeleccionado.value || cantidadSeleccionada.value < 1) {
-    Swal.fire('Atención', 'Selecciona un producto y una cantidad válida.', 'warning');
-    return;
-  }
-  
-  if (cantidadSeleccionada.value > productoSeleccionado.value.stock_actual) {
-    Swal.fire('Stock Insuficiente', `Solo quedan ${productoSeleccionado.value.stock_actual} unidades.`, 'error');
-    return;
-  }
-  
-  if (precioSeleccionado.value <= 0) {
-    Swal.fire('Error', 'El precio debe ser mayor a 0.', 'error');
-    return;
-  }
-  
-  const productoExistente = detallesPedido.value.find(item => item.id === productoSeleccionado.value.id);
-  
-  if (productoExistente) {
-    productoExistente.cantidad += cantidadSeleccionada.value;
-    productoExistente.precio_unitario = precioSeleccionado.value;
-  } else {
-    detallesPedido.value.push({
-      id: productoSeleccionado.value.id,
-      nombre: productoSeleccionado.value.nombre,
-      sku: productoSeleccionado.value.sku,
-      cantidad: cantidadSeleccionada.value,
-      precio_unitario: precioSeleccionado.value,
-      es_manual: false
-    });
-  }
-  
-  limpiarSeleccionProducto();
-}
-
-function agregarProductoManual() {
-  if (!productoManual.value.descripcion.trim() || productoManual.value.cantidad < 1 || productoManual.value.precio <= 0) {
-    Swal.fire('Error', 'Completa todos los campos del producto manual.', 'error');
-    return;
-  }
-  
-  const idManual = `MANUAL-${Date.now()}`;
-  detallesPedido.value.push({
-    id: idManual,
-    nombre: productoManual.value.descripcion,
-    sku: 'MANUAL',
-    cantidad: productoManual.value.cantidad,
-    precio_unitario: productoManual.value.precio,
-    es_manual: true
-  });
-  
-  limpiarProductoManual();
-}
-
-function limpiarSeleccionProducto() {
-  productoSeleccionado.value = null;
-  cantidadSeleccionada.value = 1;
-  precioSeleccionado.value = 0;
-  // Limpiar también el componente de búsqueda
-  if (productSearchRef.value) {
-    productSearchRef.value.clearSelection();
-  }
-}
-
-// Funciones para modal de producto manual
-function abrirModalProductoManual() {
-  mostrarModalProductoManual.value = true;
-  // Limpiar datos del modal
-  productoManual.value = {
-    descripcion: '',
-    precio: 0,
-    cantidad: 1
-  };
-}
-
-function cerrarModalProductoManual() {
-  mostrarModalProductoManual.value = false;
-}
-
-function limpiarProductoManual() {
-  productoManual.value = {
-    descripcion: '',
-    precio: 0,
-    cantidad: 1
-  };
-  cerrarModalProductoManual();
-}
-
-function eliminarProducto(index) {
-  Swal.fire({
-    title: '¿Eliminar producto?',
-    text: 'Esta acción no se puede deshacer',
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#d33',
-    cancelButtonColor: '#3085d6',
-    confirmButtonText: 'Sí, eliminar',
-    cancelButtonText: 'Cancelar'
-  }).then((result) => {
-    if (result.isConfirmed) {
-  detallesPedido.value.splice(index, 1);
-    }
-  });
-}
-
-// Funciones para control de cantidad
-function incrementarCantidad() {
-  if (cantidadSeleccionada.value < 999) {
-    cantidadSeleccionada.value++;
-  }
-}
-
-function decrementarCantidad() {
-  if (cantidadSeleccionada.value > 1) {
-    cantidadSeleccionada.value--;
-  }
-}
-
-function incrementarCantidadItem(index) {
-  if (detallesPedido.value[index].cantidad < 999) {
-    detallesPedido.value[index].cantidad++;
-  }
-}
-
-function decrementarCantidadItem(index) {
-  if (detallesPedido.value[index].cantidad > 1) {
-    detallesPedido.value[index].cantidad--;
-  }
-}
-
-function modificarCantidad(index, cambio) {
-  const item = detallesPedido.value[index];
-  const nuevaCantidad = item.cantidad + cambio;
-  
-  if (nuevaCantidad < 1) return;
-  
-  // Validar stock para productos de inventario
-  if (!item.es_manual) {
-    const producto = productos.value.find(p => p.id === item.id);
-    if (producto && nuevaCantidad > producto.stock_actual) {
-      Swal.fire('Stock Insuficiente', `Solo quedan ${producto.stock_actual} unidades.`, 'error');
-      return;
-    }
-  }
-  
-  item.cantidad = nuevaCantidad;
-}
-
-function validarCantidad(index) {
-  const item = detallesPedido.value[index];
-  
-  if (item.cantidad < 1) {
-    item.cantidad = 1;
-  }
-  
-  // Validar stock para productos de inventario
-  if (!item.es_manual) {
-    const producto = productos.value.find(p => p.id === item.id);
-    if (producto && item.cantidad > producto.stock_actual) {
-      Swal.fire('Stock Insuficiente', `Solo quedan ${producto.stock_actual} unidades.`, 'error');
-      item.cantidad = producto.stock_actual;
-    }
-  }
-}
-
-// Funciones para forzar enteros en cantidades
-function forzarEntero(event, index) {
-  const value = parseFloat(event.target.value);
-  if (!isNaN(value)) {
-    const entero = Math.floor(value);
-    if (entero < 1) {
-      detallesPedido.value[index].cantidad = 1;
-    } else {
-      detallesPedido.value[index].cantidad = entero;
-    }
-  }
-}
-
-function forzarEnteroSeleccionado(event) {
-  const value = parseFloat(event.target.value);
-  if (!isNaN(value)) {
-    const entero = Math.floor(value);
-    if (entero < 1) {
-      cantidadSeleccionada.value = 1;
-    } else {
-      cantidadSeleccionada.value = entero;
-    }
-  }
-}
-
-function forzarEnteroManual(event) {
-  const value = parseFloat(event.target.value);
-  if (!isNaN(value)) {
-    const entero = Math.floor(value);
-    if (entero < 1) {
-      productoManual.value.cantidad = 1;
-    } else {
-      productoManual.value.cantidad = entero;
-    }
-  }
-}
-
-// Función para permitir solo números en cantidades
-function soloNumeros(event) {
-  // Permitir teclas de control (backspace, delete, tab, escape, enter)
-  if ([8, 9, 27, 13, 46].indexOf(event.keyCode) !== -1 ||
-      // Permitir Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
-      (event.keyCode === 65 && event.ctrlKey === true) ||
-      (event.keyCode === 67 && event.ctrlKey === true) ||
-      (event.keyCode === 86 && event.ctrlKey === true) ||
-      (event.keyCode === 88 && event.ctrlKey === true) ||
-      // Permitir teclas de navegación (flechas, home, end)
-      (event.keyCode >= 35 && event.keyCode <= 40)) {
-    return;
-  }
-  
-  // Solo permitir números (0-9)
-  if ((event.shiftKey || (event.keyCode < 48 || event.keyCode > 57)) && (event.keyCode < 96 || event.keyCode > 105)) {
-    event.preventDefault();
-  }
-}
-
-function validarPrecio(index) {
-  const item = detallesPedido.value[index];
-  
-  if (item.precio_unitario < 0) {
-    item.precio_unitario = 0;
-  }
-}
-
-// Función para validar la tasa BCV
-function validarTasaBCV() {
-  if (venta.value.tasa_bcv < 0) {
-    venta.value.tasa_bcv = 160.0;
-  }
-  if (!venta.value.tasa_bcv || venta.value.tasa_bcv === 0) {
-    venta.value.tasa_bcv = 160.0;
-  }
-}
-
-// Funciones de búsqueda de clientes
-async function buscarClientePorCedula() {
-  if (!venta.value.cliente_cedula.trim()) return;
-  
-  try {
-    // Buscar cliente por cédula
-    const clienteEncontrado = await buscarClienteEnBD(venta.value.cliente_cedula);
-    if (clienteEncontrado) {
-      venta.value.cliente_nombre = clienteEncontrado.nombre;
-      venta.value.cliente_apellido = clienteEncontrado.apellido;
-      venta.value.cliente_telefono = clienteEncontrado.telefono;
-      venta.value.cliente_email = clienteEncontrado.email;
-      venta.value.cliente_direccion = clienteEncontrado.direccion;
-      
-      // Mostrar mensaje de éxito
-      Swal.fire({
-        title: '¡Cliente Encontrado!',
-        text: `${clienteEncontrado.nombre} ${clienteEncontrado.apellido}`,
-        icon: 'success',
-        timer: 2000,
-        showConfirmButton: false
-      });
-    } else {
-      // Mostrar mensaje de que no se encontró
-      Swal.fire({
-        title: 'Cliente No Encontrado',
-        text: 'No se encontró un cliente con esa cédula. Puedes crear uno nuevo.',
-        icon: 'info',
-        confirmButtonText: 'Crear Nuevo Cliente',
-        showCancelButton: true,
-        cancelButtonText: 'Cancelar'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          nuevoCliente();
-        }
-      });
-    }
-  } catch (error) {
-    console.log('Error al buscar cliente:', error);
-    Swal.fire({
-      title: 'Error',
-      text: 'Hubo un error al buscar el cliente',
-      icon: 'error'
-    });
-  }
-}
-
-async function buscarClienteEnBD(cedula) {
-  // Buscar en la lista de clientes cargada
-  const cliente = clientes.value.find(c => 
-    c.cedula_rif.toLowerCase() === cedula.toLowerCase()
-  );
-  
-  if (cliente) {
-    console.log('Cliente encontrado:', cliente);
-    return cliente;
-  }
-  
-  console.log('Cliente no encontrado para cédula:', cedula);
-  return null;
-}
-
-async function buscarClientePorCriterio(criterio) {
-  // Buscar en la lista de clientes cargada
-  const cliente = clientes.value.find(c => 
-    c.cedula_rif.toLowerCase().includes(criterio.toLowerCase()) ||
-    c.nombre.toLowerCase().includes(criterio.toLowerCase()) ||
-    c.apellido.toLowerCase().includes(criterio.toLowerCase()) ||
-    (c.telefono && c.telefono.includes(criterio))
-  );
-  
-  if (cliente) {
-    console.log('Cliente encontrado:', cliente);
-    return cliente;
-  }
-  
-  console.log('Cliente no encontrado para criterio:', criterio);
-  return null;
-}
-
-// Funciones para autocompletado de cliente
-function buscarClientesEnTiempoReal() {
-  console.log('🔍 Función de búsqueda llamada');
-  console.log('📝 Query actual:', clienteSearchQuery.value);
-  console.log('👥 Clientes disponibles:', clientes.value);
-  
-  if (!clienteSearchQuery.value || !clienteSearchQuery.value.trim()) {
-    console.log('❌ Query vacío, limpiando resultados');
-    resultadosBusqueda.value = [];
-    return;
-  }
-  
-  const query = clienteSearchQuery.value.trim();
-  console.log('🔍 Buscando con query:', query);
-  
-  if (!clientes.value || clientes.value.length === 0) {
-    console.log('❌ No hay clientes cargados');
-    resultadosBusqueda.value = [];
-    return;
-  }
-  
-  const resultados = clientes.value.filter(cliente => {
-    if (!cliente) return false;
-    
-    const nombre = (cliente.nombre || '').toLowerCase();
-    const apellido = (cliente.apellido || '').toLowerCase();
-    const cedula = (cliente.cedula_rif || '').toLowerCase();
-    const telefono = (cliente.telefono || '').toLowerCase();
-    const queryLower = query.toLowerCase();
-    
-    const matchNombre = nombre.includes(queryLower);
-    const matchApellido = apellido.includes(queryLower);
-    const matchCedula = cedula.includes(queryLower);
-    const matchTelefono = telefono.includes(queryLower);
-    
-    const match = matchNombre || matchApellido || matchCedula || matchTelefono;
-    
-    if (match) {
-      console.log(`✅ Cliente encontrado: ${cliente.nombre} ${cliente.apellido} (${cliente.cedula_rif})`);
-    }
-    
-    return match;
-  });
-  
-  resultadosBusqueda.value = resultados.slice(0, 10);
-  console.log('📋 Resultados finales:', resultadosBusqueda.value.length, 'clientes');
-}
-
-function seleccionarCliente(cliente) {
-  // Llenar los campos del formulario
-  venta.value.cliente_cedula = cliente.cedula_rif;
-  venta.value.cliente_nombre = cliente.nombre;
-  venta.value.cliente_apellido = cliente.apellido;
-  venta.value.cliente_telefono = cliente.telefono;
-  venta.value.cliente_email = cliente.email;
-  venta.value.cliente_direccion = cliente.direccion;
-  
-  // Limpiar búsqueda y ocultar resultados
-  clienteSearchQuery.value = '';
-  resultadosBusqueda.value = [];
-  mostrarResultados.value = false;
-  
-  // Mostrar confirmación
-  showSuccess('Cliente Seleccionado', `${cliente.nombre} ${cliente.apellido}`);
-}
-
-function limpiarBusquedaCliente() {
-  clienteSearchQuery.value = '';
-  resultadosBusqueda.value = [];
-  mostrarResultados.value = false;
-}
-
-function quitarClienteSeleccionado() {
-  // Limpiar todos los datos del cliente
-  venta.value.cliente_cedula = '';
-  venta.value.cliente_nombre = '';
-  venta.value.cliente_apellido = '';
-  venta.value.cliente_telefono = '';
-  venta.value.cliente_email = '';
-  venta.value.cliente_direccion = '';
-  
-  // Limpiar también la búsqueda
-  clienteSearchQuery.value = '';
-  resultadosBusqueda.value = [];
-  mostrarResultados.value = false;
-  
-  // Mostrar confirmación
-  showSuccess('Cliente Removido', 'El cliente ha sido removido de la venta');
-}
-
-function ocultarResultados() {
-  // Delay para permitir el click en los resultados
-  setTimeout(() => {
-    mostrarResultados.value = false;
-  }, 200);
-}
-
-function buscarCliente() {
-  Swal.fire({
-    title: 'Buscar Cliente',
-    input: 'text',
-    inputPlaceholder: 'Ingresa cédula, nombre o teléfono',
-    showCancelButton: true,
-    confirmButtonText: 'Buscar',
-    cancelButtonText: 'Cancelar',
-    inputValidator: (value) => {
-      if (!value) {
-        return 'Debes ingresar un criterio de búsqueda';
-      }
-    }
-  }).then(async (result) => {
-    if (result.isConfirmed && result.value) {
-      const criterio = result.value.trim();
-      
-      // Buscar cliente por diferentes criterios
-      const clienteEncontrado = await buscarClientePorCriterio(criterio);
-      
-      if (clienteEncontrado) {
-        // Llenar los campos del formulario
-        venta.value.cliente_cedula = clienteEncontrado.cedula_rif;
-        venta.value.cliente_nombre = clienteEncontrado.nombre;
-        venta.value.cliente_apellido = clienteEncontrado.apellido;
-        venta.value.cliente_telefono = clienteEncontrado.telefono;
-        venta.value.cliente_email = clienteEncontrado.email;
-        venta.value.cliente_direccion = clienteEncontrado.direccion;
-        
-        Swal.fire({
-          title: '¡Cliente Encontrado!',
-          text: `${clienteEncontrado.nombre} ${clienteEncontrado.apellido}`,
-          icon: 'success',
-          timer: 2000
-        });
-      } else {
-        Swal.fire({
-          title: 'Cliente No Encontrado',
-          text: 'No se encontró ningún cliente con ese criterio',
-          icon: 'info',
-          confirmButtonText: 'Crear Nuevo Cliente',
-          showCancelButton: true,
-    cancelButtonText: 'Cancelar'
-  }).then((result) => {
-          if (result.isConfirmed) {
-            nuevoCliente();
-          }
-        });
-      }
-    }
-  });
-}
-
-function nuevoCliente() {
-  Swal.fire({
-    title: 'Nuevo Cliente',
-    html: `
-      <div class="text-start">
-        <div class="mb-3">
-          <label class="form-label">Cédula/RIF *</label>
-          <input type="text" class="form-control" id="nueva-cedula" required>
-        </div>
-        <div class="mb-3">
-          <label class="form-label">Nombre *</label>
-          <input type="text" class="form-control" id="nuevo-nombre" required>
-        </div>
-        <div class="mb-3">
-          <label class="form-label">Apellido</label>
-          <input type="text" class="form-control" id="nuevo-apellido">
-        </div>
-        <div class="mb-3">
-          <label class="form-label">Teléfono</label>
-          <input type="tel" class="form-control" id="nuevo-telefono">
-        </div>
-        <div class="mb-3">
-          <label class="form-label">Email</label>
-          <input type="email" class="form-control" id="nuevo-email">
-        </div>
-        <div class="mb-3">
-          <label class="form-label">Dirección</label>
-          <input type="text" class="form-control" id="nueva-direccion">
-        </div>
-      </div>
-    `,
-    showCancelButton: true,
-    confirmButtonText: 'Guardar',
-    cancelButtonText: 'Cancelar',
-    preConfirm: () => {
-      const cedula = document.getElementById('nueva-cedula').value;
-      const nombre = document.getElementById('nuevo-nombre').value;
-      const apellido = document.getElementById('nuevo-apellido').value;
-      const telefono = document.getElementById('nuevo-telefono').value;
-      const email = document.getElementById('nuevo-email').value;
-      const direccion = document.getElementById('nueva-direccion').value;
-      
-      if (!cedula || !nombre) {
-        Swal.showValidationMessage('Cédula y nombre son obligatorios');
-        return false;
-      }
-      
-      return { cedula, nombre, apellido, telefono, email, direccion };
-    }
-  }).then((result) => {
-    if (result.isConfirmed) {
-      const cliente = result.value;
-      venta.value.cliente_cedula = cliente.cedula;
-      venta.value.cliente_nombre = cliente.nombre;
-      venta.value.cliente_apellido = cliente.apellido;
-      venta.value.cliente_telefono = cliente.telefono;
-      venta.value.cliente_email = cliente.email;
-      venta.value.cliente_direccion = cliente.direccion;
-      
-      Swal.fire('¡Éxito!', 'Cliente agregado correctamente', 'success');
-    }
-  });
-}
-
-function resetForm() {
-  venta.value = getInitialVentaState();
-  detallesPedido.value = [];
-  limpiarSeleccionProducto();
-  limpiarProductoManual();
-  
-  // Limpiar campos de abono mejorado
-  tipoPagoAbono.value = 'simple';
-  metodoPagoAbono.value = '';
-  montoAbonoSimple.value = 0;
-  montoAbonoUSD.value = 0;
-  montoAbonoVES.value = 0;
-  
-  // Limpiar campos de pago mixto independiente
-  montoMixtoUSD.value = 0;
-  montoMixtoVES.value = 0;
-  referenciaMixtoUSD.value = '';
-  referenciaMixtoVES.value = '';
-  metodoPagoMixtoUSD.value = '';
-  metodoPagoMixtoVES.value = '';
-  
-  // Limpiar checkboxes de servicios
-  quiereDelivery.value = false;
-  quiereDescuento.value = false;
-  descuentoPorcentaje.value = true; // Por defecto porcentaje
-}
-
-async function handleSubmit() {
-  try {
-  // Validaciones
-  if (detallesPedido.value.length === 0) {
-      await showError('Error', 'Debes añadir al menos un producto.');
-    return;
-  }
-  
-  if (!venta.value.cliente_cedula.trim() || !venta.value.cliente_nombre.trim()) {
-    showError('Error', 'Cédula y nombre del cliente son obligatorios.');
-    return;
-  }
-  
-  if (!venta.value.metodo_pago && !venta.value.tipo_pago) {
-      await Swal.fire({
-        title: 'Error',
-        text: 'Debes seleccionar un método de pago.',
-        icon: 'error',
-        confirmButtonText: 'Entendido'
-      });
-    return;
-  }
-  
-  // Validación dinámica de referencia
-  if (requiereReferencia.value && !venta.value.referencia_pago.trim()) {
-      await Swal.fire({
-        title: 'Error',
-        text: 'La referencia es obligatoria para este método de pago.',
-        icon: 'error',
-        confirmButtonText: 'Entendido'
-      });
-    return;
-  }
-  
-  // Validación de referencias múltiples para pago mixto
-  if (requiereReferenciasMixtas.value) {
-    let mensajeError = 'Error en las referencias del pago mixto:';
-    
-    if (montoMixtoUSD.value > 0 && metodoPagoMixtoUSD.value === 'zelle' && !referenciaMixtoUSD.value.trim()) {
-      mensajeError += '\n• La referencia USD es obligatoria para Zelle';
-    }
-    
-    if (montoMixtoVES.value > 0 && (metodoPagoMixtoVES.value === 'pago_movil' || metodoPagoMixtoVES.value === 'transferencia') && !referenciaMixtoVES.value.trim()) {
-      mensajeError += '\n• La referencia VES es obligatoria para Pago Móvil/Transferencia';
-    }
-    
-    await Swal.fire({
-      title: 'Error',
-      text: mensajeError,
-      icon: 'error',
-      confirmButtonText: 'Entendido'
-    });
-    return;
-  }
-  
-  // Validación dinámica de comentarios por descuento
-  if (requiereComentariosDescuento.value && !venta.value.comentarios.trim()) {
-      await Swal.fire({
-        title: 'Error',
-        text: 'Los comentarios son obligatorios cuando se aplica descuento.',
-        icon: 'error',
-        confirmButtonText: 'Entendido'
-      });
-    return;
-  }
-  
-  // Si hay descuento, usar los comentarios generales como motivo del descuento
-  if (venta.value.monto_descuento_usd > 0 && venta.value.comentarios.trim()) {
-    venta.value.comentarios_descuento = venta.value.comentarios;
-  }
-  
-  if (venta.value.tasa_bcv <= 0) {
-      await Swal.fire({
-        title: 'Error',
-        text: 'La tasa BCV debe ser mayor a 0.',
-        icon: 'error',
-        confirmButtonText: 'Entendido'
-      });
-    return;
-  }
-  
-  // Validaciones específicas para abono mejorado
-  if (venta.value.tipo_pago === 'Abono' || venta.value.metodo_pago === 'Abono') {
-    if (!esAbonoValido.value) {
-      let mensajeError = 'Error en la configuración del abono:';
-      
-      if (tipoPagoAbono.value === 'simple') {
-        if (!metodoPagoAbono.value) mensajeError += '\n• Debe seleccionar un método de pago';
-        if (montoAbonoSimple.value <= 0) mensajeError += '\n• El monto del abono debe ser mayor a 0';
-        if (requiereReferenciaAbono.value && !venta.value.referencia_pago.trim()) mensajeError += '\n• La referencia del abono es obligatoria';
-      } else {
-        if (montoAbonoUSD.value <= 0 && montoAbonoVES.value <= 0) {
-          mensajeError += '\n• Debe ingresar al menos un monto (USD o VES)';
-        }
-      }
-      
-      if (!venta.value.fecha_vencimiento) mensajeError += '\n• Debe seleccionar una fecha de vencimiento';
-      if (totalAbonoCalculado.value > totalVenta.value) {
-        mensajeError += `\n• El total del abono ($${totalAbonoCalculado.value.toFixed(2)}) no puede exceder el total de la venta ($${totalVenta.value.toFixed(2)})`;
-      }
-      
-      await Swal.fire({
-        title: 'Error',
-        text: mensajeError,
-        icon: 'error',
-        confirmButtonText: 'Entendido'
-      });
-      return;
-    }
-  }
-  
-  // Validaciones específicas para pago mixto independiente
-  if (venta.value.metodo_pago === 'Mixto') {
-    if (!esMixtoValido.value) {
-      let mensajeError = 'Error en la configuración del pago mixto:';
-      
-      if (montoMixtoUSD.value <= 0 && montoMixtoVES.value <= 0) {
-        mensajeError += '\n• Debe ingresar al menos un monto (USD o VES)';
-      }
-      
-      if (montoMixtoUSD.value > 0 && !metodoPagoMixtoUSD.value) {
-        mensajeError += '\n• Debe seleccionar un método de pago para USD';
-      }
-      
-      if (montoMixtoVES.value > 0 && !metodoPagoMixtoVES.value) {
-        mensajeError += '\n• Debe seleccionar un método de pago para VES';
-      }
-      
-      if (montoMixtoUSD.value > 0 && metodoPagoMixtoUSD.value === 'zelle' && !referenciaMixtoUSD.value.trim()) {
-        mensajeError += '\n• La referencia para Zelle (USD) es obligatoria';
-      }
-      
-      if (montoMixtoVES.value > 0 && (metodoPagoMixtoVES.value === 'pago_movil' || metodoPagoMixtoVES.value === 'transferencia') && !referenciaMixtoVES.value.trim()) {
-        mensajeError += '\n• La referencia para ' + (metodoPagoMixtoVES.value === 'pago_movil' ? 'Pago Móvil' : 'Transferencia') + ' (VES) es obligatoria';
-      }
-      
-      // Usar tolerancia de 0.01 para errores de precisión decimal
-      if (totalMixtoCalculado.value > totalVenta.value + 0.01) {
-        mensajeError += `\n• El total del pago mixto ($${totalMixtoCalculado.value.toFixed(2)}) no puede ser mayor al total de la venta ($${totalVenta.value.toFixed(2)})`;
-      }
-      
-      await Swal.fire({
-        title: 'Error',
-        text: mensajeError,
-        icon: 'error',
-        confirmButtonText: 'Entendido'
-      });
-      return;
-    }
-  }
-  
-  isSubmitting.value = true;
-  
-  const payload = {
-    // Datos del cliente
-    cliente_cedula: venta.value.cliente_cedula,
-    cliente_nombre: venta.value.cliente_nombre,
-    cliente_apellido: venta.value.cliente_apellido,
-    cliente_telefono: venta.value.cliente_telefono,
-    cliente_email: venta.value.cliente_email,
-    cliente_direccion: venta.value.cliente_direccion,
-    
-    // Configuración de la venta
-    metodo_pago: venta.value.tipo_pago === 'Abono' ? 'Abono' : venta.value.metodo_pago,
-    tipo_pago: venta.value.tipo_pago || venta.value.metodo_pago, // Asegurar que tipo_pago esté definido
-    referencia_pago: venta.value.referencia_pago,
-    tasa_bcv: venta.value.tasa_bcv,
-    estado_entrega: venta.value.entrega_inmediata ? 'entregado' : 'pendiente',
-    aplica_iva: venta.value.aplica_iva,
-    
-    // Datos del abono mejorado (si aplica)
-    es_abono: venta.value.metodo_pago === 'Abono' || venta.value.tipo_pago === 'Abono',
-    tipo_pago_abono: (venta.value.metodo_pago === 'Abono' || venta.value.tipo_pago === 'Abono') ? tipoPagoAbono.value : null,
-    
-    // Datos para pago simple
-    metodo_pago_abono: (venta.value.metodo_pago === 'Abono' || venta.value.tipo_pago === 'Abono') && tipoPagoAbono.value === 'simple' ? 
-      metodoPagoAbono.value : null,
-    monto_abono_simple: (venta.value.metodo_pago === 'Abono' || venta.value.tipo_pago === 'Abono') && tipoPagoAbono.value === 'simple' ? 
-      montoAbonoSimple.value : 0,
-    
-    // Datos para pago mixto
-    monto_abono_usd: (venta.value.metodo_pago === 'Abono' || venta.value.tipo_pago === 'Abono') && tipoPagoAbono.value === 'mixto' ? 
-      montoAbonoUSD.value : 0,
-    monto_abono_ves: (venta.value.metodo_pago === 'Abono' || venta.value.tipo_pago === 'Abono') && tipoPagoAbono.value === 'mixto' ? 
-      montoAbonoVES.value : 0,
-    
-    // Total del abono calculado
-    total_abono_usd: (venta.value.metodo_pago === 'Abono' || venta.value.tipo_pago === 'Abono') ? totalAbonoCalculado.value : 0,
-    fecha_vencimiento: venta.value.fecha_vencimiento || null,
-    
-    // Datos del pago mixto independiente (si aplica)
-    es_pago_mixto: venta.value.metodo_pago === 'Mixto',
-    monto_mixto_usd: venta.value.metodo_pago === 'Mixto' ? montoMixtoUSD.value : 0,
-    monto_mixto_ves: venta.value.metodo_pago === 'Mixto' ? montoMixtoVES.value : 0,
-    total_mixto_usd: venta.value.metodo_pago === 'Mixto' ? totalMixtoCalculado.value : 0,
-    referencia_mixto_usd: venta.value.metodo_pago === 'Mixto' ? referenciaMixtoUSD.value : '',
-    referencia_mixto_ves: venta.value.metodo_pago === 'Mixto' ? referenciaMixtoVES.value : '',
-    metodo_pago_mixto_usd: venta.value.metodo_pago === 'Mixto' ? metodoPagoMixtoUSD.value : '',
-    metodo_pago_mixto_ves: venta.value.metodo_pago === 'Mixto' ? metodoPagoMixtoVES.value : '',
-    
-    // Totales
-    monto_descuento_usd: montoDescuentoCalculado.value || 0,
-    monto_delivery_usd: venta.value.monto_delivery_usd || 0,
-    monto_iva_usd: ivaCalculado.value || 0,
-    subtotal_usd: subtotal.value || 0,
-    total_usd: total.value || 0,
-    comentarios_descuento: venta.value.comentarios_descuento,
-    comentarios_delivery: '',
-    comentarios_generales: venta.value.comentarios,
-    
-    // Productos
-    productos: detallesPedido.value.map(item => ({
-      id: item.es_manual ? null : item.id, // null para productos manuales
-      cantidad: item.cantidad,
-      precio_unitario: item.precio_unitario,
-      nombre: item.nombre,
-      sku: item.sku || 'N/A',
-      es_manual: item.es_manual || false
-    }))
-  };
-  
-  try {
-    const resultado = await createSale(payload);
-      await Swal.fire({
-      title: '¡Venta Registrada!',
-      text: `Venta #${resultado} procesada correctamente`,
-      icon: 'success',
-      confirmButtonText: 'Continuar'
-    });
-    resetForm();
-  } catch (error) {
-    console.error("Error al procesar la venta:", error);
-      await Swal.fire({
-        title: 'Error',
-        text: `No se pudo procesar la venta: ${error.message}`,
-        icon: 'error',
-        confirmButtonText: 'Entendido'
-      });
-  } finally {
-      isSubmitting.value = false;
-    }
-  } catch (validationError) {
-    console.error("Error de validación:", validationError);
-    isSubmitting.value = false;
-  }
-}
-</script>
-<style scoped>
-/* Estilos para el resumen dinámico */
-.payment-info-section {
-  margin-top: 0.75rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid #E8F5E8;
-}
-
-.payment-method-info,
-.payment-reference-info,
-.delivery-status-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.25rem;
-  font-size: 0.85rem;
-}
-
-/* Estilos para desglose de pago mixto */
-.mixed-payment-breakdown {
-  margin-bottom: 0.5rem;
-}
-
-.mixed-method-title {
-  margin-bottom: 0.5rem;
-}
-
-.mixed-amounts-display {
-  background: #f8f9fa;
-  border-radius: 6px;
-  padding: 0.5rem;
-  margin-bottom: 0.25rem;
-}
-
-.mixed-amount-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.25rem;
-  font-size: 0.8rem;
-}
-
-.mixed-amount-item:last-child {
-  margin-bottom: 0;
-}
-
-.currency-label {
-  color: #4A7C4A;
-  font-weight: 600;
-  min-width: 40px;
-}
-
-.currency-value {
-  font-weight: 600;
-  color: #2d5a2d;
-}
-
-.method-detail {
-  color: #6c757d;
-  font-size: 0.75rem;
-  font-style: italic;
-}
-
-.mixed-references {
-  background: #f1f8f1;
-  border-radius: 4px;
-  padding: 0.4rem;
-  margin-bottom: 0.25rem;
-}
-
-.ref-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.2rem;
-  font-size: 0.8rem;
-}
-
-.ref-item:last-child {
-  margin-bottom: 0;
-}
-
-.ref-label {
-  color: #4A7C4A;
-  font-weight: 500;
-  font-size: 0.75rem;
-}
-
-.ref-value {
-  color: #666;
-  font-family: monospace;
-  font-size: 0.75rem;
-}
-
-.info-label {
-  color: #4A7C4A;
-  font-weight: 500;
-}
-
-.info-value {
-  color: #2D5A2D;
-  font-weight: 600;
-}
-
-/* Estilos para el toggle de descuento */
-.discount-toggle {
-  margin-bottom: 0.5rem;
-}
-
-.toggle-label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9rem;
-  color: #4A7C4A;
-  cursor: pointer;
-}
-
-.toggle-label input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-}
-
-.toggle-text {
-  font-weight: 500;
-  color: #1a1a1a;
-}
-
-fieldset { border: 1px solid #dee2e6 !important; }
-legend { font-size: 1rem; font-weight: 600; }
-</style>

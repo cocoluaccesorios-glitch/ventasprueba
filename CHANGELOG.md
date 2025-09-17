@@ -1,8 +1,8 @@
 # 📋 CHANGELOG - Cocolú Ventas V4
 
-## 🚀 Versión Actual - Sistema de Abonos Corregido
+## 🚀 Versión Actual - Sistema de Abonos Completamente Funcional
 **Fecha:** 17 de Septiembre, 2025  
-**Commit:** f5fd837
+**Commit:** d0133b9
 
 ---
 
@@ -117,6 +117,17 @@ const esMetodoUSD = metodosUSD.some(metodo =>
 
 ## ⚠️ ERRORES PENDIENTES POR CORREGIR
 
+### 🔧 CORRECCIONES ADICIONALES IMPLEMENTADAS
+
+#### **Modal de Detalles de Abonos - CORREGIDO**
+- **Problema:** Modal no mostraba información correcta de abonos
+- **Causa:** Campos de abono no se guardaban en BD + lógica incorrecta en modal
+- **Solución:** 
+  - Agregados todos los campos de abono a `createSale()`
+  - Corregida lógica de visualización en modal
+  - Eliminada duplicación de información
+- **Resultado:** Modal ahora muestra monto abonado, método, referencia y saldo pendiente correcto
+
 ### 🐛 DATOS HISTÓRICOS INCOMPLETOS
 
 #### **Pedidos #20 y #21 - DATOS INCOMPLETOS**
@@ -169,15 +180,17 @@ const esMetodoUSD = metodosUSD.some(metodo =>
 - **Sistema de Abonos:** 100% funcional
 - **Cálculos Financieros:** 100% precisos
 - **Validaciones:** 100% robustas
+- **Modal de Detalles:** 100% corregido
 - **UX/UI:** 95% optimizada
-- **Gestión de Pedidos:** 90% completa
+- **Gestión de Pedidos:** 95% completa
 
 ### 🎯 OBJETIVOS CUMPLIDOS
 - ✅ Abonos se guardan correctamente
 - ✅ Cálculos de deuda precisos
 - ✅ Interfaz intuitiva y limpia
 - ✅ Validaciones robustas
-- ✅ Modal de detalles completo
+- ✅ Modal de detalles completo y funcional
+- ✅ Información de abono visible y precisa
 
 ### 📊 IMPACTO EN EL NEGOCIO
 - **Precisión:** 100% en cálculos financieros

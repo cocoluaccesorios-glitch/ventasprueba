@@ -7,11 +7,11 @@
         <div class="brand-section">
           <div class="brand-icon">
             <i class="bi bi-lightning-charge-fill"></i>
-            </div>
+      </div>
           <div class="brand-text">
             <h1 class="brand-title">Nueva Venta</h1>
             <p class="brand-subtitle">Sistema de Ventas Cocolú</p>
-            </div>
+    </div>
             </div>
         
         <!-- Sección de Búsqueda de Cliente Integrada -->
@@ -41,7 +41,7 @@
                 >
                   <i class="bi bi-x"></i>
                 </button>
-          </div>
+                </div>
                 
                 <!-- Estado de cliente seleccionado -->
                 <div v-else class="selected-client-state">
@@ -50,8 +50,8 @@
                     <div class="client-details">
                       <div class="client-name">{{ clienteSeleccionado.nombre }} {{ clienteSeleccionado.apellido }}</div>
                       <div class="client-cedula">{{ clienteSeleccionado.cedula_rif }}</div>
-            </div>
-            </div>
+                    </div>
+                  </div>
                   <button 
                     type="button" 
                     class="remove-client-btn"
@@ -60,7 +60,7 @@
                   >
                     <i class="bi bi-x"></i>
                   </button>
-          </div>
+                </div>
               </div>
               
               <!-- Lista desplegable de resultados -->
@@ -382,7 +382,7 @@
                 </div>
               </div>
               
-              <!-- Segunda fila: Tipo de Pago, Referencia -->
+              <!-- Segunda fila: Tipo de Pago, Método de Pago, Referencia -->
               <div class="form-row">
                 <!-- Tipo de Pago -->
                 <div class="form-group payment-type-group">
@@ -395,10 +395,30 @@
                       <option value="">-- Seleccione --</option>
                       <option value="Contado">Contado</option>
                       <option value="Abono">Abono</option>
+                      <option value="Mixto">Mixto</option>
+                    </select>
+                    <i class="bi bi-chevron-down select-icon"></i>
+                  </div>
+                </div>
+                
+                <!-- Método de Pago -->
+                <div class="form-group payment-method-group">
+                  <label class="modern-label">
+                    <i class="bi bi-wallet2"></i>
+                    Método de Pago *
+                  </label>
+                  <div class="select-container">
+                    <select class="modern-select" v-model="venta.metodo_pago" required>
+                <option value="">-- Seleccione --</option>
+                <option value="Efectivo (USD)">Efectivo (USD)</option>
+                <option value="Zelle (USD)">Zelle (USD)</option>
+                <option value="Punto de Venta (VES)">Punto de Venta (VES)</option>
+                <option value="Pago Móvil (VES)">Pago Móvil (VES)</option>
+                <option value="Transferencia (VES)">Transferencia (VES)</option>
               </select>
                     <i class="bi bi-chevron-down select-icon"></i>
             </div>
-          </div>
+            </div>
                 
                 <!-- Referencia -->
                 <div class="form-group reference-group">
@@ -410,98 +430,23 @@
                     <input type="text" class="modern-input" 
                            v-model="venta.referencia_pago" 
                            placeholder="Número de referencia">
-        </div>
-                </div>
-                </div>
-              
-              <!-- Tercera fila: Método de Pago (USD) -->
-              <div class="form-row" v-if="!esPagoMixto">
-                <!-- Método de Pago USD -->
-                <div class="form-group payment-method-group">
-                  <label class="modern-label">
-                    <i class="bi bi-wallet2"></i>
-                    Método de Pago USD *
-                  </label>
-                  <div class="select-container">
-                    <select class="modern-select" v-model="venta.metodo_pago_usd" required>
-                <option value="">-- Seleccione --</option>
-                <option value="Efectivo (USD)">Efectivo (USD)</option>
-                <option value="Zelle (USD)">Zelle (USD)</option>
-                    </select>
-                    <i class="bi bi-chevron-down select-icon"></i>
+            </div>
           </div>
-        </div>
-                
-                <!-- Método de Pago VES -->
-                <div class="form-group payment-method-group">
-                  <label class="modern-label">
-                    <i class="bi bi-wallet2"></i>
-                    Método de Pago VES *
-                  </label>
-                  <div class="select-container">
-                    <select class="modern-select" v-model="venta.metodo_pago_ves" required>
-                      <option value="">-- Seleccione --</option>
-                <option value="Punto de Venta (VES)">Punto de Venta (VES)</option>
-                <option value="Pago Móvil (VES)">Pago Móvil (VES)</option>
-                <option value="Transferencia (VES)">Transferencia (VES)</option>
-              </select>
-                    <i class="bi bi-chevron-down select-icon"></i>
-            </div>
-            </div>
-            </div>
-              
-              <!-- Tercera fila: Método de Pago (Mixto) -->
-              <div class="form-row" v-if="esPagoMixto">
-                <!-- Método de Pago USD -->
-                <div class="form-group payment-method-group">
-                  <label class="modern-label">
-                    <i class="bi bi-wallet2"></i>
-                    Método de Pago USD *
-                  </label>
-                  <div class="select-container">
-                    <select class="modern-select" v-model="venta.metodo_pago_usd" required>
-                      <option value="">-- Seleccione --</option>
-                      <option value="Efectivo (USD)">Efectivo (USD)</option>
-                      <option value="Zelle (USD)">Zelle (USD)</option>
-                    </select>
-                    <i class="bi bi-chevron-down select-icon"></i>
-          </div>
-                </div>
-                
-                <!-- Método de Pago VES -->
-                <div class="form-group payment-method-group">
-                  <label class="modern-label">
-                    <i class="bi bi-wallet2"></i>
-                    Método de Pago VES *
-                  </label>
-                  <div class="select-container">
-                    <select class="modern-select" v-model="venta.metodo_pago_ves" required>
-                      <option value="">-- Seleccione --</option>
-                      <option value="Punto de Venta (VES)">Punto de Venta (VES)</option>
-                      <option value="Pago Móvil (VES)">Pago Móvil (VES)</option>
-                      <option value="Transferencia (VES)">Transferencia (VES)</option>
-                    </select>
-                    <i class="bi bi-chevron-down select-icon"></i>
-                  </div>
-                </div>
               </div>
               
-              <!-- Checkbox para Pago Mixto -->
+              <!-- Tercera fila: Tasa BCV -->
               <div class="form-row">
-                <div class="form-group">
-                  <div class="checkbox-container">
-                    <div class="modern-checkbox">
-                      <input type="checkbox" id="pago-mixto" v-model="esPagoMixto">
-                      <label for="pago-mixto">
-                        <div class="checkbox-custom">
-                          <i class="bi bi-check"></i>
-                        </div>
-                        <span class="checkbox-label">
-                          <i class="bi bi-currency-exchange"></i>
-                          Pago Mixto (USD + VES)
-                        </span>
-                      </label>
-                    </div>
+                <!-- Tasa BCV -->
+                <div class="form-group rate-group">
+                  <label class="modern-label">
+                    <i class="bi bi-graph-up"></i>
+                    Tasa BCV
+                  </label>
+                  <div class="rate-container">
+                    <span class="rate-label">Bs.</span>
+                    <input type="number" class="rate-input" 
+                     v-model.number="venta.tasa_bcv" step="0.01" min="0" required
+                     placeholder="">
                   </div>
                 </div>
               </div>
@@ -582,6 +527,20 @@
                           {{ conversionAbonoSimple }}
                         </div>
                       </div>
+                      
+                      <!-- Fecha de Vencimiento -->
+                      <div class="form-group due-date-group">
+                        <label class="modern-label">
+                          <i class="bi bi-calendar-event"></i>
+                          Fecha de Vencimiento *
+                        </label>
+                        <div class="date-container">
+                          <input type="date" class="date-input" 
+                                 v-model="venta.fecha_vencimiento"
+                                 :min="fechaMinima"
+                                 required>
+                        </div>
+                      </div>
                     </div>
                   </div>
                   
@@ -616,6 +575,21 @@
                                  :max="totalVenta * venta.tasa_bcv"
                                  placeholder="">
                         </div>
+                      </div>
+                      
+                      <!-- Fecha de Vencimiento -->
+                      <div class="form-group due-date-group">
+                        <label class="modern-label">
+                          <i class="bi bi-calendar-event"></i>
+                          Fecha de Vencimiento *
+                        </label>
+                        <div class="date-container">
+                          <input type="date" class="date-input" 
+                                 v-model="venta.fecha_vencimiento"
+                                 :min="fechaMinima"
+                                 required>
+                        </div>
+                      </div>
                     </div>
                     
                     <!-- Total del Abono Mixto -->
@@ -662,13 +636,17 @@
                         <span class="info-label">Saldo Pendiente:</span>
                         <span class="info-value">${{ saldoPendiente.toFixed(2) }}</span>
                       </div>
+                      <div class="info-item">
+                        <span class="info-label">Fecha de Vencimiento:</span>
+                        <span class="info-value">{{ venta.fecha_vencimiento || 'No especificada' }}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
               
               <!-- Configuración de Pago Mixto -->
-              <div v-if="esPagoMixto && venta.tipo_pago === 'Contado'" class="mixed-payment-section">
+              <div v-if="venta.tipo_pago === 'Mixto'" class="mixed-payment-section">
                 <div class="installment-header">
                   <h4>
                     <i class="bi bi-currency-exchange"></i>
@@ -813,7 +791,7 @@
               <span>{{ isSubmitting ? 'Procesando...' : 'Registrar Venta' }}</span>
             </button>
           </div>
-      </form>
+        </form>
         </div>
         
         <!-- Modal para Producto Manual -->
@@ -3880,7 +3858,7 @@ input[type=number] {
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue';
 import { getProducts, createSale, getTasaCambio } from '../services/apiService.js';
-import { buscarClientePorCedula, buscarClientesPorNombre, crearCliente } from '../services/clientService.js';
+import { getClientePorCedula, buscarClientePorCriterio as buscarClientePorCriterioService, getClientes } from '../services/clientesService.js';
 import ProductSearch from '../components/ProductSearch.vue';
 import ClientSearch from '../components/ClientSearch.vue';
 import { useNotifier } from '../composables/useNotifier.js';
@@ -3930,9 +3908,7 @@ const getInitialVentaState = () => ({
   cliente_email: '',
   cliente_direccion: '',
   tipo_pago: '',
-  metodo_pago_usd: '',
-  metodo_pago_ves: '',
-  esPagoMixto: false,
+  metodo_pago: '',
   referencia_pago: '',
   tasa_bcv: null,
   entrega_inmediata: false,
@@ -4365,7 +4341,7 @@ function eliminarProducto(index) {
     cancelButtonText: 'Cancelar'
   }).then((result) => {
     if (result.isConfirmed) {
-  detallesPedido.value.splice(index, 1);
+      detallesPedido.value.splice(index, 1);
     }
   });
 }
@@ -4543,23 +4519,36 @@ async function buscarClientePorCedula() {
 }
 
 async function buscarClienteEnBD(cedula) {
-  try {
-    const cliente = await buscarClientePorCedula(cedula);
+  // Buscar en la lista de clientes cargada
+  const cliente = clientes.value.find(c => 
+    c.cedula_rif.toLowerCase() === cedula.toLowerCase()
+  );
+  
+  if (cliente) {
+    console.log('Cliente encontrado:', cliente);
     return cliente;
-  } catch (error) {
-    console.error('Error al buscar cliente:', error);
-    return null;
   }
+  
+  console.log('Cliente no encontrado para cédula:', cedula);
+  return null;
 }
 
 async function buscarClientePorCriterio(criterio) {
-  try {
-    const clientes = await buscarClientesPorNombre(criterio);
-    return clientes.length > 0 ? clientes[0] : null;
-  } catch (error) {
-    console.error('Error al buscar cliente:', error);
-    return null;
+  // Buscar en la lista de clientes cargada
+  const cliente = clientes.value.find(c => 
+    c.cedula_rif.toLowerCase().includes(criterio.toLowerCase()) ||
+    c.nombre.toLowerCase().includes(criterio.toLowerCase()) ||
+    c.apellido.toLowerCase().includes(criterio.toLowerCase()) ||
+    (c.telefono && c.telefono.includes(criterio))
+  );
+  
+  if (cliente) {
+    console.log('Cliente encontrado:', cliente);
+    return cliente;
   }
+  
+  console.log('Cliente no encontrado para criterio:', criterio);
+  return null;
 }
 
 // Funciones para autocompletado de cliente
@@ -4761,34 +4750,17 @@ function nuevoCliente() {
       
       return { cedula, nombre, apellido, telefono, email, direccion };
     }
-  }).then(async (result) => {
+  }).then((result) => {
     if (result.isConfirmed) {
-      const clienteData = result.value;
+      const cliente = result.value;
+      venta.value.cliente_cedula = cliente.cedula;
+      venta.value.cliente_nombre = cliente.nombre;
+      venta.value.cliente_apellido = cliente.apellido;
+      venta.value.cliente_telefono = cliente.telefono;
+      venta.value.cliente_email = cliente.email;
+      venta.value.cliente_direccion = cliente.direccion;
       
-      try {
-        // Crear cliente en la base de datos
-        const nuevoCliente = await crearCliente({
-          cedula: clienteData.cedula,
-          nombre: clienteData.nombre,
-          apellido: clienteData.apellido,
-          telefono: clienteData.telefono,
-          email: clienteData.email,
-          direccion: clienteData.direccion
-        });
-        
-        // Actualizar formulario de venta
-        venta.value.cliente_cedula = clienteData.cedula;
-        venta.value.cliente_nombre = clienteData.nombre;
-        venta.value.cliente_apellido = clienteData.apellido;
-        venta.value.cliente_telefono = clienteData.telefono;
-        venta.value.cliente_email = clienteData.email;
-        venta.value.cliente_direccion = clienteData.direccion;
-        
-        console.log('Cliente creado:', nuevoCliente);
-      } catch (error) {
-        console.error('Error al crear cliente:', error);
-        Swal.fire('Error', 'No se pudo crear el cliente. Intenta nuevamente.', 'error');
-      }
+      Swal.fire('¡Éxito!', 'Cliente agregado correctamente', 'success');
     }
   });
 }

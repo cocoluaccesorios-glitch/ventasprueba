@@ -27,9 +27,10 @@ export async function getProducts() {
     if (error) { 
       console.error('Error al cargar productos:', error);
       
-      // Si es un error de autenticación, usar datos mock
-      if (error.message.includes('401') || error.message.includes('JWT')) {
-        console.warn('Error de autenticación, usando datos mock');
+      // Si es cualquier error de conexión, usar datos mock
+      if (error.message.includes('401') || error.message.includes('JWT') || 
+          error.message.includes('fetch failed') || error.message.includes('Load failed')) {
+        console.warn('Error de conexión, usando datos mock');
         return mockProducts;
       }
       
@@ -665,7 +666,15 @@ export async function getProductos() {
     return { data: productosConCategoria };
   } catch (err) {
     console.error('Error de conexión:', err);
-    return { data: mockProducts };
+    
+    // Si es un error de conexión, usar datos mock
+    if (err.message.includes('fetch failed') || err.message.includes('Load failed') || 
+        err.message.includes('NetworkError') || err.message.includes('TypeError')) {
+      console.warn('Error de conexión detectado, usando datos mock');
+      return mockProducts;
+    }
+    
+    return mockProducts; // Fallback a datos mock
   }
 }
 

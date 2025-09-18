@@ -404,6 +404,23 @@ export async function getPedidoPorId(id) {
 
 // Anular pedido
 export async function anularPedido(pedidoId) {
+  if (USE_MOCK_DATA) {
+    console.log('🔧 Usando datos de prueba para anular pedido');
+    
+    // Buscar el pedido en mockPedidos y cambiar su estado
+    const pedidoIndex = mockPedidos.findIndex(p => p.id === pedidoId);
+    if (pedidoIndex !== -1) {
+      mockPedidos[pedidoIndex].estado_entrega = 'anulado';
+      mockPedidos[pedidoIndex].fecha_anulacion = new Date().toISOString();
+      
+      Swal.fire('Anulado', 'El pedido ha sido anulado correctamente (Modo Prueba).', 'success');
+      return true;
+    } else {
+      Swal.fire('Error', 'No se encontró el pedido', 'error');
+      return false;
+    }
+  }
+  
   const { error } = await supabase.rpc('anular_pedido_simple', { 
     p_pedido_id: pedidoId 
   });
@@ -515,6 +532,24 @@ export async function updatePedido(cambios) {
 
 // Anular pedido con motivo
 export async function anularPedidoConMotivo(pedidoId, motivo) {
+  if (USE_MOCK_DATA) {
+    console.log('🔧 Usando datos de prueba para anular pedido con motivo');
+    
+    // Buscar el pedido en mockPedidos y cambiar su estado
+    const pedidoIndex = mockPedidos.findIndex(p => p.id === pedidoId);
+    if (pedidoIndex !== -1) {
+      mockPedidos[pedidoIndex].estado_entrega = 'anulado';
+      mockPedidos[pedidoIndex].fecha_anulacion = new Date().toISOString();
+      mockPedidos[pedidoIndex].motivo_anulacion = motivo;
+      
+      Swal.fire('¡Anulado!', 'El pedido ha sido anulado correctamente (Modo Prueba).', 'success');
+      return true;
+    } else {
+      Swal.fire('Error', 'No se encontró el pedido', 'error');
+      return false;
+    }
+  }
+  
   try {
     const { error } = await supabase.rpc('anular_pedido_con_motivo', {
       p_pedido_id: pedidoId,

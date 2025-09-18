@@ -110,6 +110,32 @@ export async function getCategorias() {
 
 // Crear venta con el esquema simplificado
 export async function createSale(ventaData) {
+  if (USE_MOCK_DATA) {
+    console.log('🔧 Usando datos de prueba para crear venta');
+    
+    // Simular creación de venta con datos mock
+    const nuevoPedido = {
+      id: Date.now(),
+      ...ventaData,
+      fecha_pedido: new Date().toISOString(),
+      estado_entrega: 'pendiente'
+    };
+    
+    // Agregar a mockPedidos si existe
+    if (typeof mockPedidos !== 'undefined') {
+      mockPedidos.unshift(nuevoPedido);
+    }
+    
+    Swal.fire({
+      title: '¡Éxito!',
+      text: `Pedido #${nuevoPedido.id} creado correctamente (Modo Prueba).`,
+      icon: 'success',
+      confirmButtonText: 'Continuar'
+    });
+    
+    return nuevoPedido.id;
+  }
+  
   try {
     console.log('🔄 Creando venta con datos:', ventaData);
     

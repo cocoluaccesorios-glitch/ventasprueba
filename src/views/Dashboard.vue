@@ -108,7 +108,9 @@
             <h5 class="mb-0"><i class="bi bi-graph-up"></i> Ventas por Día</h5>
           </div>
           <div class="card-body">
-            <canvas ref="ventasChart" height="300"></canvas>
+            <div style="height: 300px; position: relative;">
+              <canvas ref="ventasChart" style="max-height: 300px;"></canvas>
+            </div>
           </div>
         </div>
       </div>
@@ -377,13 +379,18 @@ function crearGrafico() {
       chartInstance.destroy()
     }
     
+    // Asegurar que tenemos datos válidos
+    const datos = datosVentas.value || []
+    const labels = datos.map(d => d.fecha) || []
+    const ventas = datos.map(d => d.ventas) || []
+    
     chartInstance = new Chart(ctx, {
       type: 'line',
       data: {
-        labels: datosVentas.value.map(d => d.fecha),
+        labels: labels,
         datasets: [{
           label: 'Ventas ($)',
-          data: datosVentas.value.map(d => d.ventas),
+          data: ventas,
           borderColor: '#0d6efd',
           backgroundColor: 'rgba(13, 110, 253, 0.1)',
           tension: 0.4,
@@ -393,6 +400,10 @@ function crearGrafico() {
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        interaction: {
+          intersect: false,
+          mode: 'index'
+        },
         plugins: {
           legend: {
             display: false
@@ -401,6 +412,7 @@ function crearGrafico() {
         scales: {
           y: {
             beginAtZero: true,
+            max: Math.max(...ventas, 100), // Limitar el máximo
             ticks: {
               callback: function(value) {
                 return '$' + value
@@ -410,6 +422,8 @@ function crearGrafico() {
         }
       }
     })
+  }).catch(error => {
+    console.error('Error cargando Chart.js:', error)
   })
 }
 

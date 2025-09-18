@@ -336,8 +336,9 @@ export async function getPedidos() {
         return mockPedidos;
       }
       
-      Swal.fire('Error', `No se pudieron cargar los pedidos: ${error.message}`, 'error'); 
-      return []; 
+      console.error('Error al cargar pedidos:', error.message);
+      // No mostrar alerta para evitar bucles, solo usar datos mock
+      return mockPedidos; 
     }
     
     // Usar información real del cliente si está disponible

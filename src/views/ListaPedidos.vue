@@ -79,11 +79,14 @@ async function cargarPedidos() {
   try {
     const datosPedidos = await getPedidos();
     console.log('📋 Pedidos recibidos en ListaPedidos:', datosPedidos);
-    pedidos.value = datosPedidos;
+    
+    // Asegurar que siempre sea un array
+    pedidos.value = Array.isArray(datosPedidos) ? datosPedidos : [];
     console.log('✅ Pedidos asignados a la vista:', pedidos.value);
   } catch (error) {
     console.error('❌ Error al cargar pedidos:', error);
     pedidos.value = [];
+    // No mostrar alerta aquí para evitar bucles
   } finally {
     loading.value = false;
   }

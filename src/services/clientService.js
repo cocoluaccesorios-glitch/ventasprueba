@@ -2,7 +2,7 @@ import { supabase } from '../lib/supabaseClient.js'
 import Swal from 'sweetalert2'
 
 // Mock data para desarrollo
-const USE_MOCK_DATA = false
+const USE_MOCK_DATA = true // Cambiar a true para usar datos de prueba - Problema con variables de Supabase
 
 const mockClientes = [
   {

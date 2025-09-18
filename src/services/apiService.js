@@ -116,15 +116,51 @@ export async function createSale(ventaData) {
     // Simular creación de venta con datos mock
     const nuevoPedido = {
       id: Date.now(),
-      ...ventaData,
+      cliente_cedula: ventaData.cliente_cedula || '12345678',
+      cliente_nombre: ventaData.cliente_nombre || 'Cliente',
+      cliente_apellido: ventaData.cliente_apellido || 'Prueba',
+      cliente_telefono: ventaData.cliente_telefono || 'No disponible',
+      cliente_email: ventaData.cliente_email || 'cliente@email.com',
+      cliente_direccion: ventaData.cliente_direccion || 'Dirección de prueba',
+      subtotal_usd: ventaData.subtotal_usd || 0,
+      monto_descuento_usd: ventaData.monto_descuento_usd || 0,
+      monto_iva_usd: ventaData.monto_iva_usd || 0,
+      monto_delivery_usd: ventaData.monto_delivery_usd || 0,
+      total_usd: ventaData.total_usd || 0,
+      aplica_iva: ventaData.aplica_iva || false,
+      metodo_pago: ventaData.metodo_pago || 'efectivo',
+      referencia_pago: ventaData.referencia_pago || null,
+      es_abono: ventaData.es_abono || false,
+      tipo_pago_abono: ventaData.tipo_pago_abono || null,
+      metodo_pago_abono: ventaData.metodo_pago_abono || null,
+      monto_abono_simple: ventaData.monto_abono_simple || 0,
+      monto_abono_usd: ventaData.monto_abono_usd || 0,
+      monto_abono_ves: ventaData.monto_abono_ves || 0,
+      total_abono_usd: ventaData.total_abono_usd || 0,
+      fecha_vencimiento: ventaData.fecha_vencimiento || null,
+      es_pago_mixto: ventaData.es_pago_mixto || false,
+      monto_mixto_usd: ventaData.monto_mixto_usd || 0,
+      monto_mixto_ves: ventaData.monto_mixto_ves || 0,
+      metodo_pago_mixto_usd: ventaData.metodo_pago_mixto_usd || null,
+      metodo_pago_mixto_ves: ventaData.metodo_pago_mixto_ves || null,
+      referencia_mixto_usd: ventaData.referencia_mixto_usd || null,
+      referencia_mixto_ves: ventaData.referencia_mixto_ves || null,
+      tasa_bcv: ventaData.tasa_bcv || 160,
+      estado_entrega: ventaData.estado_entrega || 'pendiente',
+      comentarios_generales: ventaData.comentarios_generales || null,
+      comentarios_descuento: ventaData.comentarios_descuento || null,
       fecha_pedido: new Date().toISOString(),
-      estado_entrega: 'pendiente'
+      detalles_pedido: ventaData.productos ? ventaData.productos.map(p => ({
+        id: Date.now() + Math.random(),
+        cantidad: p.cantidad,
+        precio_unitario_usd: p.precio_unitario,
+        nombre_producto: p.nombre,
+        sku_producto: p.sku || null
+      })) : []
     };
     
-    // Agregar a mockPedidos si existe
-    if (typeof mockPedidos !== 'undefined') {
-      mockPedidos.unshift(nuevoPedido);
-    }
+    // Agregar a mockPedidos
+    mockPedidos.unshift(nuevoPedido);
     
     Swal.fire({
       title: '¡Éxito!',

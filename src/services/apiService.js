@@ -368,6 +368,20 @@ export async function getPedidos() {
 
 // Obtener pedido por ID con todos los detalles
 export async function getPedidoPorId(id) {
+  if (USE_MOCK_DATA) {
+    console.log('🔧 Usando datos de prueba para obtener pedido por ID');
+    
+    // Buscar el pedido en mockPedidos
+    const pedido = mockPedidos.find(p => p.id === parseInt(id));
+    if (pedido) {
+      return pedido;
+    } else {
+      console.error('Pedido no encontrado:', id);
+      Swal.fire('Error', 'No se encontró el pedido solicitado.', 'error');
+      return null;
+    }
+  }
+  
   try {
     const { data, error } = await supabase
       .from('pedidos')
@@ -572,6 +586,23 @@ export async function anularPedidoConMotivo(pedidoId, motivo) {
 
 // Cambiar estado de pedido
 export async function cambiarEstadoPedido(pedidoId, nuevoEstado) {
+  if (USE_MOCK_DATA) {
+    console.log('🔧 Usando datos de prueba para cambiar estado de pedido');
+    
+    // Buscar el pedido en mockPedidos y cambiar su estado
+    const pedidoIndex = mockPedidos.findIndex(p => p.id === pedidoId);
+    if (pedidoIndex !== -1) {
+      mockPedidos[pedidoIndex].estado_entrega = nuevoEstado;
+      mockPedidos[pedidoIndex].fecha_actualizacion = new Date().toISOString();
+      
+      Swal.fire('¡Actualizado!', `El estado del pedido ha sido cambiado a ${nuevoEstado} (Modo Prueba).`, 'success');
+      return true;
+    } else {
+      Swal.fire('Error', 'No se encontró el pedido', 'error');
+      return false;
+    }
+  }
+  
   try {
     const { error } = await supabase
       .from('pedidos')

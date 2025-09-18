@@ -3,7 +3,7 @@ import { mockProducts, mockPedidos, mockCategorias } from './mockData.js';
 import Swal from 'sweetalert2';
 
 // Modo de desarrollo - usar datos de prueba si no hay conexión
-const USE_MOCK_DATA = false; // Cambiar a true para usar datos de prueba
+const USE_MOCK_DATA = true; // Cambiar a true para usar datos de prueba
 
 // Obtener productos (sin categorías por ahora)
 export async function getProducts() {

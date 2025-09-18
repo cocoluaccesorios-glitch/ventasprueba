@@ -3,7 +3,7 @@ import { mockProducts, mockPedidos, mockCategorias } from './mockData.js';
 import Swal from 'sweetalert2';
 
 // Modo de desarrollo - usar datos de prueba si no hay conexión
-const USE_MOCK_DATA = false; // Cambiar a false para usar base de datos real
+const USE_MOCK_DATA = false; // Cambiar a false para usar base de datos real - Variables configuradas en Vercel
 
 // Obtener productos (sin categorías por ahora)
 export async function getProducts() {

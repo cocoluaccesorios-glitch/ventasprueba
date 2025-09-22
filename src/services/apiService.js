@@ -3,7 +3,7 @@ import { mockProducts, mockPedidos, mockCategorias } from './mockData.js';
 import Swal from 'sweetalert2';
 
 // Modo de desarrollo - usar datos de prueba si no hay conexión
-const USE_MOCK_DATA = true; // Cambiar a true para usar datos de prueba - Problema con variables de Supabase
+const USE_MOCK_DATA = false; // Cambiar a false para usar la base de datos real de Supabase
 
 // Obtener productos (sin categorías por ahora)
 export async function getProducts() {
@@ -111,6 +111,8 @@ export async function getCategorias() {
 
 // Crear venta con el esquema simplificado
 export async function createSale(ventaData) {
+  console.log('🔍 Tasa BCV recibida en createSale:', ventaData.tasa_bcv);
+  
   if (USE_MOCK_DATA) {
     console.log('🔧 Usando datos de prueba para crear venta');
     
@@ -146,7 +148,7 @@ export async function createSale(ventaData) {
       metodo_pago_mixto_ves: ventaData.metodo_pago_mixto_ves || null,
       referencia_mixto_usd: ventaData.referencia_mixto_usd || null,
       referencia_mixto_ves: ventaData.referencia_mixto_ves || null,
-      tasa_bcv: ventaData.tasa_bcv || 160,
+      tasa_bcv: ventaData.tasa_bcv || 166.58,
       estado_entrega: ventaData.estado_entrega || 'pendiente',
       comentarios_generales: ventaData.comentarios_generales || null,
       comentarios_descuento: ventaData.comentarios_descuento || null,
@@ -176,14 +178,14 @@ export async function createSale(ventaData) {
   try {
     console.log('🔄 Creando venta con datos:', ventaData);
     
-    // Primero intentar con la función RPC
+    // Intentar con la función RPC
     try {
-      const { data, error } = await supabase.rpc('procesar_venta_simple', { 
+      const { data, error } = await supabase.rpc('procesar_venta_completa', { 
         venta_data: ventaData 
       });
       
       if (error) {
-        console.warn('Error en procesar_venta_simple, intentando inserción directa:', error);
+        console.warn('Error en procesar_venta_completa, intentando inserción directa:', error);
         throw new Error('RPC failed');
       }
       
@@ -200,10 +202,14 @@ export async function createSale(ventaData) {
       console.log('⚠️ RPC falló, usando inserción directa...');
     }
     
+    console.log('🔍 Usando inserción directa como respaldo...');
+    
     // Si RPC falla, insertar directamente
+    console.log('🔍 Insertando pedido con tasa BCV:', ventaData.tasa_bcv);
     const { data: pedidoData, error: pedidoError } = await supabase
       .from('pedidos')
       .insert({
+        cliente_id: ventaData.cliente_id || 1, // Usar cliente_id o default 1
         cliente_cedula: ventaData.cliente_cedula,
         cliente_nombre: ventaData.cliente_nombre,
         cliente_apellido: ventaData.cliente_apellido,
@@ -227,7 +233,15 @@ export async function createSale(ventaData) {
         monto_abono_usd: ventaData.monto_abono_usd || 0,
         monto_abono_ves: ventaData.monto_abono_ves || 0,
         total_abono_usd: ventaData.total_abono_usd || 0,
-        fecha_vencimiento: ventaData.fecha_vencimiento || null,
+        
+        // Referencias para abono mixto (para reportes y cierres de caja)
+        // SOLO se envían si es un abono mixto, NO para pago mixto de contado
+        ...(ventaData.es_abono && ventaData.tipo_pago_abono === 'mixto' ? {
+          referencia_abono_usd: ventaData.referencia_abono_usd || null,
+          referencia_abono_ves: ventaData.referencia_abono_ves || null,
+          metodo_pago_abono_usd: ventaData.metodo_pago_abono_usd || null,
+          metodo_pago_abono_ves: ventaData.metodo_pago_abono_ves || null,
+        } : {}),
         
         // Campos para pago mixto
         es_pago_mixto: ventaData.es_pago_mixto || false,
@@ -237,7 +251,7 @@ export async function createSale(ventaData) {
         metodo_pago_mixto_ves: ventaData.metodo_pago_mixto_ves || null,
         referencia_mixto_usd: ventaData.referencia_mixto_usd || null,
         referencia_mixto_ves: ventaData.referencia_mixto_ves || null,
-        tasa_bcv: ventaData.tasa_bcv || 160,
+        tasa_bcv: ventaData.tasa_bcv || 166.58,
         estado_entrega: ventaData.estado_entrega || 'pendiente',
         comentarios_generales: ventaData.comentarios_generales || null,
         comentarios_descuento: ventaData.comentarios_descuento || null,
@@ -273,6 +287,107 @@ export async function createSale(ventaData) {
         // Intentar eliminar el pedido creado
         await supabase.from('pedidos').delete().eq('id', pedidoId);
         throw new Error(detallesError.message);
+      }
+    }
+    
+    // Si es un abono, crear registro(s) en la tabla abonos
+    if (ventaData.es_abono && ventaData.total_abono_usd > 0) {
+      console.log('🔍 Creando abono automáticamente...');
+      
+      // Obtener cliente_id
+      const { data: clienteData } = await supabase
+        .from('clientes')
+        .select('id')
+        .eq('cedula_rif', ventaData.cliente_cedula)
+        .single();
+      
+      if (ventaData.tipo_pago_abono === 'simple') {
+        // Abono simple - un solo registro
+        const { error: abonoError } = await supabase
+          .from('abonos')
+          .insert({
+            pedido_id: pedidoId,
+            cliente_id: clienteData?.id || null,
+            monto_abono_usd: ventaData.total_abono_usd,
+            monto_abono_ves: ventaData.total_abono_usd * ventaData.tasa_bcv,
+            tasa_bcv: ventaData.tasa_bcv,
+            metodo_pago_abono: ventaData.metodo_pago_abono || 'efectivo',
+            referencia_pago: ventaData.referencia_pago,
+            tipo_abono: 'simple',
+            estado_abono: 'confirmado',
+            comentarios: 'Abono simple del pedido #' + pedidoId
+          });
+        
+        if (abonoError) {
+          console.error('Error al crear abono simple:', abonoError);
+        } else {
+          console.log('✅ Abono simple creado automáticamente');
+        }
+      } else if (ventaData.tipo_pago_abono === 'mixto') {
+        // Abono mixto - crear registros separados para cada método de pago
+        const abonosToInsert = [];
+
+        // Registro para USD (si hay monto USD)
+        if (ventaData.monto_abono_usd > 0) {
+          abonosToInsert.push({
+            pedido_id: pedidoId,
+            cliente_id: clienteData?.id || null,
+            monto_abono_usd: ventaData.monto_abono_usd,
+            monto_abono_ves: 0,
+            tasa_bcv: ventaData.tasa_bcv,
+            metodo_pago_abono: ventaData.metodo_pago_abono_usd || 'efectivo',
+            referencia_pago: ventaData.referencia_abono_usd,
+            tipo_abono: 'mixto_usd',
+            estado_abono: 'confirmado',
+            comentarios: `Abono mixto USD del pedido #${pedidoId} - ${ventaData.metodo_pago_abono_usd}`
+          });
+        }
+
+        // Registro para VES (si hay monto VES)
+        if (ventaData.monto_abono_ves > 0) {
+          abonosToInsert.push({
+            pedido_id: pedidoId,
+            cliente_id: clienteData?.id || null,
+            monto_abono_usd: 0,
+            monto_abono_ves: ventaData.monto_abono_ves,
+            tasa_bcv: ventaData.tasa_bcv,
+            metodo_pago_abono: ventaData.metodo_pago_abono_ves || 'efectivo',
+            referencia_pago: ventaData.referencia_abono_ves,
+            tipo_abono: 'mixto_ves',
+            estado_abono: 'confirmado',
+            comentarios: `Abono mixto VES del pedido #${pedidoId} - ${ventaData.metodo_pago_abono_ves}`
+          });
+        }
+
+        // Insertar todos los registros de abono mixto
+        if (abonosToInsert.length > 0) {
+          const { error: abonosError } = await supabase
+            .from('abonos')
+            .insert(abonosToInsert);
+
+          if (abonosError) {
+            console.error('Error al crear abono mixto:', abonosError);
+          } else {
+            console.log(`✅ ${abonosToInsert.length} abono(s) mixto(s) creado(s) automáticamente`);
+          }
+        }
+      }
+    }
+    
+    // Insertar tasa BCV si no existe para la fecha actual
+    if (ventaData.tasa_bcv) {
+      const { error: tasaError } = await supabase
+        .from('tasa_cambio')
+        .insert({
+          fecha: new Date().toISOString().split('T')[0],
+          tasa_bcv: ventaData.tasa_bcv
+        })
+        .select()
+        .single();
+      
+      if (tasaError && !tasaError.message.includes('duplicate key')) {
+        console.error('Error al insertar tasa BCV:', tasaError);
+        // No fallar la venta por error en tasa BCV
       }
     }
     
@@ -452,29 +567,23 @@ export async function anularPedido(pedidoId) {
 // Obtener tasa de cambio actual
 export async function getTasaCambio() {
   try {
-    const { data, error } = await supabase
-      .from('tasa_cambio')
-      .select('tasa_bcv')
-      .order('id', { ascending: false })
-      .limit(1)
-      .single();
-    
-    if (error) {
-      console.warn('No se pudo obtener la tasa de cambio:', error.message);
-      
-      // Si es un error de autenticación, columnas faltantes o la tabla no existe, usar tasa por defecto
-      if (error.message.includes('401') || error.message.includes('JWT') || error.message.includes('relation') || error.message.includes('42703') || error.message.includes('42501')) {
-        console.warn('Usando tasa de cambio por defecto');
-        return 36.0;
-      }
-      
-      return 36.0; // Tasa por defecto
-    }
-    
-    return data?.tasa_bcv || 36.0;
+    // Importar el servicio BCV dinámicamente para evitar dependencias circulares
+    const { getTasaBCV } = await import('./bcvService.js');
+    const tasa = await getTasaBCV();
+    console.log('✅ Tasa BCV obtenida:', tasa);
+    return tasa;
   } catch (err) {
-    console.warn('Error al obtener tasa de cambio:', err);
-    return 36.0; // Tasa por defecto en caso de error
+    console.warn('⚠️ Error al obtener tasa de cambio, usando tasa de respaldo:', err.message);
+    // Obtener tasa directamente del BCV como fallback
+    try {
+      const { obtenerTasaBCV } = await import('./bcvService.js');
+      const tasaDirecta = await obtenerTasaBCV();
+      console.log('✅ Tasa BCV obtenida directamente:', tasaDirecta);
+      return tasaDirecta;
+    } catch (fallbackErr) {
+      console.warn('⚠️ Fallback también falló, usando tasa por defecto:', fallbackErr.message);
+      return 166.58; // Tasa por defecto actualizada
+    }
   }
 }
 

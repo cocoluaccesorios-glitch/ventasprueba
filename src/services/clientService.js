@@ -2,7 +2,7 @@ import { supabase } from '../lib/supabaseClient.js'
 import Swal from 'sweetalert2'
 
 // Mock data para desarrollo
-const USE_MOCK_DATA = true // Cambiar a true para usar datos de prueba - Problema con variables de Supabase
+const USE_MOCK_DATA = false // Cambiar a false para usar la base de datos real de Supabase
 
 const mockClientes = [
   {
@@ -196,13 +196,12 @@ export async function crearCliente(cliente) {
     const { data, error } = await supabase
       .from('clientes')
       .insert([{
-        cedula: cliente.cedula,
+        cedula_rif: cliente.cedula,
         nombre: cliente.nombre,
         apellido: cliente.apellido,
         telefono: cliente.telefono,
         email: cliente.email,
-        direccion: cliente.direccion,
-        estado: 'activo'
+        direccion: cliente.direccion
       }])
       .select()
       .single()

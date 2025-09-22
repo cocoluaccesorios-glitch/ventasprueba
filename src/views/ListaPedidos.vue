@@ -221,12 +221,14 @@ function verDetalle(pedido) {
             `}
           ` : `
             <p><strong>Método de Pago:</strong> ${pedido.metodo_pago || 'Efectivo'}</p>
-            <p><strong>Referencia:</strong> ${pedido.referencia_pago || 'No aplica'}</p>
-            ${(pedido.metodo_pago && pedido.metodo_pago.toLowerCase() !== 'efectivo') ? `
-              <p><strong>Tasa BCV:</strong> ${pedido.tasa_bcv ? `${pedido.tasa_bcv} Bs/USD` : '160.0 Bs/USD'}</p>
+            ${pedido.referencia_pago && pedido.referencia_pago !== 'No aplica' ? `
+              <p><strong>Referencia:</strong> ${pedido.referencia_pago}</p>
+            ` : ''}
+            ${(pedido.metodo_pago && pedido.metodo_pago.toLowerCase() !== 'efectivo' && pedido.metodo_pago.toLowerCase() !== 'efectivo (usd)') ? `
+              <p><strong>Tasa BCV:</strong> ${pedido.tasa_bcv ? `${pedido.tasa_bcv} Bs/USD` : '166.58 Bs/USD'}</p>
               <p><strong>Total en Bolívares:</strong> ${pedido.tasa_bcv ? 
                 `${((pedido.total_usd || 0) * pedido.tasa_bcv).toFixed(2)} Bs` : 
-                `${((pedido.total_usd || 0) * 160).toFixed(2)} Bs`}</p>
+                `${((pedido.total_usd || 0) * 166.58).toFixed(2)} Bs`}</p>
             ` : `
               <p><strong>Moneda:</strong> Dólares USD</p>
               <p><strong>Tipo:</strong> Pago en efectivo</p>

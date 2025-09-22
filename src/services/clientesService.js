@@ -7,7 +7,7 @@ import Swal from 'sweetalert2'
 const clientes = ref([])
 
 // Modo de desarrollo - usar datos de prueba si no hay conexión
-const USE_MOCK_DATA = true; // Cambiar a true para usar datos de prueba
+const USE_MOCK_DATA = false; // Cambiar a false para usar la base de datos real de Supabase
 
 // Datos mock para desarrollo
 const mockClientes = [

@@ -243,7 +243,7 @@
                     <!-- Columna Subtotal -->
                     <td class="subtotal-cell">
                       <div class="subtotal-amount">
-                        ${{ (item.cantidad * item.precio_unitario).toFixed(2) }}
+                        {{ (item.cantidad * item.precio_unitario).toFixed(2) }}
                       </div>
                   </td>
                     
@@ -536,8 +536,7 @@
                         <input type="number" class="amount-input" 
                                v-model.number="montoAbonoUSD" step="0.01" min="0"
                                :max="totalVenta"
-                               placeholder=""
-                               @input="calcularRestanteAbonoUSD">
+                               placeholder="">
                       </div>
                       
                       <!-- Monto en VES -->
@@ -549,10 +548,70 @@
                         <input type="number" class="amount-input" 
                                v-model.number="montoAbonoVES" step="0.01" min="0"
                                :max="totalVenta * venta.tasa_bcv"
-                               placeholder=""
-                               @input="calcularRestanteAbonoVES">
+                               placeholder="">
                       </div>
                       
+                    </div>
+                    
+                    <!-- Métodos de Pago para Abono Mixto -->
+                    <div class="form-row">
+                      <!-- Método de Pago USD -->
+                      <div class="form-group payment-method-group">
+                        <label class="modern-label">
+                          <i class="bi bi-wallet2"></i>
+                          Método de Pago USD
+                        </label>
+                        <div class="select-container">
+                          <select class="modern-select" v-model="metodoPagoAbonoUSD">
+                            <option value="">-- Seleccione --</option>
+                            <option value="Efectivo (USD)">Efectivo (USD)</option>
+                            <option value="Zelle (USD)">Zelle (USD)</option>
+                          </select>
+                          <i class="bi bi-chevron-down select-icon"></i>
+                        </div>
+                      </div>
+                      
+                      <!-- Método de Pago VES -->
+                      <div class="form-group payment-method-group">
+                        <label class="modern-label">
+                          <i class="bi bi-wallet2"></i>
+                          Método de Pago VES
+                        </label>
+                        <div class="select-container">
+                          <select class="modern-select" v-model="metodoPagoAbonoVES">
+                            <option value="">-- Seleccione --</option>
+                            <option value="Punto de Venta (VES)">Punto de Venta (VES)</option>
+                            <option value="Pago Móvil (VES)">Pago Móvil (VES)</option>
+                            <option value="Transferencia (VES)">Transferencia (VES)</option>
+                          </select>
+                          <i class="bi bi-chevron-down select-icon"></i>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <!-- Referencias de Pago para Abono Mixto -->
+                    <div v-if="requiereReferenciaAbonoMixto" class="form-row">
+                      <!-- Referencia USD -->
+                      <div v-if="requiereReferenciaUSD" class="form-group reference-group">
+                        <label class="modern-label">
+                          <i class="bi bi-receipt"></i>
+                          Referencia USD
+                        </label>
+                        <input type="text" class="modern-input" 
+                               v-model="referenciaAbonoUSD" 
+                               placeholder="Ej: Zelle ref, transferencia, etc.">
+                      </div>
+                      
+                      <!-- Referencia VES -->
+                      <div v-if="requiereReferenciaVES" class="form-group reference-group">
+                        <label class="modern-label">
+                          <i class="bi bi-receipt"></i>
+                          Referencia VES
+                        </label>
+                        <input type="text" class="modern-input" 
+                               v-model="referenciaAbonoVES" 
+                               placeholder="Ej: Pago móvil, transferencia, etc.">
+                      </div>
                     </div>
                     
                     <!-- Total del Abono Mixto -->
@@ -560,7 +619,7 @@
                       <div class="mixed-total-card">
                         <div class="total-item">
                           <span class="total-label">USD:</span>
-                          <span class="total-value">${{ montoAbonoUSD.toFixed(2) }}</span>
+                          <span class="total-value">{{ montoAbonoUSD.toFixed(2) }}</span>
                         </div>
                         <div class="total-item">
                           <span class="total-label">VES:</span>
@@ -568,7 +627,7 @@
                         </div>
                         <div class="total-item highlight">
                           <span class="total-label">Total Abono:</span>
-                          <span class="total-value">${{ totalAbonoMixto.toFixed(2) }}</span>
+                          <span class="total-value">{{ totalAbonoMixto.toFixed(2) }}</span>
                         </div>
                       </div>
                     </div>
@@ -579,7 +638,7 @@
                     <div class="balance-display">
                       <div class="balance-info">
                         <span class="balance-label">Saldo Pendiente:</span>
-                        <span class="balance-amount">${{ saldoPendiente.toFixed(2) }}</span>
+                        <span class="balance-amount">{{ saldoPendiente.toFixed(2) }}</span>
                       </div>
                     </div>
                   </div>
@@ -589,15 +648,15 @@
                     <div class="info-card">
                       <div class="info-item">
                         <span class="info-label">Total de la Venta:</span>
-                        <span class="info-value">${{ totalVenta.toFixed(2) }}</span>
+                        <span class="info-value">{{ totalVenta.toFixed(2) }}</span>
                       </div>
                       <div class="info-item">
                         <span class="info-label">Monto del Abono:</span>
-                        <span class="info-value">${{ totalAbonoCalculado.toFixed(2) }}</span>
+                        <span class="info-value">{{ totalAbonoCalculado.toFixed(2) }}</span>
                       </div>
                       <div class="info-item highlight">
                         <span class="info-label">Saldo Pendiente:</span>
-                        <span class="info-value">${{ saldoPendiente.toFixed(2) }}</span>
+                        <span class="info-value">{{ saldoPendiente.toFixed(2) }}</span>
                       </div>
                     </div>
                   </div>
@@ -737,7 +796,7 @@
                     <div class="mixed-total-card">
                       <div class="total-item">
                         <span class="total-label">USD</span>
-                        <span class="total-value">${{ montoMixtoUSD.toFixed(2) }}</span>
+                        <span class="total-value">{{ montoMixtoUSD.toFixed(2) }}</span>
                       </div>
                       <div class="total-item">
                         <span class="total-label">VES</span>
@@ -745,7 +804,7 @@
                       </div>
                       <div class="total-item highlight">
                         <span class="total-label">Total USD</span>
-                        <span class="total-value">${{ totalMixtoCalculado.toFixed(2) }}</span>
+                        <span class="total-value">{{ totalMixtoCalculado.toFixed(2) }}</span>
                       </div>
                     </div>
                   </div>
@@ -755,11 +814,11 @@
                     <div class="info-card">
                       <div class="info-item">
                         <span class="info-label">Total de la Venta:</span>
-                        <span class="info-value">${{ totalVenta.toFixed(2) }}</span>
+                        <span class="info-value">{{ totalVenta.toFixed(2) }}</span>
                       </div>
                       <div class="info-item">
                         <span class="info-label">Monto USD:</span>
-                        <span class="info-value">${{ montoMixtoUSD.toFixed(2) }}</span>
+                        <span class="info-value">{{ montoMixtoUSD.toFixed(2) }}</span>
                       </div>
                       <div class="info-item">
                         <span class="info-label">Monto VES:</span>
@@ -767,7 +826,7 @@
                       </div>
                       <div class="info-item highlight">
                         <span class="info-label">Total Mixto:</span>
-                        <span class="info-value">${{ totalMixtoCalculado.toFixed(2) }}</span>
+                        <span class="info-value">{{ totalMixtoCalculado.toFixed(2) }}</span>
                       </div>
                     </div>
                   </div>
@@ -900,47 +959,48 @@
             <!-- Subtotal -->
             <div class="calc-row">
               <span class="calc-label">Subtotal</span>
-              <span class="calc-value">${{ subtotal.toFixed(2) }}</span>
+              <span class="calc-value">{{ subtotal.toFixed(2) }}</span>
             </div>
             
             <!-- Descuento (solo si aplica) -->
             <div v-if="venta.monto_descuento_usd > 0" class="calc-row discount-row">
               <span class="calc-label">Descuento</span>
-              <span class="calc-value discount-value">-${{ montoDescuentoCalculado.toFixed(2) }}</span>
+              <span class="calc-value discount-value">-{{ montoDescuentoCalculado.toFixed(2) }}</span>
             </div>
             
             <!-- IVA (solo si aplica) -->
             <div v-if="venta.aplica_iva && ivaCalculado > 0" class="calc-row iva-row">
               <span class="calc-label">IVA (16%)</span>
-              <span class="calc-value iva-value">${{ ivaCalculado.toFixed(2) }}</span>
+              <span class="calc-value iva-value">{{ ivaCalculado.toFixed(2) }}</span>
             </div>
             
             <!-- Delivery (solo si aplica) -->
             <div v-if="venta.monto_delivery_usd > 0" class="calc-row delivery-row">
               <span class="calc-label">Delivery</span>
-                <span class="calc-value delivery-value">${{ (venta.monto_delivery_usd || 0).toFixed(2) }}</span>
+                <span class="calc-value delivery-value">{{ (venta.monto_delivery_usd || 0).toFixed(2) }}</span>
             </div>
             
             <!-- Total -->
             <div class="calc-row total-row">
               <span class="calc-label">Total</span>
-              <span class="calc-value total-value">${{ totalVenta.toFixed(2) }}</span>
+              <span class="calc-value total-value">{{ totalVenta.toFixed(2) }}</span>
             </div>
             
-            <!-- Tasa BCV (Editable) -->
-            <div class="calc-row rate-row editable-rate">
+            <!-- Tasa BCV (Automática) -->
+            <div class="calc-row rate-row">
               <span class="calc-label">Tasa BCV</span>
-              <div class="rate-input-container">
-                <input 
-                  type="number" 
-                  class="rate-input-field" 
-                  v-model.number="venta.tasa_bcv" 
-                  step="0.01" 
-                  min="0"
-                  placeholder="160.00"
-                  @change="validarTasaBCV"
-                >
+              <div class="rate-display-container">
+                <span class="rate-value">{{ venta.tasa_bcv.toFixed(2) }}</span>
                 <span class="rate-currency">Bs/USD</span>
+                <button 
+                  @click="actualizarTasaBCV" 
+                  class="btn-update-rate"
+                  :disabled="isUpdatingRate"
+                  title="Actualizar tasa del BCV"
+                >
+                  <span v-if="!isUpdatingRate">🔄</span>
+                  <span v-else>⏳</span>
+                </button>
               </div>
             </div>
             
@@ -967,7 +1027,7 @@
               <div class="mixed-amounts-display">
                 <div class="mixed-amount-item">
                   <span class="currency-label">USD:</span>
-                  <span class="currency-value">${{ montoMixtoUSD.toFixed(2) }}</span>
+                  <span class="currency-value">{{ montoMixtoUSD.toFixed(2) }}</span>
                   <span class="method-detail">({{ metodoPagoMixtoUSD === 'zelle' ? 'Zelle' : 'Efectivo' }})</span>
                 </div>
                 <div class="mixed-amount-item">
@@ -2627,14 +2687,8 @@ legend {
   font-weight: 700;
 }
 
-/* Tasa BCV Editable */
-.editable-rate {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.rate-input-container {
+/* Tasa BCV Display */
+.rate-display-container {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -2646,22 +2700,34 @@ legend {
   font-size: 0.9rem;
 }
 
-.rate-input-field {
-  width: 80px;
-  padding: 0.25rem 0.5rem;
+.btn-update-rate {
+  background: rgba(33, 150, 243, 0.1);
   border: 1px solid #2196f3;
   border-radius: 4px;
-  background: white;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.8rem;
   color: #1976d2;
-  font-weight: 700;
-  font-size: 0.9rem;
-  text-align: center;
 }
 
-.rate-input-field:focus {
-  outline: none;
-  border-color: #1565c0;
-  box-shadow: 0 0 0 2px rgba(21, 101, 192, 0.2);
+.btn-update-rate:hover:not(:disabled) {
+  background: rgba(33, 150, 243, 0.2);
+  transform: scale(1.05);
+}
+
+.btn-update-rate:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-update-rate:disabled span {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 /* Total en Bolívares */
@@ -4210,6 +4276,7 @@ input[type=number] {
 import { ref, onMounted, computed, watch } from 'vue';
 import { getProducts, createSale, getTasaCambio } from '../services/apiService.js';
 import { getClientePorCedula, buscarClientePorCriterio as buscarClientePorCriterioService, getClientes } from '../services/clientesService.js';
+import { actualizarTasaBCV as actualizarTasaBCVService } from '../services/bcvService.js';
 import ProductSearch from '../components/ProductSearch.vue';
 import ClientSearch from '../components/ClientSearch.vue';
 import { useNotifier } from '../composables/useNotifier.js';
@@ -4242,6 +4309,7 @@ const productoManual = ref({
   cantidad: 1
 });
 const isSubmitting = ref(false);
+const isUpdatingRate = ref(false);
 const productSearchRef = ref(null);
 const clientSearchRef = ref(null);
 
@@ -4252,6 +4320,7 @@ const quiereDescuento = ref(false);
 
 // Función para generar el estado inicial del formulario
 const getInitialVentaState = () => ({
+  cliente_id: null, // Agregar cliente_id
   cliente_cedula: '',
   cliente_nombre: '',
   cliente_apellido: '',
@@ -4261,7 +4330,7 @@ const getInitialVentaState = () => ({
   tipo_pago: '',
   metodo_pago: '',
   referencia_pago: '',
-  tasa_bcv: 160.0,
+  tasa_bcv: 166.58,
   entrega_inmediata: false,
   aplica_iva: false,
   monto_descuento_usd: null,
@@ -4269,8 +4338,7 @@ const getInitialVentaState = () => ({
   comentarios_descuento: '',
   comentarios: '',
   // Campos para abono
-  monto_abono: null,
-  fecha_vencimiento: ''
+  monto_abono: null
 });
 
 const venta = ref(getInitialVentaState());
@@ -4301,11 +4369,14 @@ onMounted(async () => {
   
   // Cargar tasa de cambio actual
   const tasa = await getTasaCambio();
+  console.log('🔍 Tasa obtenida en onMounted:', tasa);
   if (tasa) {
     venta.value.tasa_bcv = tasa;
+    console.log('✅ Tasa asignada a venta.value.tasa_bcv:', venta.value.tasa_bcv);
   } else {
     // Usar tasa por defecto si no hay tasa en la base de datos
-    venta.value.tasa_bcv = 160.0;
+    venta.value.tasa_bcv = 166.58;
+    console.log('⚠️ Usando tasa por defecto:', venta.value.tasa_bcv);
   }
   console.log('✅ Carga de datos completada');
 });
@@ -4372,7 +4443,7 @@ const total = computed(() => {
 });
 
 const totalVES = computed(() => {
-  return total.value * (venta.value.tasa_bcv || 160.0);
+  return total.value * (venta.value.tasa_bcv || 166.58);
 });
 
 // Verificar si el método de pago es en VES
@@ -4436,6 +4507,10 @@ const montoAbonoSimple = ref(0);
 // Variables para pago mixto
 const montoAbonoUSD = ref(0);
 const montoAbonoVES = ref(0);
+const metodoPagoAbonoUSD = ref('');
+const metodoPagoAbonoVES = ref('');
+const referenciaAbonoUSD = ref('');
+const referenciaAbonoVES = ref('');
 
 // Variables para pago mixto independiente
 const montoMixtoUSD = ref(0);
@@ -4465,7 +4540,7 @@ const opcionesMetodoPagoVES = [
 const conversionAbonoSimple = computed(() => {
   if (!montoAbonoSimple.value || montoAbonoSimple.value <= 0) return '';
   
-  const tasaBCV = venta.value.tasa_bcv || 160.0;
+  const tasaBCV = venta.value.tasa_bcv || 166.58;
   
   // Los métodos en USD son: Efectivo y Zelle
   const metodosUSD = ['efectivo', 'zelle'];
@@ -4550,38 +4625,43 @@ function calcularRestanteVES() {
 }
 
 // Funciones para cálculo automático del abono mixto
+// NOTA: En abono mixto NO se calcula el restante, solo se registra el monto del abono
 function calcularRestanteAbonoUSD() {
-  if (venta.value.tasa_bcv > 0 && montoAbonoUSD.value > 0) {
-    const totalVentaUSD = totalVenta.value;
-    const restanteUSD = totalVentaUSD - montoAbonoUSD.value;
-    
-    if (restanteUSD > 0) {
-      // Calcular el equivalente en VES
-      const restanteVES = restanteUSD * venta.value.tasa_bcv;
-      montoAbonoVES.value = Math.round(restanteVES * 100) / 100; // Redondear a 2 decimales
-    } else {
-      montoAbonoVES.value = 0;
-    }
+  // En abono mixto, no calculamos automáticamente el restante
+  // El usuario ingresa manualmente los montos USD y VES del abono
+  // Solo validamos que no exceda el total de la venta
+  if (totalAbonoCalculado.value > totalVenta.value) {
+    console.warn('⚠️ El abono no puede exceder el total de la venta');
   }
 }
 
 function calcularRestanteAbonoVES() {
-  if (venta.value.tasa_bcv > 0 && montoAbonoVES.value > 0) {
-    const totalVentaUSD = totalVenta.value;
-    const vesEnUSD = montoAbonoVES.value / venta.value.tasa_bcv;
-    const restanteUSD = totalVentaUSD - vesEnUSD;
-    
-    if (restanteUSD > 0) {
-      montoAbonoUSD.value = Math.round(restanteUSD * 100) / 100; // Redondear a 2 decimales
-    } else {
-      montoAbonoUSD.value = 0;
-    }
+  // En abono mixto, no calculamos automáticamente el restante
+  // El usuario ingresa manualmente los montos USD y VES del abono
+  // Solo validamos que no exceda el total de la venta
+  if (totalAbonoCalculado.value > totalVenta.value) {
+    console.warn('⚠️ El abono no puede exceder el total de la venta');
   }
 }
 
 // Saldo pendiente actualizado
 const saldoPendiente = computed(() => {
   return Math.max(0, totalVenta.value - totalAbonoCalculado.value);
+});
+
+// Computed properties para controlar visibilidad de referencias
+const requiereReferenciaUSD = computed(() => {
+  return metodoPagoAbonoUSD.value && 
+         metodoPagoAbonoUSD.value !== 'Efectivo (USD)';
+});
+
+const requiereReferenciaVES = computed(() => {
+  return metodoPagoAbonoVES.value && 
+         metodoPagoAbonoVES.value !== 'Punto de Venta (VES)';
+});
+
+const requiereReferenciaAbonoMixto = computed(() => {
+  return requiereReferenciaUSD.value || requiereReferenciaVES.value;
 });
 
 // Validación de abono mejorada
@@ -4596,7 +4676,25 @@ const esAbonoValido = computed(() => {
   } else {
     const montoValido = (montoAbonoUSD.value > 0 || montoAbonoVES.value > 0) && 
                        totalAbonoCalculado.value <= totalVenta.value;
-    return montoValido;
+    
+    // Validar que si hay monto USD, tenga método de pago USD
+    const metodoUSDValido = montoAbonoUSD.value <= 0 || metodoPagoAbonoUSD.value !== '';
+    
+    // Validar que si hay monto VES, tenga método de pago VES
+    const metodoVESValido = montoAbonoVES.value <= 0 || metodoPagoAbonoVES.value !== '';
+    
+    // Validar referencias cuando aplique
+    const requiereReferenciaUSDValida = metodoPagoAbonoUSD.value && 
+                                       metodoPagoAbonoUSD.value !== 'Efectivo (USD)' && 
+                                       montoAbonoUSD.value > 0;
+    const referenciaUSDValida = !requiereReferenciaUSDValida || referenciaAbonoUSD.value.trim() !== '';
+    
+    const requiereReferenciaVESValida = metodoPagoAbonoVES.value && 
+                                       metodoPagoAbonoVES.value !== 'Punto de Venta (VES)' && 
+                                       montoAbonoVES.value > 0;
+    const referenciaVESValida = !requiereReferenciaVESValida || referenciaAbonoVES.value.trim() !== '';
+    
+    return montoValido && metodoUSDValido && metodoVESValido && referenciaUSDValida && referenciaVESValida;
   }
 });
 
@@ -4703,6 +4801,7 @@ function abrirModalNuevoCliente() {
       try {
         // Aquí podrías agregar el cliente a la base de datos
         // Por ahora, solo lo agregamos al formulario
+        venta.value.cliente_id = null; // Nuevo cliente, sin ID aún
         venta.value.cliente_cedula = result.value.cedula;
         venta.value.cliente_nombre = result.value.nombre;
         venta.value.cliente_apellido = result.value.apellido;
@@ -4970,10 +5069,28 @@ function validarPrecio(index) {
 // Función para validar la tasa BCV
 function validarTasaBCV() {
   if (venta.value.tasa_bcv < 0) {
-    venta.value.tasa_bcv = 160.0;
+    venta.value.tasa_bcv = 166.58;
   }
   if (!venta.value.tasa_bcv || venta.value.tasa_bcv === 0) {
-    venta.value.tasa_bcv = 160.0;
+    venta.value.tasa_bcv = 166.58;
+  }
+}
+
+// Función para actualizar la tasa BCV automáticamente
+async function actualizarTasaBCV() {
+  try {
+    isUpdatingRate.value = true;
+    
+    const nuevaTasa = await actualizarTasaBCVService();
+    venta.value.tasa_bcv = nuevaTasa;
+    
+    showSuccess(`Tasa BCV actualizada: ${nuevaTasa.toFixed(2)} Bs/USD`);
+    
+  } catch (error) {
+    console.error('Error al actualizar tasa BCV:', error);
+    showError('No se pudo actualizar la tasa BCV. Usando tasa actual.');
+  } finally {
+    isUpdatingRate.value = false;
   }
 }
 
@@ -5107,6 +5224,7 @@ function buscarClientesEnTiempoReal() {
 
 function seleccionarCliente(cliente) {
   // Llenar los campos del formulario
+  venta.value.cliente_id = cliente.id; // Agregar cliente_id
   venta.value.cliente_cedula = cliente.cedula_rif;
   venta.value.cliente_nombre = cliente.nombre;
   venta.value.cliente_apellido = cliente.apellido;
@@ -5176,6 +5294,7 @@ function buscarCliente() {
       
       if (clienteEncontrado) {
         // Llenar los campos del formulario
+        venta.value.cliente_id = clienteEncontrado.id; // Agregar cliente_id
         venta.value.cliente_cedula = clienteEncontrado.cedula_rif;
         venta.value.cliente_nombre = clienteEncontrado.nombre;
         venta.value.cliente_apellido = clienteEncontrado.apellido;
@@ -5196,7 +5315,7 @@ function buscarCliente() {
           icon: 'info',
           confirmButtonText: 'Crear Nuevo Cliente',
           showCancelButton: true,
-    cancelButtonText: 'Cancelar'
+          cancelButtonText: 'Cancelar'
   }).then((result) => {
           if (result.isConfirmed) {
             nuevoCliente();
@@ -5259,6 +5378,7 @@ function nuevoCliente() {
   }).then((result) => {
     if (result.isConfirmed) {
       const cliente = result.value;
+      venta.value.cliente_id = null; // Nuevo cliente, sin ID aún
       venta.value.cliente_cedula = cliente.cedula;
       venta.value.cliente_nombre = cliente.nombre;
       venta.value.cliente_apellido = cliente.apellido;
@@ -5283,6 +5403,10 @@ function resetForm() {
   montoAbonoSimple.value = 0;
   montoAbonoUSD.value = 0;
   montoAbonoVES.value = 0;
+  metodoPagoAbonoUSD.value = '';
+  metodoPagoAbonoVES.value = '';
+  referenciaAbonoUSD.value = '';
+  referenciaAbonoVES.value = '';
   
   // Limpiar campos de pago mixto independiente
   montoMixtoUSD.value = 0;
@@ -5299,7 +5423,6 @@ function resetForm() {
 }
 
 async function handleSubmit() {
-  try {
   // Validaciones
   if (detallesPedido.value.length === 0) {
       await showError('Error', 'Debes añadir al menos un producto.');
@@ -5394,7 +5517,6 @@ async function handleSubmit() {
         }
       }
       
-      if (!venta.value.fecha_vencimiento) mensajeError += '\n• Debe seleccionar una fecha de vencimiento';
       if (totalAbonoCalculado.value > totalVenta.value) {
         mensajeError += `\n• El total del abono ($${totalAbonoCalculado.value.toFixed(2)}) no puede exceder el total de la venta ($${totalVenta.value.toFixed(2)})`;
       }
@@ -5451,8 +5573,11 @@ async function handleSubmit() {
   
   isSubmitting.value = true;
   
+  console.log('🔍 Tasa BCV antes de enviar:', venta.value.tasa_bcv);
+  
   const payload = {
     // Datos del cliente
+    cliente_id: venta.value.cliente_id, // Agregar cliente_id
     cliente_cedula: venta.value.cliente_cedula,
     cliente_nombre: venta.value.cliente_nombre,
     cliente_apellido: venta.value.cliente_apellido,
@@ -5484,9 +5609,19 @@ async function handleSubmit() {
     monto_abono_ves: (venta.value.metodo_pago === 'Abono' || venta.value.tipo_pago === 'Abono') && tipoPagoAbono.value === 'mixto' ? 
       montoAbonoVES.value : 0,
     
+    // Referencias para abono mixto (para reportes y cierres de caja)
+    // SOLO se envían si es un abono mixto, NO para pago mixto de contado
+    referencia_abono_usd: (venta.value.metodo_pago === 'Abono' || venta.value.tipo_pago === 'Abono') && tipoPagoAbono.value === 'mixto' ? 
+      referenciaAbonoUSD.value : null,
+    referencia_abono_ves: (venta.value.metodo_pago === 'Abono' || venta.value.tipo_pago === 'Abono') && tipoPagoAbono.value === 'mixto' ? 
+      referenciaAbonoVES.value : null,
+    metodo_pago_abono_usd: (venta.value.metodo_pago === 'Abono' || venta.value.tipo_pago === 'Abono') && tipoPagoAbono.value === 'mixto' ? 
+      metodoPagoAbonoUSD.value : null,
+    metodo_pago_abono_ves: (venta.value.metodo_pago === 'Abono' || venta.value.tipo_pago === 'Abono') && tipoPagoAbono.value === 'mixto' ? 
+      metodoPagoAbonoVES.value : null,
+    
     // Total del abono calculado
     total_abono_usd: (venta.value.metodo_pago === 'Abono' || venta.value.tipo_pago === 'Abono') ? totalAbonoCalculado.value : 0,
-    fecha_vencimiento: venta.value.fecha_vencimiento || null,
     
     // Datos del pago mixto independiente (si aplica)
     es_pago_mixto: venta.value.metodo_pago === 'Mixto',
@@ -5521,7 +5656,7 @@ async function handleSubmit() {
   
   try {
     const resultado = await createSale(payload);
-      await Swal.fire({
+    await Swal.fire({
       title: '¡Venta Registrada!',
       text: `Venta #${resultado} procesada correctamente`,
       icon: 'success',
@@ -5530,17 +5665,13 @@ async function handleSubmit() {
     resetForm();
   } catch (error) {
     console.error("Error al procesar la venta:", error);
-      await Swal.fire({
-        title: 'Error',
-        text: `No se pudo procesar la venta: ${error.message}`,
-        icon: 'error',
-        confirmButtonText: 'Entendido'
-      });
+    await Swal.fire({
+      title: 'Error',
+      text: `No se pudo procesar la venta: ${error.message}`,
+      icon: 'error',
+      confirmButtonText: 'Entendido'
+    });
   } finally {
-      isSubmitting.value = false;
-    }
-  } catch (validationError) {
-    console.error("Error de validación:", validationError);
     isSubmitting.value = false;
   }
 }

@@ -6,12 +6,52 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
+    "format": "prettier --write src/",
+    "format:check": "prettier --check src/",
+    "type-check": "vue-tsc --noEmit",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest --watch",
+    "setup:dev": "chmod +x scripts/setup-dev.sh && ./scripts/setup-dev.sh",
+    "db:optimize": "echo 'Ejecutar supabase-optimizations.sql en tu base de datos'",
+    "analyze": "vite-bundle-analyzer",
+    "clean": "rm -rf dist node_modules/.vite",
+    "prepare": "husky install",
+    "bcv:update": "node scripts/bcv-simple.js",
+    "bcv:auto": "node scripts/update-bcv-rate.js continuous",
+    "bcv:test": "node scripts/bcv-simple.js",
+    "bcv:setup": "node scripts/setup-bcv-system.js",
+    "bcv:start": "node scripts/start-bcv-automation.js",
+    "bcv:install": "npm run bcv:setup && npm run bcv:test",
+    "bcv:integration": "node test-bcv-integration.js",
+    "bcv:fix-orders": "node scripts/update-existing-orders-rate.js",
+    "bcv:test-load": "node test-tasa-carga.js",
+    "bcv:force": "node scripts/force-bcv-rate.js",
+    "bcv:fix-abonos": "node scripts/fix-abono-rates.js",
+    "bcv:fix-abonos-complete": "node scripts/fix-abono-complete.js",
+    "debt:analyze": "node scripts/analyze-debt-database.js",
+    "abonos:create-table": "echo 'Ejecutar scripts/create-abonos-table.sql en Supabase'",
+    "abonos:migrate": "node scripts/migrate-existing-abonos.js",
+    "abonos:service": "node scripts/abonos-service.js",
+    "db:verify": "node scripts/verify-supabase-database.js",
+    "db:create-tables": "echo 'Ejecutar scripts/create-missing-tables.sql en Supabase'",
+    "db:migrate-data": "echo 'Ejecutar scripts/migrate-data-to-new-tables.sql en Supabase'",
+    "db:execute-sql": "node scripts/execute-sql-in-supabase.js",
+    "db:create-simple": "node scripts/create-tables-simple.js",
+    "fix:abono-system": "node scripts/fix-abono-system.js",
+    "diagnose:abono": "node scripts/diagnose-abono-system.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
+    "axios": "1.12.2",
     "chart.js": "^4.5.0",
+    "cheerio": "1.1.2",
     "dotenv": "^17.2.2",
+    "node-cron": "4.2.1",
     "pinia": "3.0.3",
     "sweetalert2": "^11.12.3",
     "vue": "^3.4.29",
@@ -19,9 +59,29 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "4.6.2",
-    "vite": "4.5.3"
+    "@vue/test-utils": "^2.4.3",
+    "@vue/tsconfig": "^0.5.1",
+    "eslint": "^8.57.0",
+    "eslint-plugin-vue": "^9.19.2",
+    "husky": "^8.0.3",
+    "jsdom": "^23.0.1",
+    "prettier": "^3.2.5",
+    "typescript": "^5.3.3",
+    "vite": "4.5.3",
+    "vite-bundle-analyzer": "^0.7.0",
+    "vitest": "^1.2.2",
+    "vue-tsc": "^1.8.25"
   },
   "engines": {
     "node": "22.x"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,vue}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
   }
 }

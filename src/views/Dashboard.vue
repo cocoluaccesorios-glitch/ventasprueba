@@ -219,7 +219,7 @@
           <div class="card-body">
             <div class="row">
               <div class="col-md-3 mb-3">
-                <router-link to="/" class="btn btn-primary w-100 h-100 d-flex flex-column align-items-center justify-content-center py-4">
+                <router-link to="/ventas" class="btn btn-primary w-100 h-100 d-flex flex-column align-items-center justify-content-center py-4">
                   <i class="bi bi-cart-plus fs-1 mb-2"></i>
                   <span>Nueva Venta</span>
                 </router-link>

@@ -94,7 +94,8 @@ export const useAuthStore = defineStore('auth', () => {
     
     const routePermissions = {
       '/dashboard': ['all', 'view_reports'],
-      '/nueva-venta': ['all', 'create_orders'],
+      '/ventas': ['all', 'create_orders'],
+      '/nueva-venta': ['all', 'create_orders'], // Mantener compatibilidad
       '/pedidos': ['all', 'view_orders', 'manage_orders'],
       '/inventario': ['all', 'manage_inventory'],
       '/clientes': ['all', 'manage_clients'],

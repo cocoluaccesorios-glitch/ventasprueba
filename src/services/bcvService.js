@@ -15,16 +15,15 @@ export async function obtenerTasaBCV() {
   try {
     console.log('🔄 Obteniendo tasa de cambio del BCV...')
     
-    // Usar fetch nativo del navegador en lugar de axios para evitar problemas de CORS
+    // Usar fetch nativo del navegador con configuración para evitar CORS
     const response = await fetch('https://www.bcv.org.ve', {
       method: 'GET',
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
         'Accept-Language': 'es-ES,es;q=0.9',
         'Cache-Control': 'no-cache',
       },
-      mode: 'cors', // Permitir CORS
+      mode: 'no-cors', // Evitar CORS
       credentials: 'omit'
     })
     
@@ -212,8 +211,7 @@ export async function getTasaBCV() {
         .insert({
           fecha: fechaHoy,
           tasa_bcv: tasaActual,
-          fuente: 'bcv_web_scraper',
-          fecha_actualizacion: new Date().toISOString()
+          fuente: 'bcv_web_scraper'
         })
       
       if (insertError) {
@@ -292,12 +290,11 @@ async function mostrarAlertaTasaManual() {
         const fechaHoy = new Date().toISOString().split('T')[0]
         const { error } = await supabase
           .from('tasa_cambio')
-          .insert({
-            fecha: fechaHoy,
-            tasa_bcv: tasa,
-            fuente: 'manual_usuario',
-            fecha_actualizacion: new Date().toISOString()
-          })
+        .insert({
+          fecha: fechaHoy,
+          tasa_bcv: tasa,
+          fuente: 'manual_usuario'
+        })
         
         if (!error) {
           console.log(`✅ Tasa manual guardada en BD: ${tasa} Bs/USD`)

@@ -5,13 +5,13 @@ import App from './App.vue'
 import './assets/styles.css'
 
 // ========================================
-// VERSIÓN 4.0 - CAMBIO DRÁSTICO
+// VERSIÓN 5.0 - CAMBIO DRÁSTICO
 // ========================================
-// Timestamp: 2025-09-23T23:05:00Z
+// Timestamp: 2025-09-23T23:15:00Z
 // Forzar nueva versión para eliminar cache
 // ========================================
 
-console.log('🚀 VERSIÓN 4.0 - NUEVA LÓGICA BCV IMPLEMENTADA')
+console.log('🚀 VERSIÓN 5.0 - NUEVA LÓGICA BCV IMPLEMENTADA - SOLO BD')
 
 const app = createApp(App)
 const pinia = createPinia()

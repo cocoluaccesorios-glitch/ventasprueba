@@ -5,13 +5,16 @@ import App from './App.vue'
 import './assets/styles.css'
 
 // ========================================
-// VERSIÓN 5.0 - CAMBIO DRÁSTICO
+// VERSIÓN 6.0 - CAMBIO ULTRA DRÁSTICO
 // ========================================
-// Timestamp: 2025-09-23T23:15:00Z
-// Forzar nueva versión para eliminar cache
+// Timestamp: 2025-09-23T23:20:00Z
+// CAMBIO COMPLETO PARA FORZAR NUEVA VERSIÓN
+// SOLO BASE DE DATOS - SIN PROXIES CORS
 // ========================================
 
-console.log('🚀 VERSIÓN 5.0 - NUEVA LÓGICA BCV IMPLEMENTADA - SOLO BD')
+console.log('🚀🚀🚀 VERSIÓN 6.0 - CAMBIO ULTRA DRÁSTICO - SOLO BD 🚀🚀🚀')
+console.log('🔥 NUEVA LÓGICA BCV IMPLEMENTADA - SIN PROXIES CORS 🔥')
+console.log('✅ SOLO BUSCA EN BASE DE DATOS - TASA: 168.4157 Bs/USD ✅')
 
 const app = createApp(App)
 const pinia = createPinia()

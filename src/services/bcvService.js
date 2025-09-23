@@ -23,14 +23,8 @@ export async function obtenerTasaBCV() {
       return tasaReal
     }
     
-    // Método 2: Intentar con script Node.js (fallback)
-    console.log('🔄 Intentando con script Node.js...')
-    tasaReal = await ejecutarScriptBCV()
-    
-    if (tasaReal && tasaReal > 0) {
-      console.log(`✅ Tasa BCV obtenida con script: ${tasaReal} Bs/USD`)
-      return tasaReal
-    }
+    // Método 2: Script Node.js deshabilitado en navegador
+    console.log('⚠️ Script Node.js no disponible en navegador')
     
     // Si ambos métodos fallan, mostrar alerta para entrada manual
     console.log('❌ No se pudo obtener la tasa del BCV automáticamente')
@@ -66,39 +60,66 @@ export async function obtenerTasaBCV() {
  */
 async function obtenerTasaConProxies() {
   const proxies = [
-    'https://api.allorigins.win/raw?url=',
-    'https://cors-anywhere.herokuapp.com/',
-    'https://thingproxy.freeboard.io/fetch/',
-    'https://api.codetabs.com/v1/proxy?quest='
+    {
+      name: 'AllOrigins',
+      url: 'https://api.allorigins.win/raw?url=',
+      timeout: 15000
+    },
+    {
+      name: 'CORS Anywhere',
+      url: 'https://cors-anywhere.herokuapp.com/',
+      timeout: 10000
+    },
+    {
+      name: 'ThingProxy',
+      url: 'https://thingproxy.freeboard.io/fetch/',
+      timeout: 10000
+    },
+    {
+      name: 'CodeTabs',
+      url: 'https://api.codetabs.com/v1/proxy?quest=',
+      timeout: 10000
+    }
   ]
 
   for (const proxy of proxies) {
     try {
-      console.log(`🔄 Intentando con proxy: ${proxy}`)
+      console.log(`🔄 Intentando con proxy: ${proxy.name}`)
       
-      const url = `${proxy}https://www.bcv.org.ve`
+      const url = `${proxy.url}https://www.bcv.org.ve`
+      
+      // Crear AbortController para timeout
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), proxy.timeout)
+      
       const response = await fetch(url, {
         method: 'GET',
         headers: {
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'Accept-Language': 'es-ES,es;q=0.9',
+          'Cache-Control': 'no-cache'
         },
-        timeout: 10000
+        signal: controller.signal
       })
 
+      clearTimeout(timeoutId)
+
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`)
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
       }
 
       const html = await response.text()
-      console.log(`✅ HTML obtenido con proxy (${html.length} caracteres)`)
+      console.log(`✅ HTML obtenido con ${proxy.name} (${html.length} caracteres)`)
       
-      // Buscar la tasa en el HTML usando patrones simples
+      // Buscar la tasa en el HTML usando patrones mejorados
       const patterns = [
         /USD[:\s]*(\d{1,3}[,.]\d{2,8})/i,
         /\$[:\s]*(\d{1,3}[,.]\d{2,8})/i,
         /(\d{1,3}[,.]\d{2,8})\s*USD/i,
-        /(\d{1,3}[,.]\d{2,8})\s*Bs/i
+        /(\d{1,3}[,.]\d{2,8})\s*Bs/i,
+        /Tasa[:\s]*(\d{1,3}[,.]\d{2,8})/i,
+        /Cambio[:\s]*(\d{1,3}[,.]\d{2,8})/i
       ]
 
       for (const pattern of patterns) {
@@ -107,18 +128,25 @@ async function obtenerTasaConProxies() {
           let tasa = match[1].replace(',', '.')
           tasa = parseFloat(tasa)
           if (tasa > 50 && tasa < 1000) {
-            console.log(`✅ Tasa encontrada con proxy: ${tasa} Bs/USD`)
+            console.log(`✅ Tasa encontrada con ${proxy.name}: ${tasa} Bs/USD`)
             return tasa
           }
         }
       }
 
+      console.warn(`⚠️ No se encontró tasa válida con ${proxy.name}`)
+
     } catch (error) {
-      console.warn(`⚠️ Error con proxy ${proxy}:`, error.message)
+      if (error.name === 'AbortError') {
+        console.warn(`⚠️ Timeout con ${proxy.name} (${proxy.timeout}ms)`)
+      } else {
+        console.warn(`⚠️ Error con ${proxy.name}:`, error.message)
+      }
       continue
     }
   }
 
+  console.warn('❌ Todos los proxies CORS fallaron')
   return null
 }
 
@@ -416,11 +444,9 @@ async function mostrarAlertaTasaManual() {
         min: '50',
         max: '1000'
       },
-      showCancelButton: true,
+      showCancelButton: false,
       confirmButtonText: 'Usar esta tasa',
-      cancelButtonText: 'Usar tasa de respaldo',
       confirmButtonColor: '#28a745',
-      cancelButtonColor: '#6c757d',
       inputValidator: (value) => {
         if (!value) {
           return 'Debes ingresar una tasa válida'

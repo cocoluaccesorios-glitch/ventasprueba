@@ -1,8 +1,13 @@
 import { supabase } from '../lib/supabaseClient.js'
 import Swal from 'sweetalert2'
 
-// Versión: 2.0 - Solo BD, sin proxies CORS
-// Timestamp: 2025-09-23T22:45:00Z - Forzar nueva versión
+// ========================================
+// VERSIÓN 3.0 - NUEVA LÓGICA IMPLEMENTADA
+// ========================================
+// Timestamp: 2025-09-23T22:55:00Z
+// Cambio drástico para forzar nueva versión
+// Solo busca en base de datos - SIN PROXIES CORS
+// ========================================
 
 /**
  * Obtiene la tasa de cambio del BCV desde la base de datos
@@ -10,7 +15,8 @@ import Swal from 'sweetalert2'
  */
 export async function obtenerTasaBCV() {
   try {
-    console.log('🔄 [VERSIÓN 2.0] Obteniendo tasa BCV desde la base de datos...')
+    console.log('🚀 [VERSIÓN 3.0] NUEVA LÓGICA - Solo base de datos!')
+    console.log('🔄 Obteniendo tasa BCV desde la base de datos...')
     
     const fechaHoy = new Date().toISOString().split('T')[0]
     console.log(`📅 Buscando tasa para ${fechaHoy}...`)

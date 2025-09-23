@@ -9,6 +9,7 @@ import axios from 'axios'
 import * as cheerio from 'cheerio'
 import { createClient } from '@supabase/supabase-js'
 import dotenv from 'dotenv'
+import https from 'https'
 
 // Cargar variables de entorno
 dotenv.config()
@@ -39,7 +40,7 @@ async function obtenerTasaBCV() {
         'Cache-Control': 'no-cache',
       },
       timeout: 15000,
-      httpsAgent: new (await import('https')).Agent({
+      httpsAgent: new https.Agent({
         rejectUnauthorized: false // Permitir certificados SSL no verificados
       })
     })
@@ -104,10 +105,7 @@ async function obtenerTasaBCV() {
     
   } catch (error) {
     console.error('❌ Error al obtener tasa del BCV:', error.message)
-    
-    // Tasa de respaldo basada en la que viste (redondeada a 4 decimales)
-    console.log('🔄 Usando tasa de respaldo: 166.5800')
-    return 166.5800
+    throw error
   }
 }
 

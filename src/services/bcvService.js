@@ -57,26 +57,53 @@ export async function obtenerTasaBCV() {
  */
 async function ejecutarScriptBCV() {
   try {
+    console.log('🔄 Ejecutando script BCV...');
+    
     // Usar el script existente que ya funciona
     const { exec } = await import('child_process');
     const { promisify } = await import('util');
     const execAsync = promisify(exec);
     
     // Ejecutar el script bcv-simple.js que ya existe
-    const { stdout, stderr } = await execAsync('node scripts/bcv-simple.js');
+    const { stdout, stderr } = await execAsync('node scripts/bcv-simple.js', {
+      timeout: 30000, // 30 segundos de timeout
+      cwd: process.cwd()
+    });
     
-    // Buscar la tasa en la salida
-    const match = stdout.match(/Tasa obtenida: (\d+\.?\d*)/);
-    if (match) {
-      const tasa = parseFloat(match[1]);
-      console.log(`✅ Tasa obtenida del script: ${tasa} Bs/USD`);
-      return tasa;
+    if (stderr && stderr.trim()) {
+      console.warn('⚠️ Stderr del script BCV:', stderr);
     }
     
+    // Buscar diferentes patrones de salida
+    const patterns = [
+      /Tasa obtenida: (\d+\.?\d*)/,
+      /Tasa BCV extraída: (\d+\.?\d*)/,
+      /Nueva tasa: (\d+\.?\d*)/,
+      /(\d+\.?\d*)\s*Bs\/USD/
+    ];
+    
+    for (const pattern of patterns) {
+      const match = stdout.match(pattern);
+      if (match) {
+        const tasa = parseFloat(match[1]);
+        if (tasa > 50 && tasa < 1000) { // Validar rango razonable
+          console.log(`✅ Tasa obtenida del script: ${tasa} Bs/USD`);
+          return tasa;
+        }
+      }
+    }
+    
+    console.warn('⚠️ No se pudo extraer tasa válida del script BCV');
     return null;
     
   } catch (error) {
     console.warn('⚠️ Error en ejecutarScriptBCV:', error.message);
+    
+    // Si es un error de timeout, mostrarlo específicamente
+    if (error.code === 'TIMEOUT') {
+      console.warn('⚠️ Timeout ejecutando script BCV (30s)');
+    }
+    
     return null;
   }
 }
@@ -242,20 +269,32 @@ export async function getTasaBCV() {
     
     console.log(`✅ Tasa BCV actual obtenida: ${tasaActual} Bs/USD`)
     
-    // Intentar guardar la tasa actual en la base de datos
+    // Intentar guardar la tasa actual en la base de datos (solo si no existe para hoy)
     const fechaHoy = new Date().toISOString().split('T')[0]
     try {
-      const { error: insertError } = await supabase
+      // Verificar si ya existe una tasa para hoy
+      const { data: tasaExistente, error: selectError } = await supabase
         .from('tasa_cambio')
-        .insert({
-          fecha: fechaHoy,
-          tasa_bcv: tasaActual
-        })
+        .select('id')
+        .eq('fecha', fechaHoy)
+        .limit(1)
       
-      if (insertError) {
-        console.warn('⚠️ No se pudo guardar la tasa en la BD:', insertError.message)
+      if (tasaExistente && tasaExistente.length > 0) {
+        console.log(`✅ Ya existe una tasa para ${fechaHoy}, no se actualiza`)
       } else {
-        console.log(`✅ Tasa actual guardada en BD: ${tasaActual} Bs/USD`)
+        // Insertar nueva tasa solo si no existe
+        const { error: insertError } = await supabase
+          .from('tasa_cambio')
+          .insert({
+            fecha: fechaHoy,
+            tasa_bcv: tasaActual
+          })
+        
+        if (insertError) {
+          console.warn('⚠️ No se pudo guardar la tasa en la BD:', insertError.message)
+        } else {
+          console.log(`✅ Tasa actual guardada en BD: ${tasaActual} Bs/USD`)
+        }
       }
     } catch (insertErr) {
       console.warn('⚠️ Error al guardar tasa en BD:', insertErr.message)
@@ -327,18 +366,31 @@ async function mostrarAlertaTasaManual() {
       const tasa = parseFloat(tasaManual)
       console.log(`✅ Tasa manual ingresada: ${tasa} Bs/USD`)
       
-      // Guardar la tasa manual en la base de datos
+      // Guardar la tasa manual en la base de datos (solo si no existe para hoy)
       try {
         const fechaHoy = new Date().toISOString().split('T')[0]
-        const { error } = await supabase
-          .from('tasa_cambio')
-        .insert({
-          fecha: fechaHoy,
-          tasa_bcv: tasa
-        })
         
-        if (!error) {
-          console.log(`✅ Tasa manual guardada en BD: ${tasa} Bs/USD`)
+        // Verificar si ya existe una tasa para hoy
+        const { data: tasaExistente, error: selectError } = await supabase
+          .from('tasa_cambio')
+          .select('id')
+          .eq('fecha', fechaHoy)
+          .limit(1)
+        
+        if (tasaExistente && tasaExistente.length > 0) {
+          console.log(`✅ Ya existe una tasa para ${fechaHoy}, no se actualiza`)
+        } else {
+          // Insertar nueva tasa solo si no existe
+          const { error } = await supabase
+            .from('tasa_cambio')
+            .insert({
+              fecha: fechaHoy,
+              tasa_bcv: tasa
+            })
+          
+          if (!error) {
+            console.log(`✅ Tasa manual guardada en BD: ${tasa} Bs/USD`)
+          }
         }
       } catch (err) {
         console.warn('⚠️ Error al guardar tasa manual:', err.message)

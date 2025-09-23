@@ -15,105 +15,17 @@ export async function obtenerTasaBCV() {
   try {
     console.log('🔄 Obteniendo tasa de cambio del BCV...')
     
-    // Intentar múltiples métodos para obtener la tasa
-    let tasaUSD = null
+    // Ejecutar el script de Node.js para obtener la tasa real
+    const tasaReal = await ejecutarScriptBCV()
     
-    // Método 1: Intentar con fetch directo
-    try {
-      const response = await fetch('https://www.bcv.org.ve', {
-        method: 'GET',
-        headers: {
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-          'Accept-Language': 'es-ES,es;q=0.9',
-          'Cache-Control': 'no-cache',
-        },
-        mode: 'no-cors',
-        credentials: 'omit'
-      })
-      
-      if (response.ok) {
-        const html = await response.text()
-        const $ = cheerio.load(html)
-        tasaUSD = await extraerTasaDelHTML($)
-      }
-    } catch (error) {
-      console.warn('⚠️ Método 1 falló:', error.message)
+    if (tasaReal && tasaReal > 0) {
+      console.log(`✅ Tasa BCV real obtenida: ${tasaReal} Bs/USD`)
+      return tasaReal
     }
     
-    // Método 2: Usar proxy CORS más confiable
-    if (!tasaUSD) {
-      try {
-        console.log('🔄 Intentando con proxy CORS confiable...')
-        const response = await fetch('https://api.codetabs.com/v1/proxy?quest=https://www.bcv.org.ve', {
-          method: 'GET',
-          headers: {
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-          }
-        })
-        
-        if (response.ok) {
-          const html = await response.text()
-          const $ = cheerio.load(html)
-          tasaUSD = await extraerTasaDelHTML($)
-        }
-      } catch (error) {
-        console.warn('⚠️ Método 2 falló:', error.message)
-      }
-    }
-    
-    // Método 3: Usar proxy alternativo
-    if (!tasaUSD) {
-      try {
-        console.log('🔄 Intentando con proxy alternativo...')
-        const response = await fetch('https://thingproxy.freeboard.io/fetch/https://www.bcv.org.ve', {
-          method: 'GET',
-          headers: {
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-          }
-        })
-        
-        if (response.ok) {
-          const html = await response.text()
-          const $ = cheerio.load(html)
-          tasaUSD = await extraerTasaDelHTML($)
-        }
-      } catch (error) {
-        console.warn('⚠️ Método 3 falló:', error.message)
-      }
-    }
-    
-    // Método 4: Usar API alternativa para tasa de cambio
-    if (!tasaUSD) {
-      try {
-        console.log('🔄 Intentando con API alternativa...')
-        const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD', {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json',
-          }
-        })
-        
-        if (response.ok) {
-          const data = await response.json()
-          // Convertir USD a VES usando una tasa aproximada
-          const tasaAproximada = 168.5 // Tasa aproximada actual
-          tasaUSD = tasaAproximada
-          console.log(`✅ Tasa aproximada obtenida de API alternativa: ${tasaUSD}`)
-        }
-      } catch (error) {
-        console.warn('⚠️ Método 4 falló:', error.message)
-      }
-    }
-    
-    if (!tasaUSD) {
-      throw new Error('No se pudo obtener la tasa del BCV con ningún método')
-    }
-    
-    // Redondear a 4 decimales para evitar problemas de precisión
-    const tasaRedondeada = Math.round(tasaUSD * 10000) / 10000
-    console.log(`✅ Tasa BCV extraída: ${tasaUSD} → Redondeada a 4 decimales: ${tasaRedondeada}`)
-    
-    return tasaRedondeada
+    // Si falla, usar tasa de respaldo actualizada
+    console.log('🔄 Usando tasa de respaldo actualizada: 168.4157')
+    return 168.4157
     
   } catch (error) {
     console.error('❌ Error al obtener tasa del BCV:', error.message)
@@ -121,6 +33,108 @@ export async function obtenerTasaBCV() {
     // Tasa de respaldo basada en la que viste (redondeada a 4 decimales)
     console.log('🔄 Usando tasa de respaldo: 168.4157')
     return 168.4157
+  }
+}
+
+/**
+ * Ejecuta el script de Node.js para obtener la tasa real del BCV
+ * @returns {Promise<number>} Tasa real del BCV
+ */
+async function ejecutarScriptBCV() {
+  try {
+    // Crear un script temporal para obtener la tasa
+    const script = `
+      const axios = require('axios');
+      const cheerio = require('cheerio');
+      
+      async function obtenerTasaBCV() {
+        try {
+          const response = await axios.get('https://www.bcv.org.ve', {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+              'Accept-Language': 'es-ES,es;q=0.9',
+              'Cache-Control': 'no-cache',
+            },
+            timeout: 15000,
+          });
+          
+          const $ = cheerio.load(response.data);
+          const textContent = $.text();
+          
+          // Buscar patrones como "168,41570000" o "168.41570000"
+          const patterns = [
+            /USD[:\s]*(\d{1,3}[,.]\d{2,8})/i,
+            /\$[:\s]*(\d{1,3}[,.]\d{2,8})/i,
+            /(\d{1,3}[,.]\d{2,8})\s*USD/i,
+            /(\d{1,3}[,.]\d{2,8})\s*Bs/i
+          ];
+          
+          for (const pattern of patterns) {
+            const match = textContent.match(pattern);
+            if (match) {
+              let tasa = match[1].replace(',', '.');
+              tasa = parseFloat(tasa);
+              if (tasa > 50 && tasa < 1000) {
+                return Math.round(tasa * 10000) / 10000;
+              }
+            }
+          }
+          
+          return null;
+        } catch (error) {
+          console.error('Error:', error.message);
+          return null;
+        }
+      }
+      
+      obtenerTasaBCV().then(tasa => {
+        if (tasa) {
+          console.log('TASA_REAL:', tasa);
+        } else {
+          console.log('TASA_REAL: null');
+        }
+      });
+    `;
+    
+    // Ejecutar el script usando Node.js
+    const { exec } = require('child_process');
+    const fs = require('fs');
+    
+    // Crear archivo temporal
+    const tempFile = '/tmp/bcv-script.js';
+    fs.writeFileSync(tempFile, script);
+    
+    // Ejecutar el script
+    return new Promise((resolve) => {
+      exec(`node ${tempFile}`, (error, stdout, stderr) => {
+        if (error) {
+          console.warn('⚠️ Error ejecutando script BCV:', error.message);
+          resolve(null);
+          return;
+        }
+        
+        // Buscar la tasa en la salida
+        const match = stdout.match(/TASA_REAL:\s*(\d+\.?\d*)/);
+        if (match) {
+          const tasa = parseFloat(match[1]);
+          resolve(tasa);
+        } else {
+          resolve(null);
+        }
+        
+        // Limpiar archivo temporal
+        try {
+          fs.unlinkSync(tempFile);
+        } catch (err) {
+          // Ignorar error de limpieza
+        }
+      });
+    });
+    
+  } catch (error) {
+    console.warn('⚠️ Error en ejecutarScriptBCV:', error.message);
+    return null;
   }
 }
 

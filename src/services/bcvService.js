@@ -15,74 +15,76 @@ export async function obtenerTasaBCV() {
   try {
     console.log('🔄 Obteniendo tasa de cambio del BCV...')
     
-    // Usar fetch nativo del navegador con configuración para evitar CORS
-    const response = await fetch('https://www.bcv.org.ve', {
-      method: 'GET',
-      headers: {
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'es-ES,es;q=0.9',
-        'Cache-Control': 'no-cache',
-      },
-      mode: 'no-cors', // Evitar CORS
-      credentials: 'omit'
-    })
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    
-    const html = await response.text()
-
-    const $ = cheerio.load(html)
-    
-    // Buscar la tasa USD en el contenido de la página
+    // Intentar múltiples métodos para obtener la tasa
     let tasaUSD = null
     
-    // Método 1: Buscar por el patrón específico
-    const textContent = $.text()
+    // Método 1: Intentar con fetch directo
+    try {
+      const response = await fetch('https://www.bcv.org.ve', {
+        method: 'GET',
+        headers: {
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'es-ES,es;q=0.9',
+          'Cache-Control': 'no-cache',
+        },
+        mode: 'no-cors',
+        credentials: 'omit'
+      })
+      
+      if (response.ok) {
+        const html = await response.text()
+        const $ = cheerio.load(html)
+        tasaUSD = await extraerTasaDelHTML($)
+      }
+    } catch (error) {
+      console.warn('⚠️ Método 1 falló:', error.message)
+    }
     
-    // Buscar patrones como "166,58340000" o "166.58340000"
-    const patterns = [
-      /USD[:\s]*(\d{1,3}[,.]\d{2,8})/i,
-      /\$[:\s]*(\d{1,3}[,.]\d{2,8})/i,
-      /(\d{1,3}[,.]\d{2,8})\s*USD/i,
-      /(\d{1,3}[,.]\d{2,8})\s*Bs/i
-    ]
-    
-    for (const pattern of patterns) {
-      const match = textContent.match(pattern)
-      if (match) {
-        let tasa = match[1].replace(',', '.')
-        tasa = parseFloat(tasa)
-        if (tasa > 50 && tasa < 1000) { // Rango razonable para la tasa
-          tasaUSD = tasa
-          console.log(`✅ Tasa encontrada con patrón: ${tasa}`)
-          break
+    // Método 2: Usar proxy CORS si el método 1 falla
+    if (!tasaUSD) {
+      try {
+        console.log('🔄 Intentando con proxy CORS...')
+        const response = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://www.bcv.org.ve'), {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+          }
+        })
+        
+        if (response.ok) {
+          const data = await response.json()
+          const $ = cheerio.load(data.contents)
+          tasaUSD = await extraerTasaDelHTML($)
         }
+      } catch (error) {
+        console.warn('⚠️ Método 2 falló:', error.message)
       }
     }
     
-    // Método 2: Buscar en elementos específicos
+    // Método 3: Usar otro proxy si el método 2 falla
     if (!tasaUSD) {
-      $('*').each((i, element) => {
-        const text = $(element).text().trim()
-        if (text.includes('USD') || text.includes('$')) {
-          const match = text.match(/(\d{1,3}[,.]\d{2,8})/)
-          if (match) {
-            let tasa = match[1].replace(',', '.')
-            tasa = parseFloat(tasa)
-            if (tasa > 50 && tasa < 1000) {
-              tasaUSD = tasa
-              console.log(`✅ Tasa encontrada en elemento: ${tasa}`)
-              return false // Salir del loop
-            }
+      try {
+        console.log('🔄 Intentando con proxy alternativo...')
+        const response = await fetch('https://cors-anywhere.herokuapp.com/https://www.bcv.org.ve', {
+          method: 'GET',
+          headers: {
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'es-ES,es;q=0.9',
           }
+        })
+        
+        if (response.ok) {
+          const html = await response.text()
+          const $ = cheerio.load(html)
+          tasaUSD = await extraerTasaDelHTML($)
         }
-      })
+      } catch (error) {
+        console.warn('⚠️ Método 3 falló:', error.message)
+      }
     }
     
     if (!tasaUSD) {
-      throw new Error('No se pudo encontrar la tasa USD en la página')
+      throw new Error('No se pudo obtener la tasa del BCV con ningún método')
     }
     
     // Redondear a 4 decimales para evitar problemas de precisión
@@ -95,9 +97,63 @@ export async function obtenerTasaBCV() {
     console.error('❌ Error al obtener tasa del BCV:', error.message)
     
     // Tasa de respaldo basada en la que viste (redondeada a 4 decimales)
-    console.log('🔄 Usando tasa de respaldo: 166.5800')
-    return 166.5800
+    console.log('🔄 Usando tasa de respaldo: 168.4157')
+    return 168.4157
   }
+}
+
+/**
+ * Extrae la tasa USD del HTML usando cheerio
+ * @param {Object} $ - Objeto cheerio con el HTML cargado
+ * @returns {number|null} Tasa USD encontrada o null
+ */
+async function extraerTasaDelHTML($) {
+  let tasaUSD = null
+  
+  // Método 1: Buscar por el patrón específico
+  const textContent = $.text()
+  
+  // Buscar patrones como "168,41570000" o "168.41570000"
+  const patterns = [
+    /USD[:\s]*(\d{1,3}[,.]\d{2,8})/i,
+    /\$[:\s]*(\d{1,3}[,.]\d{2,8})/i,
+    /(\d{1,3}[,.]\d{2,8})\s*USD/i,
+    /(\d{1,3}[,.]\d{2,8})\s*Bs/i
+  ]
+  
+  for (const pattern of patterns) {
+    const match = textContent.match(pattern)
+    if (match) {
+      let tasa = match[1].replace(',', '.')
+      tasa = parseFloat(tasa)
+      if (tasa > 50 && tasa < 1000) { // Rango razonable para la tasa
+        tasaUSD = tasa
+        console.log(`✅ Tasa encontrada con patrón: ${tasa}`)
+        break
+      }
+    }
+  }
+  
+  // Método 2: Buscar en elementos específicos
+  if (!tasaUSD) {
+    $('*').each((i, element) => {
+      const text = $(element).text().trim()
+      if (text.includes('USD') || text.includes('$')) {
+        const match = text.match(/(\d{1,3}[,.]\d{2,8})/)
+        if (match) {
+          let tasa = match[1].replace(',', '.')
+          tasa = parseFloat(tasa)
+          if (tasa > 50 && tasa < 1000) {
+            tasaUSD = tasa
+            console.log(`✅ Tasa encontrada en elemento: ${tasa}`)
+            return false // Salir del loop
+          }
+        }
+      }
+    })
+  }
+  
+  return tasaUSD
 }
 
 /**

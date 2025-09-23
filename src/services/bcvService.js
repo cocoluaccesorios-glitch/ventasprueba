@@ -212,30 +212,20 @@ export async function obtenerTasaMasReciente() {
 }
 
 /**
- * Obtiene la tasa BCV para una fecha específica
- * @param {string} fecha - Fecha en formato YYYY-MM-DD
- * @returns {Promise<number>} Tasa BCV para la fecha
+ * Actualiza la tasa BCV obteniéndola del sitio web y guardándola en la BD
+ * @returns {Promise<number>} La nueva tasa obtenida
  */
-export async function getTasaBCVPorFecha(fecha) {
+export async function actualizarTasaBCV() {
   try {
-    const { data, error } = await supabase
-      .from('tasa_cambio')
-      .select('tasa_bcv')
-      .eq('fecha', fecha)
-      .order('id', { ascending: false })
-      .limit(1)
-      .single()
-
-    if (data && !error) {
-      console.log(`✅ Tasa BCV del ${fecha}: ${data.tasa_bcv}`)
-      return data.tasa_bcv
-    }
-
-    console.log(`⚠️ No hay tasa para ${fecha}`)
-    throw new Error(`No se pudo obtener la tasa BCV para la fecha ${fecha}`)
-
+    console.log('🚀 Iniciando actualización de tasa BCV...')
+    
+    const tasa = await obtenerTasaBCV()
+    console.log(`📊 Tasa obtenida: ${tasa} Bs/USD`)
+    
+    return tasa
+    
   } catch (error) {
-    console.error('❌ Error al obtener tasa por fecha:', error.message)
-    throw new Error(`No se pudo obtener la tasa BCV para la fecha ${fecha}`)
+    console.error('❌ Error general:', error.message)
+    throw new Error('No se pudo actualizar la tasa BCV')
   }
 }

@@ -573,17 +573,9 @@ export async function getTasaCambio() {
     console.log('✅ Tasa BCV obtenida:', tasa);
     return tasa;
   } catch (err) {
-    console.warn('⚠️ Error al obtener tasa de cambio, usando tasa de respaldo:', err.message);
-    // Obtener tasa directamente del BCV como fallback
-    try {
-      const { obtenerTasaBCV } = await import('./bcvService.js');
-      const tasaDirecta = await obtenerTasaBCV();
-      console.log('✅ Tasa BCV obtenida directamente:', tasaDirecta);
-      return tasaDirecta;
-    } catch (fallbackErr) {
-      console.warn('⚠️ Fallback también falló, usando tasa por defecto:', fallbackErr.message);
-      return 166.58; // Tasa por defecto actualizada
-    }
+    console.error('❌ Error al obtener tasa de cambio:', err.message);
+    // NO usar tasa de respaldo - lanzar error
+    throw new Error('No se pudo obtener la tasa de cambio del BCV');
   }
 }
 

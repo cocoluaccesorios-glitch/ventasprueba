@@ -181,14 +181,18 @@ export async function obtenerTasaMasReciente() {
     
     if (error) {
       console.warn('No se pudo obtener la tasa de cambio:', error.message)
-      return 166.5800 // Tasa por defecto
+      throw new Error('No se pudo obtener la tasa más reciente de la base de datos')
     }
     
-    return data?.tasa_bcv || 166.5800
+    if (!data?.tasa_bcv) {
+      throw new Error('No hay tasas registradas en la base de datos')
+    }
+    
+    return data.tasa_bcv
     
   } catch (err) {
     console.warn('Error al obtener tasa de cambio:', err)
-    return 166.5800 // Tasa por defecto en caso de error
+    throw new Error('No se pudo obtener la tasa más reciente de la base de datos')
   }
 }
 
@@ -216,7 +220,7 @@ export async function actualizarTasaBCV() {
     
   } catch (error) {
     console.error('❌ Error general:', error.message)
-    return 166.5800 // Tasa de respaldo
+    throw new Error('No se pudo actualizar la tasa BCV')
   }
 }
 
@@ -377,7 +381,7 @@ export async function getTasaBCVPorFecha(fecha) {
     
   } catch (error) {
     console.error('❌ Error al obtener tasa por fecha:', error.message)
-    return 166.5800 // Tasa de respaldo
+    throw new Error(`No se pudo obtener la tasa BCV para la fecha ${fecha}`)
   }
 }
 

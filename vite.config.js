@@ -20,9 +20,9 @@ export default defineConfig({
     outDir: 'dist',
     rollupOptions: {
       output: {
-        entryFileNames: 'assets/[name]-v6-[hash].js',
-        chunkFileNames: 'assets/[name]-v6-[hash].js',
-        assetFileNames: 'assets/[name]-v6-[hash].[ext]'
+        entryFileNames: 'assets/[name]-v7-[hash].js',
+        chunkFileNames: 'assets/[name]-v7-[hash].js',
+        assetFileNames: 'assets/[name]-v7-[hash].[ext]'
       }
     }
   }

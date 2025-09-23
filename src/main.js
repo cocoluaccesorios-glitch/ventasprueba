@@ -5,16 +5,22 @@ import App from './App.vue'
 import './assets/styles.css'
 
 // ========================================
-// VERSIÓN 6.0 - CAMBIO ULTRA DRÁSTICO
+// VERSIÓN 7.0 - CAMBIO EXTREMO
 // ========================================
-// Timestamp: 2025-09-23T23:20:00Z
-// CAMBIO COMPLETO PARA FORZAR NUEVA VERSIÓN
+// Timestamp: 2025-09-23T23:25:00Z
+// CAMBIO EXTREMO PARA FORZAR DEPLOY
 // SOLO BASE DE DATOS - SIN PROXIES CORS
 // ========================================
 
-console.log('🚀🚀🚀 VERSIÓN 6.0 - CAMBIO ULTRA DRÁSTICO - SOLO BD 🚀🚀🚀')
+console.log('🚀🚀🚀 VERSIÓN 7.0 - CAMBIO EXTREMO - SOLO BD 🚀🚀🚀')
 console.log('🔥 NUEVA LÓGICA BCV IMPLEMENTADA - SIN PROXIES CORS 🔥')
 console.log('✅ SOLO BUSCA EN BASE DE DATOS - TASA: 168.4157 Bs/USD ✅')
+console.log('🎯 ESTA ES LA VERSIÓN CORRECTA - NO DEBE HABER PROXIES 🎯')
+
+// Forzar que se ejecute inmediatamente
+window.addEventListener('load', () => {
+  console.log('🎉 VERSIÓN 7.0 CARGADA CORRECTAMENTE')
+})
 
 const app = createApp(App)
 const pinia = createPinia()

@@ -4,8 +4,8 @@
  */
 
 import { supabase } from '../lib/supabaseClient.js'
-import axios from 'axios'
 import * as cheerio from 'cheerio'
+import Swal from 'sweetalert2'
 
 /**
  * Obtiene la tasa de cambio del BCV desde su página web
@@ -15,20 +15,26 @@ export async function obtenerTasaBCV() {
   try {
     console.log('🔄 Obteniendo tasa de cambio del BCV...')
     
-    const response = await axios.get('https://www.bcv.org.ve', {
+    // Usar fetch nativo del navegador en lugar de axios para evitar problemas de CORS
+    const response = await fetch('https://www.bcv.org.ve', {
+      method: 'GET',
       headers: {
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
         'Accept-Language': 'es-ES,es;q=0.9',
         'Cache-Control': 'no-cache',
       },
-      timeout: 15000,
-      httpsAgent: new (await import('https')).Agent({
-        rejectUnauthorized: false
-      })
+      mode: 'cors', // Permitir CORS
+      credentials: 'omit'
     })
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    
+    const html = await response.text()
 
-    const $ = cheerio.load(response.data)
+    const $ = cheerio.load(html)
     
     // Buscar la tasa USD en el contenido de la página
     let tasaUSD = null
@@ -182,56 +188,132 @@ export async function actualizarTasaBCV() {
 
 /**
  * Obtiene la tasa BCV para usar en la aplicación
- * Obtiene la tasa del día actual, si no existe la crea
+ * SIEMPRE obtiene la tasa más actual del BCV, no usa cache
  * @returns {Promise<number>} Tasa de cambio para usar
  */
 export async function getTasaBCV() {
   try {
-    const fechaHoy = new Date().toISOString().split('T')[0] // YYYY-MM-DD
+    console.log('🔄 Obteniendo tasa BCV más actual del sitio web...')
     
-    // Buscar tasa del día actual
-    const { data: tasaHoy, error } = await supabase
-      .from('tasa_cambio')
-      .select('tasa_bcv')
-      .eq('fecha', fechaHoy)
-      .order('id', { ascending: false })
-      .limit(1)
-      .single()
+    // SIEMPRE obtener la tasa actual del BCV
+    const tasaActual = await obtenerTasaBCV()
     
-    if (tasaHoy && !error) {
-      console.log(`✅ Tasa BCV del día ${fechaHoy}: ${tasaHoy.tasa_bcv}`)
-      return tasaHoy.tasa_bcv
+    if (!tasaActual || tasaActual <= 0) {
+      throw new Error('Tasa inválida obtenida del BCV')
     }
     
-    // Si no existe tasa para hoy, obtenerla del BCV y guardarla
-    console.log(`🔄 No hay tasa para ${fechaHoy}, obteniendo del BCV...`)
-    const nuevaTasa = await obtenerTasaBCV()
+    console.log(`✅ Tasa BCV actual obtenida: ${tasaActual} Bs/USD`)
     
-    // Intentar guardar la tasa del día (puede fallar si la tabla no existe)
+    // Intentar guardar la tasa actual en la base de datos
+    const fechaHoy = new Date().toISOString().split('T')[0]
     try {
       const { error: insertError } = await supabase
         .from('tasa_cambio')
         .insert({
           fecha: fechaHoy,
-          tasa_bcv: nuevaTasa
+          tasa_bcv: tasaActual,
+          fuente: 'bcv_web_scraper',
+          fecha_actualizacion: new Date().toISOString()
         })
       
       if (insertError) {
-        console.warn('⚠️ No se pudo guardar la tasa del día (tabla no existe):', insertError.message)
+        console.warn('⚠️ No se pudo guardar la tasa en la BD:', insertError.message)
       } else {
-        console.log(`✅ Tasa del día ${fechaHoy} guardada: ${nuevaTasa}`)
+        console.log(`✅ Tasa actual guardada en BD: ${tasaActual} Bs/USD`)
       }
     } catch (insertErr) {
-      console.warn('⚠️ Error al guardar tasa (tabla no existe):', insertErr.message)
+      console.warn('⚠️ Error al guardar tasa en BD:', insertErr.message)
     }
     
-    return nuevaTasa
+    return tasaActual
     
   } catch (error) {
-    console.error('❌ Error al obtener tasa BCV del día:', error.message)
-    // En caso de error, obtener directamente del BCV
-    console.log('🔄 Obteniendo tasa directamente del BCV como fallback...')
-    return await obtenerTasaBCV()
+    console.error('❌ Error al obtener tasa BCV actual:', error.message)
+    
+    // Si hay error, mostrar alerta para entrada manual
+    await mostrarAlertaTasaManual()
+    
+    // Retornar tasa de respaldo
+    console.log('🔄 Usando tasa de respaldo: 168.4157')
+    return 168.4157
+  }
+}
+
+/**
+ * Muestra alerta para entrada manual de tasa BCV
+ * @returns {Promise<number>} Tasa ingresada manualmente
+ */
+async function mostrarAlertaTasaManual() {
+  try {
+    const { value: tasaManual } = await Swal.fire({
+      title: '⚠️ Error al obtener tasa BCV',
+      html: `
+        <div style="text-align: left;">
+          <p>No se pudo obtener la tasa de cambio del BCV automáticamente.</p>
+          <p><strong>Por favor, ingresa la tasa manualmente:</strong></p>
+          <p style="font-size: 0.9em; color: #666;">
+            Puedes consultar la tasa actual en: 
+            <a href="https://www.bcv.org.ve" target="_blank" style="color: #007bff;">www.bcv.org.ve</a>
+          </p>
+        </div>
+      `,
+      input: 'number',
+      inputLabel: 'Tasa BCV (Bs/USD)',
+      inputPlaceholder: 'Ejemplo: 168.4157',
+      inputValue: '168.4157',
+      inputAttributes: {
+        step: '0.0001',
+        min: '50',
+        max: '1000'
+      },
+      showCancelButton: true,
+      confirmButtonText: 'Usar esta tasa',
+      cancelButtonText: 'Usar tasa de respaldo',
+      confirmButtonColor: '#28a745',
+      cancelButtonColor: '#6c757d',
+      inputValidator: (value) => {
+        if (!value) {
+          return 'Debes ingresar una tasa válida'
+        }
+        const tasa = parseFloat(value)
+        if (isNaN(tasa) || tasa < 50 || tasa > 1000) {
+          return 'La tasa debe estar entre 50 y 1000 Bs/USD'
+        }
+        return null
+      }
+    })
+    
+    if (tasaManual) {
+      const tasa = parseFloat(tasaManual)
+      console.log(`✅ Tasa manual ingresada: ${tasa} Bs/USD`)
+      
+      // Guardar la tasa manual en la base de datos
+      try {
+        const fechaHoy = new Date().toISOString().split('T')[0]
+        const { error } = await supabase
+          .from('tasa_cambio')
+          .insert({
+            fecha: fechaHoy,
+            tasa_bcv: tasa,
+            fuente: 'manual_usuario',
+            fecha_actualizacion: new Date().toISOString()
+          })
+        
+        if (!error) {
+          console.log(`✅ Tasa manual guardada en BD: ${tasa} Bs/USD`)
+        }
+      } catch (err) {
+        console.warn('⚠️ Error al guardar tasa manual:', err.message)
+      }
+      
+      return tasa
+    }
+    
+    return null
+    
+  } catch (error) {
+    console.error('❌ Error en alerta de tasa manual:', error.message)
+    return null
   }
 }
 

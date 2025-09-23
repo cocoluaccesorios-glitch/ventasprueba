@@ -42,95 +42,23 @@ export async function obtenerTasaBCV() {
  */
 async function ejecutarScriptBCV() {
   try {
-    // Crear un script temporal para obtener la tasa
-    const script = `
-      const axios = require('axios');
-      const cheerio = require('cheerio');
-      
-      async function obtenerTasaBCV() {
-        try {
-          const response = await axios.get('https://www.bcv.org.ve', {
-            headers: {
-              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-              'Accept-Language': 'es-ES,es;q=0.9',
-              'Cache-Control': 'no-cache',
-            },
-            timeout: 15000,
-          });
-          
-          const $ = cheerio.load(response.data);
-          const textContent = $.text();
-          
-          // Buscar patrones como "168,41570000" o "168.41570000"
-          const patterns = [
-            /USD[:\s]*(\d{1,3}[,.]\d{2,8})/i,
-            /\$[:\s]*(\d{1,3}[,.]\d{2,8})/i,
-            /(\d{1,3}[,.]\d{2,8})\s*USD/i,
-            /(\d{1,3}[,.]\d{2,8})\s*Bs/i
-          ];
-          
-          for (const pattern of patterns) {
-            const match = textContent.match(pattern);
-            if (match) {
-              let tasa = match[1].replace(',', '.');
-              tasa = parseFloat(tasa);
-              if (tasa > 50 && tasa < 1000) {
-                return Math.round(tasa * 10000) / 10000;
-              }
-            }
-          }
-          
-          return null;
-        } catch (error) {
-          console.error('Error:', error.message);
-          return null;
-        }
-      }
-      
-      obtenerTasaBCV().then(tasa => {
-        if (tasa) {
-          console.log('TASA_REAL:', tasa);
-        } else {
-          console.log('TASA_REAL: null');
-        }
-      });
-    `;
+    // Usar el script existente que ya funciona
+    const { exec } = await import('child_process');
+    const { promisify } = await import('util');
+    const execAsync = promisify(exec);
     
-    // Ejecutar el script usando Node.js
-    const { exec } = require('child_process');
-    const fs = require('fs');
+    // Ejecutar el script bcv-simple.js que ya existe
+    const { stdout, stderr } = await execAsync('node scripts/bcv-simple.js');
     
-    // Crear archivo temporal
-    const tempFile = '/tmp/bcv-script.js';
-    fs.writeFileSync(tempFile, script);
+    // Buscar la tasa en la salida
+    const match = stdout.match(/Tasa obtenida: (\d+\.?\d*)/);
+    if (match) {
+      const tasa = parseFloat(match[1]);
+      console.log(`✅ Tasa obtenida del script: ${tasa} Bs/USD`);
+      return tasa;
+    }
     
-    // Ejecutar el script
-    return new Promise((resolve) => {
-      exec(`node ${tempFile}`, (error, stdout, stderr) => {
-        if (error) {
-          console.warn('⚠️ Error ejecutando script BCV:', error.message);
-          resolve(null);
-          return;
-        }
-        
-        // Buscar la tasa en la salida
-        const match = stdout.match(/TASA_REAL:\s*(\d+\.?\d*)/);
-        if (match) {
-          const tasa = parseFloat(match[1]);
-          resolve(tasa);
-        } else {
-          resolve(null);
-        }
-        
-        // Limpiar archivo temporal
-        try {
-          fs.unlinkSync(tempFile);
-        } catch (err) {
-          // Ignorar error de limpieza
-        }
-      });
-    });
+    return null;
     
   } catch (error) {
     console.warn('⚠️ Error en ejecutarScriptBCV:', error.message);
@@ -302,8 +230,7 @@ export async function getTasaBCV() {
         .from('tasa_cambio')
         .insert({
           fecha: fechaHoy,
-          tasa_bcv: tasaActual,
-          fuente: 'bcv_web_scraper'
+          tasa_bcv: tasaActual
         })
       
       if (insertError) {
@@ -384,8 +311,7 @@ async function mostrarAlertaTasaManual() {
           .from('tasa_cambio')
         .insert({
           fecha: fechaHoy,
-          tasa_bcv: tasa,
-          fuente: 'manual_usuario'
+          tasa_bcv: tasa
         })
         
         if (!error) {

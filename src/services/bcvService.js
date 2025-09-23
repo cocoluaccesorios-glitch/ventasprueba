@@ -23,16 +23,31 @@ export async function obtenerTasaBCV() {
       return tasaReal
     }
     
-    // Si falla, usar tasa de respaldo actualizada
-    console.log('🔄 Usando tasa de respaldo actualizada: 168.4157')
-    return 168.4157
+    // Si falla, mostrar alerta para entrada manual
+    console.log('❌ No se pudo obtener la tasa del BCV automáticamente')
+    const tasaManual = await mostrarAlertaTasaManual()
+    
+    if (tasaManual && tasaManual > 0) {
+      console.log(`✅ Tasa manual ingresada: ${tasaManual} Bs/USD`)
+      return tasaManual
+    }
+    
+    // Si no se ingresa tasa manual, lanzar error
+    throw new Error('No se pudo obtener la tasa del BCV y no se ingresó tasa manual')
     
   } catch (error) {
     console.error('❌ Error al obtener tasa del BCV:', error.message)
     
-    // Tasa de respaldo basada en la que viste (redondeada a 4 decimales)
-    console.log('🔄 Usando tasa de respaldo: 168.4157')
-    return 168.4157
+    // Mostrar alerta de error y solicitar entrada manual
+    const tasaManual = await mostrarAlertaTasaManual()
+    
+    if (tasaManual && tasaManual > 0) {
+      console.log(`✅ Tasa manual ingresada después del error: ${tasaManual} Bs/USD`)
+      return tasaManual
+    }
+    
+    // Si no se ingresa tasa manual, lanzar error
+    throw new Error('No se pudo obtener la tasa del BCV y no se ingresó tasa manual')
   }
 }
 
@@ -248,11 +263,15 @@ export async function getTasaBCV() {
     console.error('❌ Error al obtener tasa BCV actual:', error.message)
     
     // Si hay error, mostrar alerta para entrada manual
-    await mostrarAlertaTasaManual()
+    const tasaManual = await mostrarAlertaTasaManual()
     
-    // Retornar tasa de respaldo
-    console.log('🔄 Usando tasa de respaldo: 168.4157')
-    return 168.4157
+    if (tasaManual && tasaManual > 0) {
+      console.log(`✅ Tasa manual ingresada: ${tasaManual} Bs/USD`)
+      return tasaManual
+    }
+    
+    // Si no se ingresa tasa manual, lanzar error
+    throw new Error('No se pudo obtener la tasa del BCV y no se ingresó tasa manual')
   }
 }
 

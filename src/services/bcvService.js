@@ -1,6 +1,8 @@
 import { supabase } from '../lib/supabaseClient.js'
 import Swal from 'sweetalert2'
 
+// Versión: 2.0 - Solo BD, sin proxies CORS
+
 /**
  * Obtiene la tasa de cambio del BCV desde la base de datos
  * @returns {Promise<number>} Tasa de cambio en Bs/USD

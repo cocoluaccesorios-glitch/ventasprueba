@@ -52,3 +52,4 @@ ON CONFLICT (fecha) DO UPDATE SET
 -- Verificar que se insertó correctamente
 SELECT * FROM tasa_cambio ORDER BY created_at DESC LIMIT 5;
 
+

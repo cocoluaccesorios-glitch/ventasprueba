@@ -85,3 +85,4 @@ SELECT
     'Permisos completos otorgados' as estado,
     'RLS deshabilitado' as rls_status,
     'Listo para procesar ventas' as resultado;
+

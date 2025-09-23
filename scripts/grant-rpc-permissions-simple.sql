@@ -36,3 +36,4 @@ SELECT
     'Sistema listo para usar funciones RPC' as seccion,
     'Permisos de ejecución otorgados' as estado,
     'Funciones RPC disponibles' as resultado;
+

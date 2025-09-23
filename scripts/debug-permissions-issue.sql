@@ -80,3 +80,4 @@ SELECT
     inet_server_addr() as direccion_servidor,
     inet_server_port() as puerto_servidor,
     version() as version_postgres;
+

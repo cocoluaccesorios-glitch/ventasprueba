@@ -15,15 +15,24 @@ export async function obtenerTasaBCV() {
   try {
     console.log('🔄 Obteniendo tasa de cambio del BCV...')
     
-    // Ejecutar el script de Node.js para obtener la tasa real
-    const tasaReal = await ejecutarScriptBCV()
+    // Método 1: Intentar con proxies CORS (más confiable en navegador)
+    let tasaReal = await obtenerTasaConProxies()
     
     if (tasaReal && tasaReal > 0) {
-      console.log(`✅ Tasa BCV real obtenida: ${tasaReal} Bs/USD`)
+      console.log(`✅ Tasa BCV obtenida con proxies: ${tasaReal} Bs/USD`)
       return tasaReal
     }
     
-    // Si falla, mostrar alerta para entrada manual
+    // Método 2: Intentar con script Node.js (fallback)
+    console.log('🔄 Intentando con script Node.js...')
+    tasaReal = await ejecutarScriptBCV()
+    
+    if (tasaReal && tasaReal > 0) {
+      console.log(`✅ Tasa BCV obtenida con script: ${tasaReal} Bs/USD`)
+      return tasaReal
+    }
+    
+    // Si ambos métodos fallan, mostrar alerta para entrada manual
     console.log('❌ No se pudo obtener la tasa del BCV automáticamente')
     const tasaManual = await mostrarAlertaTasaManual()
     
@@ -49,6 +58,68 @@ export async function obtenerTasaBCV() {
     // Si no se ingresa tasa manual, lanzar error
     throw new Error('No se pudo obtener la tasa del BCV y no se ingresó tasa manual')
   }
+}
+
+/**
+ * Obtiene la tasa BCV usando proxies CORS
+ * @returns {Promise<number|null>} Tasa BCV obtenida o null
+ */
+async function obtenerTasaConProxies() {
+  const proxies = [
+    'https://api.allorigins.win/raw?url=',
+    'https://cors-anywhere.herokuapp.com/',
+    'https://thingproxy.freeboard.io/fetch/',
+    'https://api.codetabs.com/v1/proxy?quest='
+  ]
+
+  for (const proxy of proxies) {
+    try {
+      console.log(`🔄 Intentando con proxy: ${proxy}`)
+      
+      const url = `${proxy}https://www.bcv.org.ve`
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
+        },
+        timeout: 10000
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`)
+      }
+
+      const html = await response.text()
+      console.log(`✅ HTML obtenido con proxy (${html.length} caracteres)`)
+      
+      // Buscar la tasa en el HTML usando patrones simples
+      const patterns = [
+        /USD[:\s]*(\d{1,3}[,.]\d{2,8})/i,
+        /\$[:\s]*(\d{1,3}[,.]\d{2,8})/i,
+        /(\d{1,3}[,.]\d{2,8})\s*USD/i,
+        /(\d{1,3}[,.]\d{2,8})\s*Bs/i
+      ]
+
+      for (const pattern of patterns) {
+        const match = html.match(pattern)
+        if (match) {
+          let tasa = match[1].replace(',', '.')
+          tasa = parseFloat(tasa)
+          if (tasa > 50 && tasa < 1000) {
+            console.log(`✅ Tasa encontrada con proxy: ${tasa} Bs/USD`)
+            return tasa
+          }
+        }
+      }
+
+    } catch (error) {
+      console.warn(`⚠️ Error con proxy ${proxy}:`, error.message)
+      continue
+    }
+  }
+
+  return null
 }
 
 /**

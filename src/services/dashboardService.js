@@ -32,6 +32,32 @@ export async function calcularEstadisticasGenerales() {
     const ventasTotales = pedidos.reduce((sum, p) => sum + (p.total_usd || 0), 0)
     const totalVentas = pedidos.length
     
+    // Calcular ingresos reales (dinero que ha entrado)
+    const ingresosReales = pedidos.reduce((sum, p) => {
+      let ingresosPedido = 0
+      
+      // Si es venta de contado
+      if (p.metodo_pago === 'Contado') {
+        ingresosPedido = p.total_usd || 0
+      }
+      
+      // Si es pago mixto
+      if (p.es_pago_mixto) {
+        ingresosPedido = (p.monto_mixto_usd || 0) + (p.monto_mixto_ves || 0) / (p.tasa_bcv || 1)
+      }
+      
+      // Si es venta por abono
+      if (p.es_abono) {
+        if (p.tipo_pago_abono === 'simple') {
+          ingresosPedido = p.monto_abono_simple || 0
+        } else if (p.tipo_pago_abono === 'mixto') {
+          ingresosPedido = (p.monto_abono_usd || 0) + (p.monto_abono_ves || 0) / (p.tasa_bcv || 1)
+        }
+      }
+      
+      return sum + ingresosPedido
+    }, 0)
+    
     // Calcular productos vendidos (sumando cantidades reales de detalles)
     const productosVendidos = pedidos.reduce((sum, p) => {
       if (p.detalles_pedido && Array.isArray(p.detalles_pedido)) {
@@ -54,8 +80,9 @@ export async function calcularEstadisticasGenerales() {
     const stockBajo = productos.filter(p => (p.stock_actual || p.stock || 0) <= 5).length
     
     const estadisticas = {
-      ventasTotales: parseFloat(ventasTotales.toFixed(2)),
-      totalVentas,
+      ingresosReales: parseFloat(ingresosReales.toFixed(2)), // Dinero que ha entrado
+      ventasTotales: parseFloat(ventasTotales.toFixed(2)), // Valor total de pedidos
+      totalVentas, // Número de pedidos
       productosVendidos,
       totalProductos: productos.length,
       clientesActivos,
@@ -250,8 +277,9 @@ export function obtenerDatosVentasPorPeriodo(periodo = 'mes') {
 // Funciones mock para fallback
 function getEstadisticasMock() {
   return {
-    ventasTotales: 1250.50,
-    totalVentas: 15,
+    ingresosReales: 980.25, // Dinero que ha entrado (menor que ventas totales por pagos parciales)
+    ventasTotales: 1250.50, // Valor total de pedidos
+    totalVentas: 15, // Número de pedidos
     productosVendidos: 45,
     totalProductos: 25,
     clientesActivos: 8,

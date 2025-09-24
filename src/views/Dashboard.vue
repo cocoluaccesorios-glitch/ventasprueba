@@ -35,9 +35,10 @@
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center">
               <div>
-                <h6 class="card-title text-white-50">Ventas Totales</h6>
-                <h3 class="mb-0">${{ (estadisticas.ventasTotales || 0).toFixed(2) }}</h3>
-                <small class="text-white-75">{{ estadisticas.totalVentas }} pedidos</small>
+                <h6 class="card-title text-white-50">Ingresos Reales</h6>
+                <h3 class="mb-0">${{ (estadisticas.ingresosReales || 0).toFixed(2) }}</h3>
+                <small class="text-white-75">${{ (estadisticas.ventasTotales || 0).toFixed(2) }} en ventas</small>
+                <small class="text-white-75 d-block">{{ estadisticas.totalVentas }} pedidos</small>
               </div>
               <div class="fs-1 opacity-50">
                 <i class="bi bi-currency-dollar"></i>
@@ -355,8 +356,9 @@ async function cargarDatos() {
 
 function cargarDatosMock() {
   estadisticas.value = {
-    ventasTotales: 1250.50,
-    totalVentas: 15,
+    ingresosReales: 980.25, // Dinero que ha entrado
+    ventasTotales: 1250.50, // Valor total de pedidos
+    totalVentas: 15, // Número de pedidos
     productosVendidos: 45,
     totalProductos: 25,
     clientesActivos: 8,

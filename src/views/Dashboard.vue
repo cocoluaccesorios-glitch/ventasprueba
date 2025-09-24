@@ -316,6 +316,8 @@ const datosVentas = computed(() => {
 // Funciones
 async function cargarDatos() {
   try {
+    console.log('🔄 Cargando datos del dashboard...')
+    
     // Cargar datos usando el servicio
     const [estadisticasData, topProductosData, pedidosRecientesData, alertasData] = await Promise.all([
       calcularEstadisticasGenerales(),
@@ -329,10 +331,25 @@ async function cargarDatos() {
     pedidosRecientes.value = pedidosRecientesData
     alertasInventario.value = alertasData
     
+    console.log('✅ Datos del dashboard cargados correctamente')
+    
   } catch (error) {
-    console.error('Error cargando datos del dashboard:', error)
+    console.error('❌ Error cargando datos del dashboard:', error)
+    
     // Usar datos mock en caso de error
+    console.log('🔄 Usando datos mock como fallback...')
     cargarDatosMock()
+    
+    // Mostrar notificación de error
+    if (typeof Swal !== 'undefined') {
+      Swal.fire({
+        title: 'Advertencia',
+        text: 'Algunos datos del dashboard no se pudieron cargar. Se muestran datos de ejemplo.',
+        icon: 'warning',
+        timer: 3000,
+        showConfirmButton: false
+      })
+    }
   }
 }
 

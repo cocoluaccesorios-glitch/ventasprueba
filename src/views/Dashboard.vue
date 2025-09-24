@@ -666,7 +666,7 @@ onUnmounted(() => {
   padding: 2rem;
   border-radius: 0.75rem;
   box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.3);
-  max-width: 800px;
+  max-width: 1000px;
   width: 95%;
   max-height: 85vh;
   overflow-y: auto;
@@ -739,6 +739,12 @@ onUnmounted(() => {
 }
 
 /* Responsive */
+@media (max-width: 1200px) {
+  .detalle-content {
+    max-width: 90%;
+  }
+}
+
 @media (max-width: 768px) {
   .detalle-content {
     padding: 1.5rem;

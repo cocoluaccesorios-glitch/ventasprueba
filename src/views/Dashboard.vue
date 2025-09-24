@@ -56,20 +56,20 @@
           </div>
           
                     <!-- Detalle interactivo -->
-                    <div v-if="mostrarDetalleIngresos" class="detalle-ingresos" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center;" @click="mostrarDetalleIngresos = false">
-                      <div @click.stop style="background: white; color: #333; padding: 1.5rem; border-radius: 0.5rem; box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.3); max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; border: 1px solid #dee2e6; position: relative; margin: auto;">
+                    <div v-if="mostrarDetalleIngresos" class="detalle-ingresos" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); z-index: 9999; display: flex; align-items: center; justify-content: center;" @click="mostrarDetalleIngresos = false">
+                      <div @click.stop style="background: white; color: #333; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.4); width: 90vw; height: 85vh; overflow-y: auto; border: 2px solid #007bff; position: relative; margin: auto; max-width: none;">
                         <!-- Botón de cerrar -->
                         <button @click="mostrarDetalleIngresos = false" style="position: absolute; top: 1rem; right: 1rem; background: #dc3545; color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;">×</button>
                         
-              <h5 class="mb-3 text-center" style="color: #007bff; font-weight: bold;">
-                <i class="bi bi-info-circle"></i> Detalle de Ingresos
-              </h5>
+              <h3 class="mb-4 text-center" style="color: #007bff; font-weight: bold; font-size: 1.8rem;">
+                <i class="bi bi-info-circle"></i> Detalle Completo de Ingresos
+              </h3>
               
               <!-- Ingresos en USD -->
               <div class="mb-4">
-                <h6 class="text-success mb-3" style="font-weight: bold;">
+                <h5 class="text-success mb-4" style="font-weight: bold; font-size: 1.3rem;">
                   <i class="bi bi-currency-dollar"></i> Ingresos en Dólares (USD)
-                </h6>
+                </h5>
                 <div class="detalle-item-large">
                   <div class="detalle-label">
                     <i class="bi bi-cash-coin"></i> Ventas de Contado
@@ -98,9 +98,9 @@
               
               <!-- Ingresos en VES -->
               <div class="mb-4">
-                <h6 class="text-warning mb-3" style="font-weight: bold;">
+                <h5 class="text-warning mb-4" style="font-weight: bold; font-size: 1.3rem;">
                   <i class="bi bi-currency-exchange"></i> Ingresos en Bolívares (VES)
-                </h6>
+                </h5>
                 <div class="detalle-item-large">
                   <div class="detalle-label">
                     <i class="bi bi-arrow-left-right"></i> Pagos Mixtos (VES)
@@ -129,9 +129,9 @@
               
               <!-- Resumen total -->
               <div class="detalle-resumen-large">
-                <h6 class="text-primary mb-3" style="font-weight: bold;">
+                <h5 class="text-primary mb-4" style="font-weight: bold; font-size: 1.3rem;">
                   <i class="bi bi-pie-chart"></i> Resumen General
-                </h6>
+                </h5>
                 <div class="detalle-item-large">
                   <div class="detalle-label">
                     <i class="bi bi-wallet2"></i> <strong>Total Ingresos Reales</strong>

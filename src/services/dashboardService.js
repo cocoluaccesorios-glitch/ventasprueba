@@ -102,9 +102,13 @@ export async function obtenerTopProductos(limite = 5) {
     // Obtener productos con sus cantidades vendidas
     const productosConVentas = productos.map(producto => {
       const cantidadVendida = productosVendidos.get(producto.id) || 0
+      const precioUnitario = producto.precio_usd || producto.precio || 0
+      const totalVentas = cantidadVendida * precioUnitario
+      
       return {
         ...producto,
         cantidadVendida,
+        totalVentas: parseFloat(totalVentas.toFixed(2)),
         nombre: producto.nombre || producto.nombre_producto || 'Producto sin nombre'
       }
     })

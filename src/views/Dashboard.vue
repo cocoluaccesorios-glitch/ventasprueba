@@ -36,7 +36,7 @@
             <div class="d-flex justify-content-between align-items-center">
               <div>
                 <h6 class="card-title text-white-50">Ventas Totales</h6>
-                <h3 class="mb-0">${{ estadisticas.ventasTotales.toFixed(2) }}</h3>
+                <h3 class="mb-0">${{ (estadisticas.ventasTotales || 0).toFixed(2) }}</h3>
                 <small class="text-white-75">{{ estadisticas.totalVentas }} pedidos</small>
               </div>
               <div class="fs-1 opacity-50">
@@ -132,7 +132,7 @@
                     <small class="text-muted">{{ producto.cantidadVendida }} vendidos</small>
                   </div>
                 </div>
-                <span class="badge bg-success">${{ producto.totalVentas.toFixed(2) }}</span>
+                <span class="badge bg-success">${{ (producto.totalVentas || 0).toFixed(2) }}</span>
               </div>
             </div>
           </div>
@@ -165,7 +165,7 @@
                   <tr v-for="pedido in pedidosRecientes" :key="pedido.id">
                     <td>#{{ pedido.id }}</td>
                     <td>{{ pedido.cliente }}</td>
-                    <td>${{ pedido.total.toFixed(2) }}</td>
+                    <td>${{ (pedido.total || 0).toFixed(2) }}</td>
                     <td>
                       <span :class="getEstadoBadgeClass(pedido.estado)" class="badge">
                         {{ pedido.estado }}

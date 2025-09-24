@@ -374,6 +374,35 @@ export async function createSale(ventaData) {
       }
     }
     
+    // Guardar detalles de productos en la tabla detalles_pedido
+    if (ventaData.productos && ventaData.productos.length > 0) {
+      console.log('📦 Guardando detalles de productos:', ventaData.productos);
+      
+      const detallesParaInsertar = ventaData.productos.map(producto => ({
+        pedido_id: pedidoId,
+        producto_id: producto.id, // null para productos manuales
+        cantidad: producto.cantidad,
+        precio_unitario_usd: producto.precio_unitario,
+        subtotal_usd: producto.cantidad * producto.precio_unitario,
+        nombre_producto: producto.nombre,
+        sku_producto: producto.sku || null
+      }));
+      
+      const { error: detallesError } = await supabase
+        .from('detalles_pedido')
+        .insert(detallesParaInsertar);
+      
+      if (detallesError) {
+        console.error('❌ Error al insertar detalles de productos:', detallesError);
+        // No fallar la venta por error en detalles, pero registrar el problema
+        console.warn('⚠️ La venta se creó pero sin detalles de productos');
+      } else {
+        console.log('✅ Detalles de productos guardados correctamente');
+      }
+    } else {
+      console.warn('⚠️ No hay productos para guardar en detalles_pedido');
+    }
+    
     // Insertar tasa BCV si no existe para la fecha actual
     if (ventaData.tasa_bcv) {
       const { error: tasaError } = await supabase

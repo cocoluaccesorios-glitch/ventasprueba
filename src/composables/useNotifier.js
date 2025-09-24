@@ -7,7 +7,13 @@ export function useNotifier() {
       title,
       text,
       icon: 'success',
-      confirmButtonText: 'Continuar'
+      confirmButtonText: 'Continuar',
+      position: 'center', // Centrar las alertas
+      customClass: {
+        container: 'swal2-container-high-z',
+        popup: 'swal2-popup-high-z'
+      },
+      zIndex: 999999
     });
   };
 
@@ -16,7 +22,13 @@ export function useNotifier() {
       title,
       text,
       icon: 'error',
-      confirmButtonText: 'Entendido'
+      confirmButtonText: 'Entendido',
+      position: 'center', // Centrar las alertas
+      customClass: {
+        container: 'swal2-container-high-z',
+        popup: 'swal2-popup-high-z'
+      },
+      zIndex: 999999
     });
   };
 
@@ -25,7 +37,13 @@ export function useNotifier() {
       title,
       text,
       icon: 'warning',
-      confirmButtonText: 'Entendido'
+      confirmButtonText: 'Entendido',
+      position: 'center', // Centrar las alertas
+      customClass: {
+        container: 'swal2-container-high-z',
+        popup: 'swal2-popup-high-z'
+      },
+      zIndex: 999999
     });
   };
 
@@ -34,7 +52,13 @@ export function useNotifier() {
       title,
       text,
       icon: 'info',
-      confirmButtonText: 'Entendido'
+      confirmButtonText: 'Entendido',
+      position: 'center', // Centrar las alertas
+      customClass: {
+        container: 'swal2-container-high-z',
+        popup: 'swal2-popup-high-z'
+      },
+      zIndex: 999999
     });
   };
 
@@ -47,7 +71,13 @@ export function useNotifier() {
       confirmButtonText: confirmText,
       cancelButtonText: cancelText,
       confirmButtonColor: '#198754',
-      cancelButtonColor: '#dc3545'
+      cancelButtonColor: '#dc3545',
+      position: 'center', // Centrar las alertas
+      customClass: {
+        container: 'swal2-container-high-z',
+        popup: 'swal2-popup-high-z'
+      },
+      zIndex: 999999
     });
   };
 
@@ -66,6 +96,12 @@ export function useNotifier() {
       allowOutsideClick: false,
       allowEscapeKey: false,
       showConfirmButton: false,
+      position: 'center', // Centrar las alertas
+      customClass: {
+        container: 'swal2-container-high-z',
+        popup: 'swal2-popup-high-z'
+      },
+      zIndex: 999999,
       didOpen: () => {
         Swal.showLoading();
       }

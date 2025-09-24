@@ -318,3 +318,4 @@ test.describe('Pruebas de Tipos de Pago', () => {
     console.log('✅ Efectivo no requiere referencia correctamente');
   });
 });
+

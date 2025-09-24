@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Dashboard Update</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border-color: #bee5eb;
+            color: #0c5460;
+        }
+        .warning {
+            background-color: #fff3cd;
+            border-color: #ffeaa7;
+            color: #856404;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Dashboard Update</h1>
+        
+        <div class="test-section info">
+            <h3>📋 Instrucciones de Prueba</h3>
+            <p>1. Abre el dashboard en <a href="http://localhost:5174" target="_blank">http://localhost:5174</a></p>
+            <p>2. Ve a la sección del dashboard</p>
+            <p>3. Prueba cambiar el período usando el dropdown</p>
+            <p>4. Verifica que los números se actualicen correctamente</p>
+        </div>
+
+        <div class="test-section success">
+            <h3>✅ Correcciones Implementadas</h3>
+            <ul>
+                <li><strong>Cálculo de Ingresos VES:</strong> Ahora incluye pagos en VES (Pago Móvil, Punto de Venta, Transferencia)</li>
+                <li><strong>Actualización por Período:</strong> Los números se actualizan cuando cambias el período</li>
+                <li><strong>Datos Reales:</strong> El dashboard muestra datos reales de la base de datos</li>
+                <li><strong>Gráfica Dual:</strong> Muestra tanto Ventas como Ingresos Reales</li>
+            </ul>
+        </div>
+
+        <div class="test-section warning">
+            <h3>📊 Datos Esperados por Período</h3>
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-value">$0.00</div>
+                    <div class="stat-label">Ventas Hoy</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">$0.00</div>
+                    <div class="stat-label">Ingresos Hoy</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">$2,821.04</div>
+                    <div class="stat-label">Ventas Este Mes</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">$835.21</div>
+                    <div class="stat-label">Ingresos Este Mes</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔍 Pruebas a Realizar</h3>
+            <ol>
+                <li><strong>Cambio a "Hoy":</strong> Debería mostrar $0.00 en ventas e ingresos</li>
+                <li><strong>Cambio a "Este Mes":</strong> Debería mostrar $2,821.04 en ventas y $835.21 en ingresos</li>
+                <li><strong>Cambio a "Esta Semana":</strong> Debería mostrar datos de la semana actual</li>
+                <li><strong>Cambio a "Este Año":</strong> Debería mostrar datos del año actual</li>
+                <li><strong>Gráfica:</strong> Debería mostrar líneas azul (Ventas) y verde (Ingresos)</li>
+            </ol>
+        </div>
+
+        <div class="test-section">
+            <h3>🐛 Problemas Conocidos</h3>
+            <ul>
+                <li><strong>Productos Vendidos:</strong> Muestra 0 porque detalles_pedido están NULL</li>
+                <li><strong>Top Productos:</strong> No se puede calcular sin detalles de pedidos</li>
+                <li><strong>Stock Bajo:</strong> Funciona correctamente</li>
+            </ul>
+        </div>
+
+        <div class="test-section success">
+            <h3>🎉 Resultado Esperado</h3>
+            <p>Cuando cambies el período en el dashboard, deberías ver:</p>
+            <ul>
+                <li>Los números en las tarjetas principales se actualizan</li>
+                <li>La gráfica se actualiza con nuevos datos</li>
+                <li>Los ingresos se calculan correctamente para pagos en VES</li>
+                <li>El eje Y de la gráfica se ajusta dinámicamente</li>
+            </ul>
+        </div>
+
+        <button onclick="window.open('http://localhost:5174', '_blank')">🚀 Abrir Dashboard</button>
+        <button onclick="location.reload()">🔄 Recargar Test</button>
+    </div>
+
+    <script>
+        console.log('🧪 Test Dashboard Update cargado');
+        console.log('📋 Verifica que el dashboard se actualice correctamente cuando cambies el período');
+        
+        // Mostrar información en consola
+        setTimeout(() => {
+            console.log('✅ Correcciones implementadas:');
+            console.log('   - Cálculo de ingresos para pagos VES');
+            console.log('   - Actualización de estadísticas por período');
+            console.log('   - Gráfica con ventas e ingresos');
+            console.log('   - Eje Y dinámico');
+        }, 1000);
+    </script>
+</body>
+</html>

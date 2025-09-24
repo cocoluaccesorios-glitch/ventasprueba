@@ -259,3 +259,4 @@ test.describe('Pruebas Avanzadas de Ventas', () => {
     console.log('✅ Venta mínima configurada');
   });
 });
+

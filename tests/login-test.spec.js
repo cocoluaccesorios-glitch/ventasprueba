@@ -53,3 +53,4 @@ test.describe('Pruebas de Login', () => {
     console.log('✅ Login falló correctamente con credenciales inválidas');
   });
 });
+

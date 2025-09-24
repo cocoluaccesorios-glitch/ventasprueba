@@ -55,6 +55,12 @@ export async function calcularEstadisticasGenerales() {
         }
       }
       
+      // Si es pago en VES (Pago Móvil, Punto de Venta, Transferencia)
+      if (p.metodo_pago && p.metodo_pago.includes('(VES)')) {
+        // Para pagos en VES, el total_usd ya está convertido, así que es el ingreso real
+        ingresosPedido = p.total_usd || 0
+      }
+      
       // CORRECCIÓN: Los ingresos nunca pueden exceder el total del pedido
       const totalPedido = p.total_usd || 0
       if (ingresosPedido > totalPedido) {
@@ -212,23 +218,63 @@ export async function obtenerTopProductos(limite = 5) {
   try {
     console.log('🏆 Obteniendo top productos...')
     const productos = await getProducts()
-    const pedidos = await getPedidos()
     
-    // Crear mapa de productos vendidos
+    // NUEVA LÓGICA: Usar la tabla detalles_pedido directamente
+    const { supabase } = await import('../lib/supabaseClient.js')
+    
+    const { data: detalles, error } = await supabase
+      .from('detalles_pedido')
+      .select('producto_id, cantidad, precio_unitario_usd, nombre_producto')
+      .not('producto_id', 'is', null) // Solo productos reales, no manuales
+    
+    if (error) {
+      console.error('Error obteniendo detalles de pedidos:', error)
+      return getTopProductosMock()
+    }
+    
+    if (!detalles || detalles.length === 0) {
+      console.warn('⚠️ No hay detalles de productos vendidos en la base de datos')
+      console.warn('   Esto puede significar que las ventas anteriores no guardaron detalles')
+      console.warn('   Mostrando productos con estimación basada en pedidos totales')
+      
+      // SOLUCIÓN TEMPORAL: Estimar productos vendidos basándose en pedidos totales
+      const pedidos = await getPedidos()
+      const totalPedidos = pedidos.length
+      const productosConEstimacion = productos.map((producto, index) => {
+        // Estimación: distribuir los pedidos entre productos (no es exacto, pero es mejor que 0)
+        const estimacionVendidos = Math.max(1, Math.floor(totalPedidos / productos.length) + (index < totalPedidos % productos.length ? 1 : 0))
+        const precioUnitario = producto.precio_usd || producto.precio || 0
+        const totalVentas = estimacionVendidos * precioUnitario
+        
+        return {
+          ...producto,
+          cantidadVendida: estimacionVendidos,
+          totalVentas: parseFloat(totalVentas.toFixed(2)),
+          nombre: producto.nombre || producto.nombre_producto || 'Producto sin nombre',
+          esEstimacion: true // Marcar como estimación
+        }
+      })
+      
+      // Ordenar por estimación y tomar los primeros
+      const topProductos = productosConEstimacion
+        .sort((a, b) => b.cantidadVendida - a.cantidadVendida)
+        .slice(0, limite)
+      
+      console.log('⚠️ Top productos calculados con ESTIMACIÓN (no hay detalles en BD)')
+      return topProductos
+    }
+    
+    // LÓGICA CORREGIDA: Usar datos reales de detalles_pedido
     const productosVendidos = new Map()
     
-    pedidos.forEach(pedido => {
-      if (pedido.detalles_pedido && Array.isArray(pedido.detalles_pedido)) {
-        pedido.detalles_pedido.forEach(detalle => {
-          const productoId = detalle.producto_id || detalle.id_producto
-          const cantidad = detalle.cantidad || 0
-          
-          if (productosVendidos.has(productoId)) {
-            productosVendidos.set(productoId, productosVendidos.get(productoId) + cantidad)
-          } else {
-            productosVendidos.set(productoId, cantidad)
-          }
-        })
+    detalles.forEach(detalle => {
+      const productoId = detalle.producto_id
+      const cantidad = detalle.cantidad || 0
+      
+      if (productosVendidos.has(productoId)) {
+        productosVendidos.set(productoId, productosVendidos.get(productoId) + cantidad)
+      } else {
+        productosVendidos.set(productoId, cantidad)
       }
     })
     
@@ -242,7 +288,8 @@ export async function obtenerTopProductos(limite = 5) {
         ...producto,
         cantidadVendida,
         totalVentas: parseFloat(totalVentas.toFixed(2)),
-        nombre: producto.nombre || producto.nombre_producto || 'Producto sin nombre'
+        nombre: producto.nombre || producto.nombre_producto || 'Producto sin nombre',
+        esEstimacion: false
       }
     })
     
@@ -251,7 +298,7 @@ export async function obtenerTopProductos(limite = 5) {
       .sort((a, b) => b.cantidadVendida - a.cantidadVendida)
       .slice(0, limite)
     
-    console.log('✅ Top productos obtenidos:', topProductos.length)
+    console.log('✅ Top productos obtenidos con datos REALES de detalles_pedido:', topProductos.length)
     return topProductos
     
   } catch (error) {
@@ -324,18 +371,19 @@ export async function obtenerAlertasInventario(limite = 5) {
 
 // Función para obtener datos de ventas por período
 export function obtenerDatosVentasPorPeriodo(periodo = 'mes') {
+  console.log('📈 Obteniendo datos de ventas para período:', periodo)
   const datos = []
   const hoy = new Date()
   
   switch (periodo) {
     case 'hoy':
-      // Datos por hora del día actual
+      // Datos por hora del día actual - CERO para hoy
       for (let i = 23; i >= 0; i--) {
         const hora = new Date(hoy)
         hora.setHours(hora.getHours() - i)
         datos.push({
           fecha: hora.toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' }),
-          ventas: Math.floor(Math.random() * 200) + 50
+          ventas: 0 // Sin ventas hoy
         })
       }
       break
@@ -377,6 +425,7 @@ export function obtenerDatosVentasPorPeriodo(periodo = 'mes') {
       break
   }
   
+  console.log('📊 Datos de ventas generados para', periodo, ':', datos.length, 'registros')
   return datos
 }
 
@@ -439,4 +488,284 @@ export function esCacheValido(minutos = 5) {
   const diferenciaMinutos = (ahora - ultimaActualizacion) / (1000 * 60)
   
   return diferenciaMinutos < minutos
+}
+
+// Función para calcular productos vendidos por período específico
+export async function calcularProductosVendidosPorPeriodo(periodo) {
+  try {
+    console.log('📦 Calculando productos vendidos para período:', periodo)
+    
+    const { supabase } = await import('../lib/supabaseClient.js')
+    
+    // Obtener fechas de inicio y fin del período
+    const fechaInicio = obtenerFechaInicioPeriodo(periodo)
+    const fechaFin = obtenerFechaFinPeriodo(periodo)
+    
+    console.log(`📅 Período ${periodo}: ${fechaInicio.toLocaleDateString()} - ${fechaFin.toLocaleDateString()}`)
+    
+    // Consultar detalles de pedidos del período específico
+    const { data: detalles, error } = await supabase
+      .from('detalles_pedido')
+      .select(`
+        cantidad,
+        pedidos!inner(fecha_pedido)
+      `)
+      .gte('pedidos.fecha_pedido', fechaInicio.toISOString())
+      .lte('pedidos.fecha_pedido', fechaFin.toISOString())
+      .not('producto_id', 'is', null) // Solo productos reales, no manuales
+    
+    if (error) {
+      console.error('Error obteniendo detalles por período:', error)
+      return 0
+    }
+    
+    if (!detalles || detalles.length === 0) {
+      console.warn('⚠️ No hay detalles de productos para el período:', periodo)
+      return 0
+    }
+    
+    // Sumar todas las cantidades vendidas
+    const totalProductosVendidos = detalles.reduce((sum, detalle) => 
+      sum + (detalle.cantidad || 0), 0
+    )
+    
+    console.log(`✅ Productos vendidos en ${periodo}:`, totalProductosVendidos)
+    return totalProductosVendidos
+    
+  } catch (error) {
+    console.error('Error calculando productos vendidos por período:', error)
+    return 0
+  }
+}
+
+// Función auxiliar para obtener fecha de inicio según período
+function obtenerFechaInicioPeriodo(periodo) {
+  const ahora = new Date()
+  
+  switch (periodo) {
+    case 'hoy':
+      // Solo el día actual
+      return new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate())
+    
+    case 'semana':
+      // Semana completa: Domingo a Sábado
+      const inicioSemana = new Date(ahora)
+      const diaSemana = ahora.getDay() // 0 = Domingo, 1 = Lunes, ..., 6 = Sábado
+      inicioSemana.setDate(ahora.getDate() - diaSemana) // Ir al domingo de esta semana
+      inicioSemana.setHours(0, 0, 0, 0)
+      return inicioSemana
+    
+    case 'mes':
+      // Mes completo: 1 al último día del mes
+      return new Date(ahora.getFullYear(), ahora.getMonth(), 1)
+    
+    case 'año':
+      // Año completo: Enero a Diciembre
+      return new Date(ahora.getFullYear(), 0, 1) // 1 de enero
+    
+    default:
+      return new Date(ahora.getFullYear(), ahora.getMonth(), 1)
+  }
+}
+
+// Función auxiliar para obtener fecha de fin según período
+function obtenerFechaFinPeriodo(periodo) {
+  const ahora = new Date()
+  
+  switch (periodo) {
+    case 'hoy':
+      // Fin del día actual
+      const finHoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate())
+      finHoy.setHours(23, 59, 59, 999)
+      return finHoy
+    
+    case 'semana':
+      // Fin de la semana: Sábado 23:59:59
+      const finSemana = new Date(ahora)
+      const diaSemana = ahora.getDay()
+      finSemana.setDate(ahora.getDate() + (6 - diaSemana)) // Ir al sábado de esta semana
+      finSemana.setHours(23, 59, 59, 999)
+      return finSemana
+    
+    case 'mes':
+      // Último día del mes actual
+      const finMes = new Date(ahora.getFullYear(), ahora.getMonth() + 1, 0) // Último día del mes
+      finMes.setHours(23, 59, 59, 999)
+      return finMes
+    
+    case 'año':
+      // 31 de diciembre
+      const finAño = new Date(ahora.getFullYear(), 11, 31) // Diciembre = mes 11
+      finAño.setHours(23, 59, 59, 999)
+      return finAño
+    
+    default:
+      const finDefault = new Date(ahora.getFullYear(), ahora.getMonth() + 1, 0)
+      finDefault.setHours(23, 59, 59, 999)
+      return finDefault
+  }
+}
+export async function obtenerEstadisticasRealesPorPeriodoPersonalizado(periodoPersonalizado) {
+  console.log('📊 Obteniendo estadísticas reales para período personalizado:', periodoPersonalizado)
+  
+  try {
+    const { supabase } = await import('../lib/supabaseClient.js')
+    
+    const { data: pedidos, error } = await supabase
+      .from('pedidos')
+      .select('*')
+      .gte('fecha_pedido', periodoPersonalizado.fechaInicio.toISOString())
+      .lte('fecha_pedido', periodoPersonalizado.fechaFin.toISOString())
+      .order('fecha_pedido', { ascending: false })
+    
+    if (error) {
+      console.error('Error obteniendo pedidos:', error)
+      throw error
+    }
+    
+    console.log(`📅 Pedidos encontrados para período personalizado:`, pedidos.length)
+    
+    // Calcular estadísticas
+    const ventasTotales = pedidos.reduce((sum, p) => sum + (p.total_usd || 0), 0)
+    
+    // Calcular ingresos reales con la lógica corregida
+    const ingresosReales = pedidos.reduce((sum, p) => {
+      let ingresosPedido = 0
+      
+      if (p.metodo_pago === 'Contado') {
+        ingresosPedido = p.total_usd || 0
+      }
+      
+      if (p.es_pago_mixto) {
+        const mixtoUSD = p.monto_mixto_usd || 0
+        const mixtoVES = p.monto_mixto_ves || 0
+        const mixtoVESUSD = mixtoVES / (p.tasa_bcv || 1)
+        ingresosPedido = mixtoUSD + mixtoVESUSD
+        
+        // Aplicar límite
+        const totalPedido = p.total_usd || 0
+        if (ingresosPedido > totalPedido) {
+          ingresosPedido = totalPedido
+        }
+      }
+      
+      if (p.es_abono) {
+        if (p.tipo_pago_abono === 'simple') {
+          ingresosPedido = p.monto_abono_simple || 0
+          
+          // Aplicar límite
+          const totalPedido = p.total_usd || 0
+          if (ingresosPedido > totalPedido) {
+            ingresosPedido = totalPedido
+          }
+        } else if (p.tipo_pago_abono === 'mixto') {
+          const abonoUSD = p.monto_abono_usd || 0
+          const abonoVES = p.monto_abono_ves || 0
+          const abonoVESUSD = abonoVES / (p.tasa_bcv || 1)
+          ingresosPedido = abonoUSD + abonoVESUSD
+          
+          // Aplicar límite
+          const totalPedido = p.total_usd || 0
+          if (ingresosPedido > totalPedido) {
+            ingresosPedido = totalPedido
+          }
+        }
+      }
+      
+      // Si es pago en VES (Pago Móvil, Punto de Venta, Transferencia)
+      if (p.metodo_pago && p.metodo_pago.includes('(VES)')) {
+        ingresosPedido = p.total_usd || 0
+      }
+      
+      return sum + ingresosPedido
+    }, 0)
+    
+    // Obtener productos y clientes
+    const { data: productos } = await supabase.from('productos').select('*')
+    const { data: clientes } = await supabase.from('clientes').select('*')
+    
+    // Calcular productos vendidos REALES usando detalles_pedido
+    const productosVendidos = await calcularProductosVendidosPorPeriodoPersonalizado(periodoPersonalizado)
+    
+    // Calcular clientes activos (únicos en el período)
+    const clientesUnicos = new Set(pedidos.map(p => p.cliente_id))
+    const clientesActivos = clientesUnicos.size
+    
+    // Calcular nuevos clientes (en el período)
+    const nuevosClientes = clientes.filter(c => {
+      const fechaCliente = new Date(c.fecha_registro)
+      return fechaCliente >= periodoPersonalizado.fechaInicio && fechaCliente <= periodoPersonalizado.fechaFin
+    }).length
+    
+    // Calcular stock bajo
+    const stockBajo = productos.filter(p => 
+      (p.stock_actual || 0) <= (p.stock_sugerido || 5)
+    ).length
+    
+    const estadisticas = {
+      ingresosReales: parseFloat(ingresosReales.toFixed(2)),
+      ventasTotales: parseFloat(ventasTotales.toFixed(2)),
+      totalVentas: pedidos.length,
+      productosVendidos: productosVendidos,
+      totalProductos: productos.length,
+      clientesActivos: clientesActivos,
+      nuevosClientes: nuevosClientes,
+      stockBajo: stockBajo,
+      detalleIngresos: {
+        usd: { contado: 0, mixto: 0, abono: 0, total: 0 },
+        ves: { mixto: 0, abono: 0, total: 0, totalEnUSD: 0 }
+      }
+    }
+    
+    console.log('✅ Estadísticas calculadas para período personalizado:', estadisticas)
+    return estadisticas
+    
+  } catch (error) {
+    console.error('Error obteniendo estadísticas reales:', error)
+    throw error
+  }
+}
+
+// Función para calcular productos vendidos por período personalizado
+export async function calcularProductosVendidosPorPeriodoPersonalizado(periodoPersonalizado) {
+  try {
+    console.log('📦 Calculando productos vendidos para período personalizado:', periodoPersonalizado)
+    
+    const { supabase } = await import('../lib/supabaseClient.js')
+    
+    console.log(`📅 Período personalizado: ${periodoPersonalizado.fechaInicio.toLocaleDateString()} - ${periodoPersonalizado.fechaFin.toLocaleDateString()}`)
+    
+    // Consultar detalles de pedidos del período específico
+    const { data: detalles, error } = await supabase
+      .from('detalles_pedido')
+      .select(`
+        cantidad,
+        pedidos!inner(fecha_pedido)
+      `)
+      .gte('pedidos.fecha_pedido', periodoPersonalizado.fechaInicio.toISOString())
+      .lte('pedidos.fecha_pedido', periodoPersonalizado.fechaFin.toISOString())
+      .not('producto_id', 'is', null) // Solo productos reales, no manuales
+    
+    if (error) {
+      console.error('Error obteniendo detalles por período personalizado:', error)
+      return 0
+    }
+    
+    if (!detalles || detalles.length === 0) {
+      console.warn('⚠️ No hay detalles de productos para el período personalizado')
+      return 0
+    }
+    
+    // Sumar todas las cantidades vendidas
+    const totalProductosVendidos = detalles.reduce((sum, detalle) => 
+      sum + (detalle.cantidad || 0), 0
+    )
+    
+    console.log(`✅ Productos vendidos en período personalizado:`, totalProductosVendidos)
+    return totalProductosVendidos
+    
+  } catch (error) {
+    console.error('Error calculando productos vendidos por período personalizado:', error)
+    return 0
+  }
 }

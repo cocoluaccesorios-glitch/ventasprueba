@@ -557,3 +557,252 @@ legend {
 .fs-4 { font-size: 1.5rem; }
 .fs-5 { font-size: 1.25rem; }
 .fs-6 { font-size: 1rem; }
+
+/* Estilos para modales y alertas - Z-index alto */
+.swal2-container {
+  z-index: 999999 !important;
+}
+
+.swal2-popup {
+  z-index: 999999 !important;
+}
+
+.swal2-backdrop {
+  z-index: 999998 !important;
+}
+
+/* Bootstrap modals */
+.modal {
+  z-index: 999999 !important;
+}
+
+.modal-backdrop {
+  z-index: 999998 !important;
+}
+
+/* Modales personalizados */
+.modal-overlay {
+  z-index: 999999 !important;
+}
+
+.modal-content {
+  z-index: 999999 !important;
+}
+
+/* Asegurar que todos los elementos con z-index alto estén por encima */
+[style*="z-index"] {
+  z-index: 999999 !important;
+}
+
+/* Estilos específicos para el modal de detalles de ingresos */
+.detalle-ingresos-modal {
+  z-index: 999999 !important;
+}
+
+.detalle-ingresos-content {
+  z-index: 999999 !important;
+}
+
+.btn-cerrar-modal {
+  z-index: 1000000 !important;
+}
+
+/* Forzar que todos los elementos de SweetAlert estén por encima */
+.swal2-container,
+.swal2-container * {
+  z-index: 999999 !important;
+}
+
+/* Estilos para tooltips y popovers */
+.tooltip {
+  z-index: 999999 !important;
+}
+
+.popover {
+  z-index: 999999 !important;
+}
+
+/* Estilos para dropdowns */
+.dropdown-menu {
+  z-index: 2147483647 !important;
+}
+
+.dropdown {
+  z-index: 2147483647 !important;
+}
+
+.dropdown-toggle {
+  z-index: 2147483647 !important;
+}
+
+/* Específico para el dropdown del período */
+.dropdown-menu.show {
+  z-index: 2147483647 !important;
+  position: absolute !important;
+  top: 100% !important;
+  left: 0 !important;
+  display: block !important;
+}
+
+/* Asegurar que el body no tenga overflow hidden que pueda interferir */
+body.modal-open {
+  overflow: visible !important;
+}
+
+/* Estilos adicionales para elementos que puedan interferir */
+.navbar,
+.navbar * {
+  z-index: 1000 !important;
+}
+
+.sidebar,
+.sidebar * {
+  z-index: 1000 !important;
+}
+
+/* Forzar z-index alto para cualquier elemento que pueda estar interfiriendo */
+.card,
+.card * {
+  z-index: auto !important;
+}
+
+/* Estilos para asegurar que los modales se muestren correctamente */
+.swal2-show {
+  animation: swal2-show 0.3s !important;
+}
+
+@keyframes swal2-show {
+  0% {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+  45% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+  80% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Clases específicas para SweetAlert con z-index alto */
+.swal2-container-high-z {
+  z-index: 999999 !important;
+}
+
+.swal2-popup-high-z {
+  z-index: 999999 !important;
+}
+
+/* Estilos adicionales para asegurar que los modales se muestren */
+.swal2-container-high-z .swal2-popup {
+  z-index: 999999 !important;
+}
+
+.swal2-container-high-z .swal2-backdrop {
+  z-index: 999998 !important;
+}
+
+/* Forzar que todos los elementos de SweetAlert estén por encima de cualquier otro elemento */
+.swal2-container,
+.swal2-container *,
+.swal2-popup,
+.swal2-popup *,
+.swal2-backdrop {
+  z-index: 999999 !important;
+  position: relative !important;
+}
+
+/* Estilos para asegurar que el modal del dashboard funcione correctamente */
+.detalle-ingresos-modal {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 999999 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.detalle-ingresos-content {
+  position: relative !important;
+  z-index: 999999 !important;
+}
+
+/* Asegurar que no haya elementos que interfieran */
+* {
+  box-sizing: border-box;
+}
+
+/* Estilos para elementos que puedan tener z-index alto por defecto */
+.navbar,
+.navbar *,
+.sidebar,
+.sidebar *,
+.header,
+.header * {
+  z-index: 1000 !important;
+}
+
+/* SOLUCIÓN DEFINITIVA - Forzar que los modales estén por encima de todo */
+.modal,
+.modal *,
+.swal2-container,
+.swal2-container *,
+.detalle-ingresos-modal,
+.detalle-ingresos-modal *,
+.modal-superior-definitivo,
+.modal-superior-definitivo *,
+.modal-contenido-definitivo,
+.modal-contenido-definitivo * {
+  z-index: 2147483647 !important; /* Z-index máximo posible */
+}
+
+/* Forzar que NO haya elementos con z-index más alto */
+*:not(.modal-superior-definitivo):not(.modal-superior-definitivo *):not(.modal-contenido-definitivo):not(.modal-contenido-definitivo *):not(.swal2-container):not(.swal2-container *) {
+  z-index: auto !important;
+}
+
+/* Resetear z-index de elementos problemáticos */
+.navbar,
+.navbar *,
+.sidebar,
+.sidebar *,
+.header,
+.header *,
+.card,
+.card *,
+.dropdown-menu,
+.dropdown-menu *,
+.tooltip,
+.tooltip *,
+.popover,
+.popover * {
+  z-index: 1000 !important;
+}
+
+/* Asegurar que el body no interfiera */
+body {
+  overflow: visible !important;
+  position: relative !important;
+}
+
+/* Forzar que el modal definitivo esté por encima de TODO */
+.modal-superior-definitivo {
+  z-index: 2147483647 !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+}
+
+.modal-contenido-definitivo {
+  z-index: 2147483647 !important;
+  position: relative !important;
+}

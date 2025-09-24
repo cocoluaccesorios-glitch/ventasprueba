@@ -12,56 +12,54 @@
             <h1 class="brand-title">Nueva Venta</h1>
             <p class="brand-subtitle">Sistema de Ventas Cocolú</p>
             </div>
-            </div>
+          </div>
         
         <!-- Sección de Búsqueda de Cliente Integrada -->
         <div class="client-search-section">
           <div class="client-search-container">
             <div class="client-search-field">
-              <label class="search-label">{{ clienteSeleccionado ? 'Cliente Seleccionado' : 'Buscar Cliente' }}</label>
+              <label class="search-label">Buscar Cliente</label>
               <div class="search-input-wrapper">
-                <!-- Estado de búsqueda -->
+                <!-- Estado de búsqueda normal -->
                 <div v-if="!clienteSeleccionado" class="search-state">
-                <i class="bi bi-search search-icon"></i>
-                <input 
-                  type="text" 
-                  class="client-search-input" 
-                  v-model="clienteSearchQuery"
-                  @input="buscarClientesEnTiempoReal"
-                  @focus="mostrarResultados = true"
-                  @blur="ocultarResultadosConDelay"
-                  placeholder="Escribe nombre, cédula o teléfono..."
-                  ref="clientSearchInput"
-                >
-                <button 
-                  v-if="clienteSearchQuery" 
-                  type="button" 
-                  class="clear-search-btn"
-                  @click="limpiarBusquedaCliente"
-                >
-                  <i class="bi bi-x"></i>
-                </button>
-          </div>
+                  <i class="bi bi-search search-icon"></i>
+                  <input 
+                    type="text" 
+                    class="client-search-input" 
+                    v-model="clienteSearchQuery"
+                    @input="buscarClientesEnTiempoReal"
+                    @focus="mostrarResultados = true"
+                    @blur="ocultarResultadosConDelay"
+                    placeholder="Escribe nombre, cédula o teléfono..."
+                    ref="clientSearchInput"
+                  >
+                  <button 
+                    v-if="clienteSearchQuery" 
+                    type="button" 
+                    class="clear-search-btn"
+                    @click="limpiarBusquedaCliente"
+                  >
+                    <i class="bi bi-x"></i>
+                  </button>
+                </div>
                 
                 <!-- Estado de cliente seleccionado -->
-                <div v-else class="selected-client-state">
+                <div v-else class="selected-client-display">
+                  <i class="bi bi-person-check-fill selected-icon"></i>
                   <div class="selected-client-info">
-                    <i class="bi bi-person-check-fill client-icon"></i>
-                    <div class="client-details">
-                      <div class="client-name">{{ clienteSeleccionado.nombre }} {{ clienteSeleccionado.apellido }}</div>
-                      <div class="client-cedula">{{ clienteSeleccionado.cedula_rif }}</div>
-            </div>
-            </div>
+                    <span class="selected-client-name">{{ clienteSeleccionado.nombre }} {{ clienteSeleccionado.apellido }}</span>
+                    <span class="selected-client-cedula">{{ clienteSeleccionado.cedula_rif }}</span>
+                  </div>
                   <button 
                     type="button" 
-                    class="remove-client-btn"
+                    class="remove-selected-client-btn"
                     @click="quitarClienteSeleccionado"
                     title="Quitar cliente"
                   >
                     <i class="bi bi-x"></i>
                   </button>
+                </div>
           </div>
-              </div>
               
               <!-- Lista desplegable de resultados -->
               <div v-if="mostrarResultados && resultadosBusqueda.length > 0" class="search-results-dropdown">
@@ -1354,6 +1352,71 @@ select.form-control {
   color: #495057;
 }
 
+/* Estado de cliente seleccionado en el campo de búsqueda */
+.selected-client-display {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+  border: 2px solid #28a745;
+  border-radius: 8px;
+  padding: 0.75rem;
+  min-height: 48px;
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.15);
+}
+
+.selected-icon {
+  color: #28a745;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.selected-client-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.selected-client-name {
+  font-weight: 700;
+  color: #155724;
+  font-size: 1rem;
+}
+
+.selected-client-cedula {
+  font-weight: 600;
+  color: #28a745;
+  font-size: 0.9rem;
+}
+
+.remove-selected-client-btn {
+  background: rgba(220, 53, 69, 0.1);
+  border: 1px solid #dc3545;
+  border-radius: 6px;
+  padding: 0.5rem;
+  color: #dc3545;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+}
+
+.remove-selected-client-btn:hover {
+  background: rgba(220, 53, 69, 0.2);
+  transform: scale(1.05);
+}
+
+.remove-selected-client-btn i {
+  font-size: 1rem;
+}
+
+/* Información del Cliente Seleccionado - Muy Compacto */
+
 /* Estilos para el estado de cliente seleccionado */
 .search-state {
   position: relative;
@@ -1530,12 +1593,12 @@ select.form-control {
 
 .centered-layout {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: 2fr 1fr; /* Dos columnas: formulario más ancho, resumen más estrecho */
   gap: 2rem;
   align-items: start;
   max-width: 1400px;
   margin: 0 auto;
-  padding-right: 490px; /* Padding reducido 40px más para ensanchar el formulario */
+  padding: 0 30px; /* Padding uniforme */
 }
 
 /* Formulario estilo Bootstrap estándar */
@@ -2179,18 +2242,32 @@ legend {
 
 /* Panel de resumen estilo Bootstrap estándar */
 .summary-container {
-  position: fixed;
-  top: 200px; /* Posición fija a la derecha */
-  right: 120px; /* 40 puntos más a la izquierda desde right: 80px */
-  width: 480px; /* Más ancho */
-  max-height: calc(100vh - 250px); /* Altura máxima para permitir scroll interno */
+  position: sticky;
+  top: 2rem; /* Posición sticky para seguir el scroll */
+  width: 100%; /* Ancho completo de la columna del grid */
+  height: calc(100vh - 4rem); /* Altura fija para ocupar toda la pantalla disponible */
   overflow-y: auto; /* Barra de desplazamiento vertical */
   overflow-x: hidden; /* Sin barra horizontal */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Panel de resumen - distribución del contenido */
+.summary-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%; /* Usar toda la altura disponible */
+}
+
+.summary-content {
+  flex: 1; /* Ocupar el espacio disponible */
+  display: flex;
+  flex-direction: column;
 }
 
 /* Sección de comentarios */
 .comments-section {
-  margin-top: 1.5rem;
+  margin-top: auto; /* Empujar hacia abajo */
   background: rgba(255, 255, 255, 0.95);
   border-radius: 12px;
   padding: 1.5rem;
@@ -2365,7 +2442,8 @@ legend {
   background: #f8f9fa;
   border-radius: 4px;
   padding: 1rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem; /* Aumentado para mejor separación */
+  overflow: visible; /* Asegurar que el contenido sea visible */
 }
 
 .calc-row {
@@ -2679,19 +2757,22 @@ legend {
   margin-top: 0.5rem;
 }
 
-/* Tasa BCV */
+/* Tasa BCV - Simplificado sin recuadro */
 .rate-row {
-  background: #e3f2fd;
-  border: 1px solid #2196f3;
-  border-radius: 4px;
-  padding: 0.75rem;
+  background: transparent; /* Sin fondo */
+  border: none; /* Sin borde */
+  padding: 0.5rem 0; /* Padding mínimo */
   margin-top: 0.5rem;
+  margin-bottom: 0.5rem; /* Margen reducido */
   font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .rate-value {
-  color: #1976d2;
-  font-weight: 700;
+  color: #495057; /* Color más discreto */
+  font-weight: 600; /* Peso reducido */
 }
 
 /* Tasa BCV Display */
@@ -2699,28 +2780,36 @@ legend {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  flex-shrink: 0; /* Evitar que se comprima */
 }
 
 .rate-currency {
-  color: #1976d2;
-  font-weight: 700;
+  color: #495057; /* Color más discreto */
+  font-weight: 600; /* Peso reducido */
   font-size: 0.9rem;
 }
 
 .btn-update-rate {
-  background: rgba(33, 150, 243, 0.1);
-  border: 1px solid #2196f3;
+  background: transparent; /* Sin fondo */
+  border: 1px solid #dee2e6; /* Borde discreto */
   border-radius: 4px;
-  padding: 0.25rem 0.5rem;
+  padding: 0.25rem; /* Padding reducido */
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 0.8rem;
-  color: #1976d2;
+  font-size: 0.8rem; /* Tamaño de fuente reducido */
+  color: #6c757d; /* Color más discreto */
+  min-width: 32px; /* Ancho mínimo reducido */
+  height: 32px; /* Altura reducida */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0; /* Evitar que se comprima */
 }
 
 .btn-update-rate:hover:not(:disabled) {
-  background: rgba(33, 150, 243, 0.2);
-  transform: scale(1.05);
+  background: #f8f9fa; /* Fondo discreto al hover */
+  border-color: #adb5bd; /* Borde más visible al hover */
+  transform: none; /* Sin transformación */
 }
 
 .btn-update-rate:disabled {
@@ -2737,10 +2826,10 @@ legend {
   to { transform: rotate(360deg); }
 }
 
-/* Total en Bolívares */
+/* Total en Bolívares - Misma estructura que Total USD */
 .ves-row {
   background: #fff3e0;
-  border: 1px solid #ff9800;
+  border: 2px solid #ff9800;
   border-radius: 4px;
   padding: 1rem;
   margin-top: 0.5rem;
@@ -2751,15 +2840,15 @@ legend {
 }
 
 .ves-row .calc-label {
-  font-size: 1.3rem;
+  font-size: inherit; /* Usar el mismo tamaño que .calc-label base */
   color: #212529;
-  font-weight: 800;
+  font-weight: 600; /* Usar el mismo peso que .calc-label base */
 }
 
 .ves-value {
   color: #f57c00;
-  font-weight: 800;
-  font-size: 1.4rem;
+  font-weight: 700; /* Usar el mismo peso que .calc-value base */
+  font-size: inherit; /* Usar el mismo tamaño que .calc-value base */
 }
 
 .total-label {
@@ -2772,18 +2861,6 @@ legend {
   font-size: 1.4rem;
   color: #28a745;
   font-weight: 800;
-}
-
-.ves-row {
-  flex-direction: column;
-  align-items: stretch;
-  gap: 0.5rem;
-}
-
-.ves-value {
-  font-size: 1rem;
-  color: #495057;
-  font-weight: 600;
 }
 
 /* Métodos de pago */
@@ -2920,10 +2997,28 @@ legend {
 }
 
 /* Responsive */
+@media (max-width: 1200px) {
+  .centered-layout {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  
+  .summary-container {
+    position: static;
+    height: auto; /* Altura automática en pantallas pequeñas */
+    max-height: none;
+  }
+  
+  .summary-panel {
+    height: auto; /* Altura automática en pantallas pequeñas */
+  }
+}
+
 @media (max-width: 768px) {
   .centered-layout {
     grid-template-columns: 1fr;
     gap: 1rem;
+    padding: 0 15px;
   }
   
   .form-row {
@@ -2933,6 +3028,12 @@ legend {
   
   .summary-container {
     position: static;
+    height: auto; /* Altura automática en móviles */
+    max-height: none;
+  }
+  
+  .summary-panel {
+    height: auto; /* Altura automática en móviles */
   }
   
   .payment-options {
@@ -3310,23 +3411,6 @@ input[type=number] {
   gap: 1rem;
 }
 
-@media (max-width: 1200px) {
-  .summary-container {
-    position: relative;
-    top: auto;
-    right: auto;
-    width: 100%;
-    margin-top: 2rem;
-  }
-  
-  .comments-section {
-    margin-top: 1rem;
-  }
-  
-  .centered-layout {
-    padding-right: 30px;
-  }
-}
 
 @media (max-width: 768px) {
   .mixed-amounts-section .form-row {
@@ -4793,6 +4877,7 @@ function onClientCleared() {
 function abrirModalNuevoCliente() {
   Swal.fire({
     title: 'Nuevo Cliente',
+    position: 'center',
     html: `
       <div class="mb-3">
         <label class="form-label">Cédula/RIF *</label>
@@ -4854,7 +4939,12 @@ function abrirModalNuevoCliente() {
         // Actualizar la lista de clientes
         clientes.value = await getClientes();
         
-        Swal.fire('¡Éxito!', 'Cliente creado y seleccionado', 'success');
+        Swal.fire({
+          title: '¡Éxito!',
+          text: 'Cliente creado y seleccionado',
+          icon: 'success',
+          position: 'center'
+        });
       } catch (error) {
         console.error('Error al crear cliente:', error);
         Swal.fire('Error', 'No se pudo crear el cliente', 'error');
@@ -4880,17 +4970,32 @@ function onProductCleared() {
 
 function agregarProducto() {
   if (!productoSeleccionado.value || cantidadSeleccionada.value < 1) {
-    Swal.fire('Atención', 'Selecciona un producto y una cantidad válida.', 'warning');
+    Swal.fire({
+      title: 'Atención',
+      text: 'Selecciona un producto y una cantidad válida.',
+      icon: 'warning',
+      position: 'center'
+    });
     return;
   }
   
   if (cantidadSeleccionada.value > productoSeleccionado.value.stock_actual) {
-    Swal.fire('Stock Insuficiente', `Solo quedan ${productoSeleccionado.value.stock_actual} unidades.`, 'error');
+    Swal.fire({
+      title: 'Stock Insuficiente',
+      text: `Solo quedan ${productoSeleccionado.value.stock_actual} unidades.`,
+      icon: 'error',
+      position: 'center'
+    });
     return;
   }
   
   if (precioSeleccionado.value <= 0) {
-    Swal.fire('Error', 'El precio debe ser mayor a 0.', 'error');
+    Swal.fire({
+      title: 'Error',
+      text: 'El precio debe ser mayor a 0.',
+      icon: 'error',
+      position: 'center'
+    });
     return;
   }
   
@@ -4975,7 +5080,8 @@ function eliminarProducto(index) {
     confirmButtonColor: '#d33',
     cancelButtonColor: '#3085d6',
     confirmButtonText: 'Sí, eliminar',
-    cancelButtonText: 'Cancelar'
+    cancelButtonText: 'Cancelar',
+    position: 'center'
   }).then((result) => {
     if (result.isConfirmed) {
   detallesPedido.value.splice(index, 1);
@@ -5150,14 +5256,8 @@ async function buscarClientePorCedulaLocal() {
       venta.value.cliente_email = clienteEncontrado.email;
       venta.value.cliente_direccion = clienteEncontrado.direccion;
       
-      // Mostrar mensaje de éxito
-      Swal.fire({
-        title: '¡Cliente Encontrado!',
-        text: `${clienteEncontrado.nombre} ${clienteEncontrado.apellido}`,
-        icon: 'success',
-        timer: 2000,
-        showConfirmButton: false
-      });
+      // Cliente encontrado silenciosamente (sin alerta)
+      console.log('✅ Cliente encontrado:', `${clienteEncontrado.nombre} ${clienteEncontrado.apellido}`);
     } else {
       // Mostrar mensaje de que no se encontró
       Swal.fire({
@@ -5306,8 +5406,8 @@ function seleccionarCliente(cliente) {
   resultadosBusqueda.value = [];
   mostrarResultados.value = false;
   
-  // Mostrar confirmación
-  showSuccess('Cliente Seleccionado', `${cliente.nombre} ${cliente.apellido}`);
+  // Cliente seleccionado silenciosamente (sin alerta)
+  console.log('✅ Cliente seleccionado:', `${cliente.nombre} ${cliente.apellido}`);
 }
 
 function limpiarBusquedaCliente() {
@@ -5330,8 +5430,8 @@ function quitarClienteSeleccionado() {
   resultadosBusqueda.value = [];
   mostrarResultados.value = false;
   
-  // Mostrar confirmación
-  showSuccess('Cliente Removido', 'El cliente ha sido removido de la venta');
+  // Cliente removido silenciosamente (sin alerta)
+  console.log('✅ Cliente removido');
 }
 
 function ocultarResultadosConDelay() {
@@ -5378,12 +5478,8 @@ function buscarCliente() {
         venta.value.cliente_email = clienteEncontrado.email;
         venta.value.cliente_direccion = clienteEncontrado.direccion;
         
-        Swal.fire({
-          title: '¡Cliente Encontrado!',
-          text: `${clienteEncontrado.nombre} ${clienteEncontrado.apellido}`,
-          icon: 'success',
-          timer: 2000
-        });
+        // Cliente encontrado silenciosamente (sin alerta)
+        console.log('✅ Cliente encontrado:', `${clienteEncontrado.nombre} ${clienteEncontrado.apellido}`);
       } else {
         Swal.fire({
           title: 'Cliente No Encontrado',
@@ -5777,9 +5873,11 @@ async function handleSubmit() {
 <style scoped>
 /* Estilos para el resumen dinámico */
 .payment-info-section {
-  margin-top: 0.75rem;
+  margin-top: 1.5rem; /* Aumentado para evitar superposición con rate-row */
   padding-top: 0.75rem;
   border-top: 1px solid #E8F5E8;
+  position: relative;
+  z-index: 0; /* Z-index menor que rate-row */
 }
 
 .payment-method-info,

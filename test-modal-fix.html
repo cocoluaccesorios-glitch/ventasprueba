@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Modal Fix - Cocolú Ventas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        /* Estilos para modales y alertas - Z-index alto */
+        .swal2-container {
+            z-index: 999999 !important;
+        }
+
+        .swal2-popup {
+            z-index: 999999 !important;
+        }
+
+        .swal2-backdrop {
+            z-index: 999998 !important;
+        }
+
+        /* Bootstrap modals */
+        .modal {
+            z-index: 999999 !important;
+        }
+
+        .modal-backdrop {
+            z-index: 999998 !important;
+        }
+
+        /* Modales personalizados */
+        .modal-overlay {
+            z-index: 999999 !important;
+        }
+
+        .modal-content {
+            z-index: 999999 !important;
+        }
+
+        /* Estilos específicos para el modal de detalles de ingresos */
+        .detalle-ingresos-modal {
+            z-index: 999999 !important;
+        }
+
+        .detalle-ingresos-content {
+            z-index: 999999 !important;
+        }
+
+        .btn-cerrar-modal {
+            z-index: 1000000 !important;
+        }
+
+        /* Forzar que todos los elementos de SweetAlert estén por encima */
+        .swal2-container,
+        .swal2-container * {
+            z-index: 999999 !important;
+        }
+
+        /* Estilos para tooltips y popovers */
+        .tooltip {
+            z-index: 999999 !important;
+        }
+
+        .popover {
+            z-index: 999999 !important;
+        }
+
+        /* Estilos para dropdowns */
+        .dropdown-menu {
+            z-index: 999999 !important;
+        }
+
+        /* Asegurar que el body no tenga overflow hidden que pueda interferir */
+        body.modal-open {
+            overflow: visible !important;
+        }
+
+        /* Estilos adicionales para elementos que puedan interferir */
+        .navbar,
+        .navbar * {
+            z-index: 1000 !important;
+        }
+
+        .sidebar,
+        .sidebar * {
+            z-index: 1000 !important;
+        }
+
+        /* Forzar z-index alto para cualquier elemento que pueda estar interfiriendo */
+        .card,
+        .card * {
+            z-index: auto !important;
+        }
+
+        /* Estilos para asegurar que los modales se muestren correctamente */
+        .swal2-show {
+            animation: swal2-show 0.3s !important;
+        }
+
+        @keyframes swal2-show {
+            0% {
+                transform: scale(0.7);
+                opacity: 0;
+            }
+            45% {
+                transform: scale(1.05);
+                opacity: 1;
+            }
+            80% {
+                transform: scale(0.95);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* Clases específicas para SweetAlert con z-index alto */
+        .swal2-container-high-z {
+            z-index: 999999 !important;
+        }
+
+        .swal2-popup-high-z {
+            z-index: 999999 !important;
+        }
+
+        /* Estilos adicionales para asegurar que los modales se muestren */
+        .swal2-container-high-z .swal2-popup {
+            z-index: 999999 !important;
+        }
+
+        .swal2-container-high-z .swal2-backdrop {
+            z-index: 999998 !important;
+        }
+
+        /* Forzar que todos los elementos de SweetAlert estén por encima de cualquier otro elemento */
+        .swal2-container,
+        .swal2-container *,
+        .swal2-popup,
+        .swal2-popup *,
+        .swal2-backdrop {
+            z-index: 999999 !important;
+            position: relative !important;
+        }
+
+        /* Estilos para asegurar que el modal del dashboard funcione correctamente */
+        .detalle-ingresos-modal {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 999999 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        .detalle-ingresos-content {
+            position: relative !important;
+            z-index: 999999 !important;
+        }
+
+        /* Asegurar que no haya elementos que interfieran */
+        * {
+            box-sizing: border-box;
+        }
+
+        /* Estilos para elementos que puedan tener z-index alto por defecto */
+        .navbar,
+        .navbar *,
+        .sidebar,
+        .sidebar *,
+        .header,
+        .header * {
+            z-index: 1000 !important;
+        }
+
+        /* Forzar que los modales estén por encima de todo */
+        .modal,
+        .modal *,
+        .swal2-container,
+        .swal2-container *,
+        .detalle-ingresos-modal,
+        .detalle-ingresos-modal * {
+            z-index: 999999 !important;
+        }
+
+        /* Modal personalizado del dashboard */
+        .detalle-ingresos-modal {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            background: rgba(0, 0, 0, 0.8) !important;
+            z-index: 999999 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            backdrop-filter: blur(8px);
+            animation: modalFadeIn 0.3s ease-out;
+        }
+
+        .detalle-ingresos-content {
+            background: white !important;
+            color: #333 !important;
+            padding: 2rem !important;
+            border-radius: 1rem !important;
+            box-shadow: 0 2rem 4rem rgba(0, 0, 0, 0.5) !important;
+            width: 90vw !important;
+            max-width: 1200px !important;
+            height: 85vh !important;
+            overflow-y: auto !important;
+            border: 3px solid #007bff !important;
+            position: relative !important;
+            z-index: 999999 !important;
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        .btn-cerrar-modal {
+            position: absolute !important;
+            top: 1rem !important;
+            right: 1rem !important;
+            background: #dc3545 !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 50% !important;
+            width: 40px !important;
+            height: 40px !important;
+            cursor: pointer !important;
+            font-size: 18px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            transition: all 0.2s ease !important;
+            z-index: 1000000 !important;
+        }
+
+        .btn-cerrar-modal:hover {
+            background: #c82333;
+            transform: scale(1.1);
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8) translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        /* Estilos de prueba */
+        .test-container {
+            padding: 2rem;
+            background: #f8f9fa;
+            min-height: 100vh;
+        }
+
+        .test-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .test-button {
+            margin: 0.5rem;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-warning { background: #ffc107; color: #212529; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-info { background: #17a2b8; color: white; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="test-card">
+            <h1>🧪 Test de Modales - Cocolú Ventas</h1>
+            <p>Esta página prueba que los modales se muestren correctamente por encima de todo el contenido.</p>
+            
+            <h3>Pruebas de SweetAlert2:</h3>
+            <button class="test-button btn-primary" onclick="testSweetAlertSuccess()">
+                <i class="bi bi-check-circle"></i> SweetAlert Success
+            </button>
+            <button class="test-button btn-danger" onclick="testSweetAlertError()">
+                <i class="bi bi-x-circle"></i> SweetAlert Error
+            </button>
+            <button class="test-button btn-warning" onclick="testSweetAlertWarning()">
+                <i class="bi bi-exclamation-triangle"></i> SweetAlert Warning
+            </button>
+            <button class="test-button btn-info" onclick="testSweetAlertInfo()">
+                <i class="bi bi-info-circle"></i> SweetAlert Info
+            </button>
+            <button class="test-button btn-success" onclick="testSweetAlertConfirm()">
+                <i class="bi bi-question-circle"></i> SweetAlert Confirm
+            </button>
+        </div>
+
+        <div class="test-card">
+            <h3>Pruebas de Modal Personalizado:</h3>
+            <button class="test-button btn-primary" onclick="testCustomModal()">
+                <i class="bi bi-eye"></i> Modal Personalizado (Dashboard Style)
+            </button>
+        </div>
+
+        <div class="test-card">
+            <h3>Pruebas de Bootstrap Modal:</h3>
+            <button class="test-button btn-info" onclick="testBootstrapModal()">
+                <i class="bi bi-window"></i> Bootstrap Modal
+            </button>
+        </div>
+
+        <div class="test-card">
+            <h3>Contenido de Prueba:</h3>
+            <p>Este contenido está aquí para simular el dashboard real y verificar que los modales aparezcan por encima.</p>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <h5>Card 1</h5>
+                            <p>Contenido de prueba</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <h5>Card 2</h5>
+                            <p>Contenido de prueba</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body">
+                            <h5>Card 3</h5>
+                            <p>Contenido de prueba</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap Modal -->
+    <div class="modal fade" id="testBootstrapModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Test Bootstrap Modal</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Este es un modal de Bootstrap que debería aparecer por encima de todo el contenido.</p>
+                    <p>Si puedes ver este modal correctamente, significa que el z-index está funcionando.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Variable para controlar el modal personalizado
+        let mostrarModalPersonalizado = false;
+
+        // Funciones de prueba para SweetAlert
+        function testSweetAlertSuccess() {
+            Swal.fire({
+                title: '¡Éxito!',
+                text: 'Este modal debería aparecer por encima de todo el contenido.',
+                icon: 'success',
+                confirmButtonText: 'Continuar',
+                customClass: {
+                    container: 'swal2-container-high-z',
+                    popup: 'swal2-popup-high-z'
+                },
+                zIndex: 999999
+            });
+        }
+
+        function testSweetAlertError() {
+            Swal.fire({
+                title: 'Error',
+                text: 'Este modal de error debería aparecer por encima de todo.',
+                icon: 'error',
+                confirmButtonText: 'Entendido',
+                customClass: {
+                    container: 'swal2-container-high-z',
+                    popup: 'swal2-popup-high-z'
+                },
+                zIndex: 999999
+            });
+        }
+
+        function testSweetAlertWarning() {
+            Swal.fire({
+                title: 'Advertencia',
+                text: 'Este modal de advertencia debería aparecer por encima de todo.',
+                icon: 'warning',
+                confirmButtonText: 'Entendido',
+                customClass: {
+                    container: 'swal2-container-high-z',
+                    popup: 'swal2-popup-high-z'
+                },
+                zIndex: 999999
+            });
+        }
+
+        function testSweetAlertInfo() {
+            Swal.fire({
+                title: 'Información',
+                text: 'Este modal de información debería aparecer por encima de todo.',
+                icon: 'info',
+                confirmButtonText: 'Entendido',
+                customClass: {
+                    container: 'swal2-container-high-z',
+                    popup: 'swal2-popup-high-z'
+                },
+                zIndex: 999999
+            });
+        }
+
+        function testSweetAlertConfirm() {
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: 'Este modal de confirmación debería aparecer por encima de todo.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, continuar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#198754',
+                cancelButtonColor: '#dc3545',
+                customClass: {
+                    container: 'swal2-container-high-z',
+                    popup: 'swal2-popup-high-z'
+                },
+                zIndex: 999999
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire('¡Confirmado!', 'Has confirmado la acción.', 'success');
+                }
+            });
+        }
+
+        // Función para el modal personalizado
+        function testCustomModal() {
+            mostrarModalPersonalizado = true;
+            renderCustomModal();
+        }
+
+        function cerrarModalPersonalizado() {
+            mostrarModalPersonalizado = false;
+            renderCustomModal();
+        }
+
+        function renderCustomModal() {
+            let modalHTML = '';
+            if (mostrarModalPersonalizado) {
+                modalHTML = `
+                    <div class="detalle-ingresos-modal" onclick="cerrarModalPersonalizado()">
+                        <div class="detalle-ingresos-content" onclick="event.stopPropagation()">
+                            <button onclick="cerrarModalPersonalizado()" class="btn-cerrar-modal">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                            
+                            <h3 class="mb-4 text-center" style="color: #007bff; font-weight: bold; font-size: 1.8rem;">
+                                <i class="bi bi-info-circle"></i> Test Modal Personalizado
+                            </h3>
+                            
+                            <div class="mb-4">
+                                <h5 class="text-success mb-4" style="font-weight: bold; font-size: 1.3rem;">
+                                    <i class="bi bi-currency-dollar"></i> Información de Prueba
+                                </h5>
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; margin-bottom: 0.5rem; background: #f8f9fa; border-radius: 0.5rem; border-left: 4px solid #e9ecef;">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; font-weight: 500; color: #495057;">
+                                        <i class="bi bi-cash-coin"></i> Test Item 1
+                                    </div>
+                                    <div style="font-weight: 600; color: #212529; font-size: 1.05rem;">
+                                        $100.00
+                                    </div>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; margin-bottom: 0.5rem; background: #f8f9fa; border-radius: 0.5rem; border-left: 4px solid #e9ecef;">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; font-weight: 500; color: #495057;">
+                                        <i class="bi bi-arrow-left-right"></i> Test Item 2
+                                    </div>
+                                    <div style="font-weight: 600; color: #212529; font-size: 1.05rem;">
+                                        $200.00
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div style="margin-top: 1.5rem; padding: 1.5rem; border-top: 3px solid #007bff; background: linear-gradient(135deg, #e3f2fd, #bbdefb); border-radius: 0.75rem; box-shadow: 0 2px 4px rgba(0, 123, 255, 0.2);">
+                                <h5 class="text-primary mb-4" style="font-weight: bold; font-size: 1.3rem;">
+                                    <i class="bi bi-pie-chart"></i> Resumen de Prueba
+                                </h5>
+                                <p>Si puedes ver este modal correctamente por encima de todo el contenido, significa que el problema del z-index ha sido solucionado.</p>
+                                <p><strong>¡El modal está funcionando correctamente!</strong></p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Buscar o crear el contenedor del modal
+            let modalContainer = document.getElementById('customModalContainer');
+            if (!modalContainer) {
+                modalContainer = document.createElement('div');
+                modalContainer.id = 'customModalContainer';
+                document.body.appendChild(modalContainer);
+            }
+            modalContainer.innerHTML = modalHTML;
+        }
+
+        // Función para Bootstrap Modal
+        function testBootstrapModal() {
+            const modal = new bootstrap.Modal(document.getElementById('testBootstrapModal'));
+            modal.show();
+        }
+
+        // Renderizar el modal personalizado al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            renderCustomModal();
+        });
+    </script>
+</body>
+</html>
+

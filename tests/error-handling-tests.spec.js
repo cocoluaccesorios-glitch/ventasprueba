@@ -276,3 +276,4 @@ test.describe('Pruebas de Manejo de Errores', () => {
     console.log('✅ Validación en tiempo real funciona correctamente');
   });
 });
+

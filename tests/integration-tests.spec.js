@@ -304,3 +304,4 @@ test.describe('Pruebas de Integración Completa', () => {
     console.log('✅ Venta con múltiples métodos de pago procesada exitosamente');
   });
 });
+

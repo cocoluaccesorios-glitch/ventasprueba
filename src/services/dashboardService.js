@@ -86,26 +86,59 @@ export async function calcularEstadisticasGenerales() {
     // Calcular stock bajo
     const stockBajo = productos.filter(p => (p.stock_actual || p.stock || 0) <= 5).length
     
-    // Calcular detalle de ingresos por tipo de moneda y método
+    // Calcular detalle de ingresos por tipo de moneda y método (CON LÍMITE)
     const detalleIngresos = pedidos.reduce((detalle, p) => {
       const tasaBCV = p.tasa_bcv || 1
       
-      // Ingresos en USD
+      // Calcular ingresos del pedido
+      let ingresosPedido = 0
+      
       if (p.metodo_pago === 'Contado') {
-        detalle.usd.contado += p.total_usd || 0
+        ingresosPedido = p.total_usd || 0
+        detalle.usd.contado += ingresosPedido
       }
       
       if (p.es_pago_mixto) {
-        detalle.usd.mixto += p.monto_mixto_usd || 0
-        detalle.ves.mixto += p.monto_mixto_ves || 0
+        const mixtoUSD = p.monto_mixto_usd || 0
+        const mixtoVES = p.monto_mixto_ves || 0
+        const mixtoVESUSD = mixtoVES / tasaBCV
+        ingresosPedido = mixtoUSD + mixtoVESUSD
+        
+        // Aplicar límite
+        const totalPedido = p.total_usd || 0
+        if (ingresosPedido > totalPedido) {
+          ingresosPedido = totalPedido
+        }
+        
+        detalle.usd.mixto += mixtoUSD
+        detalle.ves.mixto += mixtoVES
       }
       
       if (p.es_abono) {
         if (p.tipo_pago_abono === 'simple') {
-          detalle.usd.abono += p.monto_abono_simple || 0
+          ingresosPedido = p.monto_abono_simple || 0
+          
+          // Aplicar límite
+          const totalPedido = p.total_usd || 0
+          if (ingresosPedido > totalPedido) {
+            ingresosPedido = totalPedido
+          }
+          
+          detalle.usd.abono += ingresosPedido
         } else if (p.tipo_pago_abono === 'mixto') {
-          detalle.usd.abono += p.monto_abono_usd || 0
-          detalle.ves.abono += p.monto_abono_ves || 0
+          const abonoUSD = p.monto_abono_usd || 0
+          const abonoVES = p.monto_abono_ves || 0
+          const abonoVESUSD = abonoVES / tasaBCV
+          ingresosPedido = abonoUSD + abonoVESUSD
+          
+          // Aplicar límite
+          const totalPedido = p.total_usd || 0
+          if (ingresosPedido > totalPedido) {
+            ingresosPedido = totalPedido
+          }
+          
+          detalle.usd.abono += abonoUSD
+          detalle.ves.abono += abonoVES
         }
       }
       

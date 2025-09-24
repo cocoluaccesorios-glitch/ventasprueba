@@ -49,8 +49,8 @@
           </div>
           
                     <!-- Detalle interactivo -->
-                    <div v-if="mostrarDetalleIngresos" class="detalle-ingresos">
-                      <div class="detalle-content" style="max-width: 1400px !important; width: 98% !important; background: #f8f9fa !important; border: 3px solid #007bff !important;">
+                    <div v-if="mostrarDetalleIngresos" class="detalle-ingresos" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center;" @click="console.log('🎯 Detalle visible - CSS inline aplicado')">
+                      <div style="background: #f8f9fa; color: #333; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.3); max-width: 1400px; width: 98%; max-height: 85vh; overflow-y: auto; border: 3px solid #007bff; position: relative;">
               <h5 class="mb-4"><i class="bi bi-info-circle"></i> Detalle Completo de Ingresos</h5>
               
               <!-- Ingresos en USD -->
@@ -429,6 +429,9 @@ const topProductos = ref([])
 const pedidosRecientes = ref([])
 const alertasInventario = ref([])
 const mostrarDetalleIngresos = ref(false)
+
+// Debug: verificar que el componente se está ejecutando
+console.log('🎯 Dashboard.vue cargado correctamente')
 
 // Computed properties
 const datosVentas = computed(() => {

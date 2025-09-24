@@ -90,12 +90,27 @@ export async function calcularEstadisticasGenerales() {
     const detalleIngresos = pedidos.reduce((detalle, p) => {
       const tasaBCV = p.tasa_bcv || 1
       
+      // Debug: verificar datos del pedido
+      console.log('🔍 Pedido:', {
+        id: p.id,
+        metodo_pago: p.metodo_pago,
+        es_pago_mixto: p.es_pago_mixto,
+        es_abono: p.es_abono,
+        total_usd: p.total_usd,
+        monto_mixto_usd: p.monto_mixto_usd,
+        monto_mixto_ves: p.monto_mixto_ves,
+        monto_abono_simple: p.monto_abono_simple,
+        monto_abono_usd: p.monto_abono_usd,
+        monto_abono_ves: p.monto_abono_ves
+      })
+      
       // Calcular ingresos del pedido
       let ingresosPedido = 0
       
       if (p.metodo_pago === 'Contado') {
         ingresosPedido = p.total_usd || 0
         detalle.usd.contado += ingresosPedido
+        console.log('💰 Contado:', ingresosPedido)
       }
       
       if (p.es_pago_mixto) {
@@ -112,6 +127,7 @@ export async function calcularEstadisticasGenerales() {
         
         detalle.usd.mixto += mixtoUSD
         detalle.ves.mixto += mixtoVES
+        console.log('💰 Mixto USD:', mixtoUSD, 'VES:', mixtoVES)
       }
       
       if (p.es_abono) {
@@ -125,6 +141,7 @@ export async function calcularEstadisticasGenerales() {
           }
           
           detalle.usd.abono += ingresosPedido
+          console.log('💰 Abono simple:', ingresosPedido)
         } else if (p.tipo_pago_abono === 'mixto') {
           const abonoUSD = p.monto_abono_usd || 0
           const abonoVES = p.monto_abono_ves || 0
@@ -139,6 +156,7 @@ export async function calcularEstadisticasGenerales() {
           
           detalle.usd.abono += abonoUSD
           detalle.ves.abono += abonoVES
+          console.log('💰 Abono mixto USD:', abonoUSD, 'VES:', abonoVES)
         }
       }
       
@@ -147,6 +165,8 @@ export async function calcularEstadisticasGenerales() {
       usd: { contado: 0, mixto: 0, abono: 0 },
       ves: { mixto: 0, abono: 0 }
     })
+    
+    console.log('📊 Detalle ingresos calculado:', detalleIngresos)
     
     // Convertir VES a USD para totales
     const totalVESEnUSD = (detalleIngresos.ves.mixto + detalleIngresos.ves.abono) / (pedidos[0]?.tasa_bcv || 1)

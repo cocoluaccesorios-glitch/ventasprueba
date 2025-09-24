@@ -31,7 +31,9 @@
     <!-- Tarjetas de Estadísticas Principales -->
     <div class="row mb-4">
       <div class="col-md-3 mb-3">
-        <div class="card bg-primary text-white h-100">
+        <div class="card bg-primary text-white h-100 position-relative" 
+             @mouseenter="mostrarDetalleIngresos = true" 
+             @mouseleave="mostrarDetalleIngresos = false">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center">
               <div>
@@ -42,6 +44,71 @@
               </div>
               <div class="fs-1 opacity-50">
                 <i class="bi bi-currency-dollar"></i>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Detalle interactivo -->
+          <div v-if="mostrarDetalleIngresos" class="detalle-ingresos">
+            <div class="detalle-content">
+              <h6 class="mb-3"><i class="bi bi-info-circle"></i> Detalle de Ingresos</h6>
+              
+              <!-- Ingresos en USD -->
+              <div class="mb-3">
+                <h6 class="text-success mb-2">💰 Ingresos en USD</h6>
+                <div class="detalle-item">
+                  <span>Contado:</span>
+                  <span>${{ (estadisticas.detalleIngresos?.usd?.contado || 0).toFixed(2) }}</span>
+                </div>
+                <div class="detalle-item">
+                  <span>Mixto:</span>
+                  <span>${{ (estadisticas.detalleIngresos?.usd?.mixto || 0).toFixed(2) }}</span>
+                </div>
+                <div class="detalle-item">
+                  <span>Abono:</span>
+                  <span>${{ (estadisticas.detalleIngresos?.usd?.abono || 0).toFixed(2) }}</span>
+                </div>
+                <div class="detalle-total">
+                  <span><strong>Total USD:</strong></span>
+                  <span><strong>${{ (estadisticas.detalleIngresos?.usd?.total || 0).toFixed(2) }}</strong></span>
+                </div>
+              </div>
+              
+              <!-- Ingresos en VES -->
+              <div class="mb-3">
+                <h6 class="text-warning mb-2">💸 Ingresos en VES</h6>
+                <div class="detalle-item">
+                  <span>Mixto:</span>
+                  <span>{{ (estadisticas.detalleIngresos?.ves?.mixto || 0).toFixed(2) }} Bs</span>
+                </div>
+                <div class="detalle-item">
+                  <span>Abono:</span>
+                  <span>{{ (estadisticas.detalleIngresos?.ves?.abono || 0).toFixed(2) }} Bs</span>
+                </div>
+                <div class="detalle-total">
+                  <span><strong>Total VES:</strong></span>
+                  <span><strong>{{ (estadisticas.detalleIngresos?.ves?.total || 0).toFixed(2) }} Bs</strong></span>
+                </div>
+                <div class="detalle-conversion">
+                  <span>Equivalente USD:</span>
+                  <span>${{ (estadisticas.detalleIngresos?.ves?.totalEnUSD || 0).toFixed(2) }}</span>
+                </div>
+              </div>
+              
+              <!-- Resumen total -->
+              <div class="detalle-resumen">
+                <div class="detalle-item">
+                  <span><strong>Total Ingresos:</strong></span>
+                  <span><strong>${{ (estadisticas.ingresosReales || 0).toFixed(2) }}</strong></span>
+                </div>
+                <div class="detalle-item">
+                  <span>Ventas Totales:</span>
+                  <span>${{ (estadisticas.ventasTotales || 0).toFixed(2) }}</span>
+                </div>
+                <div class="detalle-item">
+                  <span>Por Cobrar:</span>
+                  <span>${{ ((estadisticas.ventasTotales || 0) - (estadisticas.ingresosReales || 0)).toFixed(2) }}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -294,18 +361,24 @@ let chartInstance = null
 
 // Datos mock para el dashboard
 const estadisticas = ref({
+  ingresosReales: 0,
   ventasTotales: 0,
   totalVentas: 0,
   productosVendidos: 0,
   totalProductos: 0,
   clientesActivos: 0,
   nuevosClientes: 0,
-  stockBajo: 0
+  stockBajo: 0,
+  detalleIngresos: {
+    usd: { contado: 0, mixto: 0, abono: 0, total: 0 },
+    ves: { mixto: 0, abono: 0, total: 0, totalEnUSD: 0 }
+  }
 })
 
 const topProductos = ref([])
 const pedidosRecientes = ref([])
 const alertasInventario = ref([])
+const mostrarDetalleIngresos = ref(false)
 
 // Computed properties
 const datosVentas = computed(() => {
@@ -519,6 +592,108 @@ onUnmounted(() => {
 
 .card:hover {
   box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+/* Estilos para el detalle interactivo */
+.detalle-ingresos {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.95);
+  border-radius: 0.375rem;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(5px);
+}
+
+.detalle-content {
+  background: white;
+  color: #333;
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.3);
+  max-width: 400px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.detalle-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.25rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+.detalle-item:last-child {
+  border-bottom: none;
+}
+
+.detalle-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  margin-top: 0.5rem;
+  border-top: 2px solid #28a745;
+  background: #f8f9fa;
+  border-radius: 0.25rem;
+  padding: 0.5rem;
+}
+
+.detalle-conversion {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.25rem 0;
+  font-style: italic;
+  color: #6c757d;
+}
+
+.detalle-resumen {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 2px solid #007bff;
+  background: #f8f9fa;
+  border-radius: 0.25rem;
+  padding: 0.75rem;
+}
+
+.detalle-resumen .detalle-item {
+  border-bottom: 1px solid #dee2e6;
+}
+
+.detalle-resumen .detalle-item:last-child {
+  border-bottom: none;
+}
+
+/* Animaciones */
+.detalle-ingresos {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .detalle-content {
+    padding: 1rem;
+    max-width: 95%;
+  }
 }
 
 .btn {

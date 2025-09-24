@@ -55,6 +55,13 @@ export async function calcularEstadisticasGenerales() {
         }
       }
       
+      // CORRECCIÓN: Los ingresos nunca pueden exceder el total del pedido
+      const totalPedido = p.total_usd || 0
+      if (ingresosPedido > totalPedido) {
+        console.warn(`⚠️ Pedido #${p.id}: Ingresos ($${ingresosPedido.toFixed(2)}) > Total ($${totalPedido.toFixed(2)}) - Limitando a total`)
+        ingresosPedido = totalPedido
+      }
+      
       return sum + ingresosPedido
     }, 0)
     
@@ -79,6 +86,38 @@ export async function calcularEstadisticasGenerales() {
     // Calcular stock bajo
     const stockBajo = productos.filter(p => (p.stock_actual || p.stock || 0) <= 5).length
     
+    // Calcular detalle de ingresos por tipo de moneda y método
+    const detalleIngresos = pedidos.reduce((detalle, p) => {
+      const tasaBCV = p.tasa_bcv || 1
+      
+      // Ingresos en USD
+      if (p.metodo_pago === 'Contado') {
+        detalle.usd.contado += p.total_usd || 0
+      }
+      
+      if (p.es_pago_mixto) {
+        detalle.usd.mixto += p.monto_mixto_usd || 0
+        detalle.ves.mixto += p.monto_mixto_ves || 0
+      }
+      
+      if (p.es_abono) {
+        if (p.tipo_pago_abono === 'simple') {
+          detalle.usd.abono += p.monto_abono_simple || 0
+        } else if (p.tipo_pago_abono === 'mixto') {
+          detalle.usd.abono += p.monto_abono_usd || 0
+          detalle.ves.abono += p.monto_abono_ves || 0
+        }
+      }
+      
+      return detalle
+    }, {
+      usd: { contado: 0, mixto: 0, abono: 0 },
+      ves: { mixto: 0, abono: 0 }
+    })
+    
+    // Convertir VES a USD para totales
+    const totalVESEnUSD = (detalleIngresos.ves.mixto + detalleIngresos.ves.abono) / (pedidos[0]?.tasa_bcv || 1)
+    
     const estadisticas = {
       ingresosReales: parseFloat(ingresosReales.toFixed(2)), // Dinero que ha entrado
       ventasTotales: parseFloat(ventasTotales.toFixed(2)), // Valor total de pedidos
@@ -89,7 +128,21 @@ export async function calcularEstadisticasGenerales() {
       nuevosClientes,
       stockBajo,
       ingresosHoy: 0, // Simplificado para evitar errores
-      ingresosMes: 0  // Simplificado para evitar errores
+      ingresosMes: 0, // Simplificado para evitar errores
+      detalleIngresos: {
+        usd: {
+          contado: parseFloat(detalleIngresos.usd.contado.toFixed(2)),
+          mixto: parseFloat(detalleIngresos.usd.mixto.toFixed(2)),
+          abono: parseFloat(detalleIngresos.usd.abono.toFixed(2)),
+          total: parseFloat((detalleIngresos.usd.contado + detalleIngresos.usd.mixto + detalleIngresos.usd.abono).toFixed(2))
+        },
+        ves: {
+          mixto: parseFloat(detalleIngresos.ves.mixto.toFixed(2)),
+          abono: parseFloat(detalleIngresos.ves.abono.toFixed(2)),
+          total: parseFloat((detalleIngresos.ves.mixto + detalleIngresos.ves.abono).toFixed(2)),
+          totalEnUSD: parseFloat(totalVESEnUSD.toFixed(2))
+        }
+      }
     }
     
     console.log('✅ Estadísticas calculadas:', estadisticas)

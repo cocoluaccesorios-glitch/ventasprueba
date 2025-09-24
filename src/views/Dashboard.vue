@@ -50,7 +50,7 @@
           
                     <!-- Detalle interactivo -->
                     <div v-if="mostrarDetalleIngresos" class="detalle-ingresos">
-                      <div class="detalle-content" style="max-width: 1200px !important; width: 95% !important;">
+                      <div class="detalle-content" style="max-width: 1400px !important; width: 98% !important; background: #f8f9fa !important; border: 3px solid #007bff !important;">
               <h5 class="mb-4"><i class="bi bi-info-circle"></i> Detalle Completo de Ingresos</h5>
               
               <!-- Ingresos en USD -->
@@ -661,15 +661,16 @@ onUnmounted(() => {
 }
 
 .detalle-content {
-  background: white;
+  background: #f8f9fa !important;
   color: #333;
   padding: 2rem;
   border-radius: 0.75rem;
   box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.3);
-  max-width: 1200px !important;
-  width: 95% !important;
+  max-width: 1400px !important;
+  width: 98% !important;
   max-height: 85vh;
   overflow-y: auto;
+  border: 3px solid #007bff !important;
 }
 
 .detalle-item {

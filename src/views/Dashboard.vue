@@ -56,8 +56,8 @@
           </div>
           
                     <!-- Detalle interactivo -->
-                    <div v-if="mostrarDetalleIngresos" class="detalle-ingresos" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center;" @click="console.log('🎯 Detalle visible - CSS inline aplicado')">
-                      <div @click.stop style="background: white; color: #333; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.3); max-width: 1200px; width: 95%; max-height: 85vh; overflow-y: auto; border: 2px solid #007bff; position: relative;">
+                    <div v-if="mostrarDetalleIngresos" class="detalle-ingresos" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 2rem;" @click="console.log('🎯 Detalle visible - CSS inline aplicado')">
+                      <div @click.stop style="background: white; color: #333; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.3); max-width: 1200px; width: 95%; max-height: 85vh; overflow-y: auto; border: 2px solid #007bff; position: relative; margin: auto;">
                         <!-- Botón de cerrar -->
                         <button @click="mostrarDetalleIngresos = false" style="position: absolute; top: 1rem; right: 1rem; background: #dc3545; color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;">×</button>
                         

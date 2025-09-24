@@ -51,64 +51,114 @@
           <!-- Detalle interactivo -->
           <div v-if="mostrarDetalleIngresos" class="detalle-ingresos">
             <div class="detalle-content">
-              <h6 class="mb-3"><i class="bi bi-info-circle"></i> Detalle de Ingresos</h6>
+              <h5 class="mb-4"><i class="bi bi-info-circle"></i> Detalle Completo de Ingresos</h5>
               
               <!-- Ingresos en USD -->
-              <div class="mb-3">
-                <h6 class="text-success mb-2">💰 Ingresos en USD</h6>
-                <div class="detalle-item">
-                  <span>Contado:</span>
-                  <span>${{ (estadisticas.detalleIngresos?.usd?.contado || 0).toFixed(2) }}</span>
+              <div class="mb-4">
+                <h6 class="text-success mb-3">
+                  <i class="bi bi-currency-dollar"></i> Ingresos en Dólares (USD)
+                </h6>
+                <div class="detalle-item-large">
+                  <div class="detalle-label">
+                    <i class="bi bi-cash-coin"></i> Ventas de Contado
+                  </div>
+                  <div class="detalle-value">${{ (estadisticas.detalleIngresos?.usd?.contado || 0).toFixed(2) }}</div>
                 </div>
-                <div class="detalle-item">
-                  <span>Mixto:</span>
-                  <span>${{ (estadisticas.detalleIngresos?.usd?.mixto || 0).toFixed(2) }}</span>
+                <div class="detalle-item-large">
+                  <div class="detalle-label">
+                    <i class="bi bi-arrow-left-right"></i> Pagos Mixtos (USD)
+                  </div>
+                  <div class="detalle-value">${{ (estadisticas.detalleIngresos?.usd?.mixto || 0).toFixed(2) }}</div>
                 </div>
-                <div class="detalle-item">
-                  <span>Abono:</span>
-                  <span>${{ (estadisticas.detalleIngresos?.usd?.abono || 0).toFixed(2) }}</span>
+                <div class="detalle-item-large">
+                  <div class="detalle-label">
+                    <i class="bi bi-calendar-check"></i> Abonos (USD)
+                  </div>
+                  <div class="detalle-value">${{ (estadisticas.detalleIngresos?.usd?.abono || 0).toFixed(2) }}</div>
                 </div>
-                <div class="detalle-total">
-                  <span><strong>Total USD:</strong></span>
-                  <span><strong>${{ (estadisticas.detalleIngresos?.usd?.total || 0).toFixed(2) }}</strong></span>
+                <div class="detalle-total-large">
+                  <div class="detalle-label">
+                    <i class="bi bi-graph-up"></i> <strong>Total USD</strong>
+                  </div>
+                  <div class="detalle-value"><strong>${{ (estadisticas.detalleIngresos?.usd?.total || 0).toFixed(2) }}</strong></div>
                 </div>
               </div>
               
               <!-- Ingresos en VES -->
-              <div class="mb-3">
-                <h6 class="text-warning mb-2">💸 Ingresos en VES</h6>
-                <div class="detalle-item">
-                  <span>Mixto:</span>
-                  <span>{{ (estadisticas.detalleIngresos?.ves?.mixto || 0).toFixed(2) }} Bs</span>
+              <div class="mb-4">
+                <h6 class="text-warning mb-3">
+                  <i class="bi bi-currency-exchange"></i> Ingresos en Bolívares (VES)
+                </h6>
+                <div class="detalle-item-large">
+                  <div class="detalle-label">
+                    <i class="bi bi-arrow-left-right"></i> Pagos Mixtos (VES)
+                  </div>
+                  <div class="detalle-value">{{ (estadisticas.detalleIngresos?.ves?.mixto || 0).toFixed(2) }} Bs</div>
                 </div>
-                <div class="detalle-item">
-                  <span>Abono:</span>
-                  <span>{{ (estadisticas.detalleIngresos?.ves?.abono || 0).toFixed(2) }} Bs</span>
+                <div class="detalle-item-large">
+                  <div class="detalle-label">
+                    <i class="bi bi-calendar-check"></i> Abonos (VES)
+                  </div>
+                  <div class="detalle-value">{{ (estadisticas.detalleIngresos?.ves?.abono || 0).toFixed(2) }} Bs</div>
                 </div>
-                <div class="detalle-total">
-                  <span><strong>Total VES:</strong></span>
-                  <span><strong>{{ (estadisticas.detalleIngresos?.ves?.total || 0).toFixed(2) }} Bs</strong></span>
+                <div class="detalle-total-large">
+                  <div class="detalle-label">
+                    <i class="bi bi-graph-up"></i> <strong>Total VES</strong>
+                  </div>
+                  <div class="detalle-value"><strong>{{ (estadisticas.detalleIngresos?.ves?.total || 0).toFixed(2) }} Bs</strong></div>
                 </div>
-                <div class="detalle-conversion">
-                  <span>Equivalente USD:</span>
-                  <span>${{ (estadisticas.detalleIngresos?.ves?.totalEnUSD || 0).toFixed(2) }}</span>
+                <div class="detalle-conversion-large">
+                  <div class="detalle-label">
+                    <i class="bi bi-calculator"></i> Equivalente en USD
+                  </div>
+                  <div class="detalle-value">${{ (estadisticas.detalleIngresos?.ves?.totalEnUSD || 0).toFixed(2) }}</div>
                 </div>
               </div>
               
               <!-- Resumen total -->
-              <div class="detalle-resumen">
-                <div class="detalle-item">
-                  <span><strong>Total Ingresos:</strong></span>
-                  <span><strong>${{ (estadisticas.ingresosReales || 0).toFixed(2) }}</strong></span>
+              <div class="detalle-resumen-large">
+                <h6 class="text-primary mb-3">
+                  <i class="bi bi-pie-chart"></i> Resumen General
+                </h6>
+                <div class="detalle-item-large">
+                  <div class="detalle-label">
+                    <i class="bi bi-wallet2"></i> <strong>Total Ingresos Reales</strong>
+                  </div>
+                  <div class="detalle-value"><strong>${{ (estadisticas.ingresosReales || 0).toFixed(2) }}</strong></div>
                 </div>
-                <div class="detalle-item">
-                  <span>Ventas Totales:</span>
-                  <span>${{ (estadisticas.ventasTotales || 0).toFixed(2) }}</span>
+                <div class="detalle-item-large">
+                  <div class="detalle-label">
+                    <i class="bi bi-receipt"></i> Ventas Totales Registradas
+                  </div>
+                  <div class="detalle-value">${{ (estadisticas.ventasTotales || 0).toFixed(2) }}</div>
                 </div>
-                <div class="detalle-item">
-                  <span>Por Cobrar:</span>
-                  <span>${{ ((estadisticas.ventasTotales || 0) - (estadisticas.ingresosReales || 0)).toFixed(2) }}</span>
+                <div class="detalle-item-large">
+                  <div class="detalle-label">
+                    <i class="bi bi-clock-history"></i> Monto Pendiente por Cobrar
+                  </div>
+                  <div class="detalle-value">${{ ((estadisticas.ventasTotales || 0) - (estadisticas.ingresosReales || 0)).toFixed(2) }}</div>
                 </div>
+                <div class="detalle-item-large">
+                  <div class="detalle-label">
+                    <i class="bi bi-percent"></i> Porcentaje Cobrado
+                  </div>
+                  <div class="detalle-value">{{ (((estadisticas.ingresosReales || 0) / (estadisticas.ventasTotales || 1)) * 100).toFixed(1) }}%</div>
+                </div>
+                <div class="detalle-item-large">
+                  <div class="detalle-label">
+                    <i class="bi bi-list-ol"></i> Total de Pedidos
+                  </div>
+                  <div class="detalle-value">{{ estadisticas.totalVentas }} pedidos</div>
+                </div>
+              </div>
+              
+              <!-- Información adicional -->
+              <div class="detalle-info">
+                <small class="text-muted">
+                  <i class="bi bi-info-circle"></i> 
+                  Los ingresos reales representan el dinero efectivamente recibido, 
+                  mientras que las ventas totales incluyen montos pendientes de cobro.
+                </small>
               </div>
             </div>
           </div>
@@ -613,12 +663,12 @@ onUnmounted(() => {
 .detalle-content {
   background: white;
   color: #333;
-  padding: 1.5rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.3);
-  max-width: 400px;
-  width: 90%;
-  max-height: 80vh;
+  padding: 2rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.3);
+  max-width: 500px;
+  width: 95%;
+  max-height: 85vh;
   overflow-y: auto;
 }
 
@@ -694,6 +744,112 @@ onUnmounted(() => {
     padding: 1rem;
     max-width: 95%;
   }
+}
+
+/* Estilos para pestañas más grandes */
+.detalle-item-large {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.5rem;
+  background: #f8f9fa;
+  border-radius: 0.5rem;
+  border-left: 4px solid #e9ecef;
+  transition: all 0.2s ease;
+}
+
+.detalle-item-large:hover {
+  background: #e9ecef;
+  border-left-color: #007bff;
+  transform: translateX(2px);
+}
+
+.detalle-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  color: #495057;
+}
+
+.detalle-value {
+  font-weight: 600;
+  color: #212529;
+  font-size: 1.05rem;
+}
+
+.detalle-total-large {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  margin-top: 1rem;
+  border-top: 3px solid #28a745;
+  background: linear-gradient(135deg, #d4edda, #c3e6cb);
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(40, 167, 69, 0.2);
+}
+
+.detalle-total-large .detalle-label {
+  font-weight: 700;
+  color: #155724;
+  font-size: 1.1rem;
+}
+
+.detalle-total-large .detalle-value {
+  font-weight: 700;
+  color: #155724;
+  font-size: 1.2rem;
+}
+
+.detalle-conversion-large {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  margin-top: 0.5rem;
+  background: #fff3cd;
+  border-radius: 0.5rem;
+  border-left: 4px solid #ffc107;
+  font-style: italic;
+}
+
+.detalle-conversion-large .detalle-label {
+  color: #856404;
+  font-weight: 500;
+}
+
+.detalle-conversion-large .detalle-value {
+  color: #856404;
+  font-weight: 600;
+}
+
+.detalle-resumen-large {
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  border-top: 3px solid #007bff;
+  background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.2);
+}
+
+.detalle-resumen-large .detalle-item-large {
+  background: rgba(255, 255, 255, 0.7);
+  border-left-color: #007bff;
+}
+
+.detalle-resumen-large .detalle-item-large:hover {
+  background: rgba(255, 255, 255, 0.9);
+  border-left-color: #0056b3;
+}
+
+.detalle-info {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 0.5rem;
+  border-left: 4px solid #6c757d;
 }
 
 .btn {

@@ -48,9 +48,9 @@
             </div>
           </div>
           
-          <!-- Detalle interactivo -->
-          <div v-if="mostrarDetalleIngresos" class="detalle-ingresos">
-            <div class="detalle-content">
+                    <!-- Detalle interactivo -->
+                    <div v-if="mostrarDetalleIngresos" class="detalle-ingresos">
+                      <div class="detalle-content" style="max-width: 1200px !important; width: 95% !important;">
               <h5 class="mb-4"><i class="bi bi-info-circle"></i> Detalle Completo de Ingresos</h5>
               
               <!-- Ingresos en USD -->
@@ -666,8 +666,8 @@ onUnmounted(() => {
   padding: 2rem;
   border-radius: 0.75rem;
   box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.3);
-  max-width: 1000px;
-  width: 95%;
+  max-width: 1200px !important;
+  width: 95% !important;
   max-height: 85vh;
   overflow-y: auto;
 }

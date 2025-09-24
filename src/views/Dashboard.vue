@@ -30,10 +30,12 @@
 
     <!-- Tarjetas de Estadísticas Principales -->
     <div class="row mb-4">
-      <div class="col-md-3 mb-3">
-        <div class="card bg-primary text-white h-100 position-relative" 
-             @mouseenter="mostrarDetalleIngresos = true" 
-             @mouseleave="mostrarDetalleIngresos = false">
+                <div class="col-md-3 mb-3">
+                  <div class="card bg-primary text-white h-100 position-relative" 
+                       @click="mostrarDetalleIngresos = true"
+                       style="cursor: pointer; transition: all 0.3s ease;"
+                       @mouseenter="$event.target.style.transform = 'scale(1.02)'"
+                       @mouseleave="$event.target.style.transform = 'scale(1)'">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center">
               <div>
@@ -41,6 +43,11 @@
                 <h3 class="mb-0">${{ (estadisticas.ingresosReales || 0).toFixed(2) }}</h3>
                 <small class="text-white-75">${{ (estadisticas.ventasTotales || 0).toFixed(2) }} en ventas</small>
                 <small class="text-white-75 d-block">{{ estadisticas.totalVentas }} pedidos</small>
+                <div class="mt-2">
+                  <small class="text-white-50" style="font-size: 0.75rem;">
+                    <i class="bi bi-cursor"></i> Click para ver más detalles
+                  </small>
+                </div>
               </div>
               <div class="fs-1 opacity-50">
                 <i class="bi bi-currency-dollar"></i>

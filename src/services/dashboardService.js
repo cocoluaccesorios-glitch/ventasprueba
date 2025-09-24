@@ -1,7 +1,7 @@
 // Servicio para estadísticas del dashboard
 import { ref } from 'vue'
 import { getPedidos } from './apiService.js'
-import { getClientes } from './clientesService.js'
+import { getClientes } from './clientService.js'
 import { getProducts } from './apiService.js'
 import { getEstadisticasIngresos } from './ingresosService.js'
 
@@ -14,6 +14,8 @@ const estadisticasCache = ref({
 // Función para calcular estadísticas generales
 export async function calcularEstadisticasGenerales() {
   try {
+    console.log('📊 Calculando estadísticas generales...')
+    
     const [pedidos, clientes, productos, estadisticasIngresos] = await Promise.all([
       getPedidos(),
       getClientes(),
@@ -21,39 +23,53 @@ export async function calcularEstadisticasGenerales() {
       getEstadisticasIngresos()
     ])
     
+    console.log('📈 Datos obtenidos:', {
+      pedidos: pedidos.length,
+      clientes: clientes.length,
+      productos: productos.length,
+      ingresos: estadisticasIngresos
+    })
+    
     // Calcular estadísticas de ventas
     const ventasTotales = pedidos.reduce((sum, p) => sum + (p.total_usd || 0), 0)
     const totalVentas = pedidos.length
     
-    // Calcular productos vendidos (simulado)
+    // Calcular productos vendidos (sumando cantidades reales de detalles)
     const productosVendidos = pedidos.reduce((sum, p) => {
-      // Simular cantidad de productos por pedido
-      return sum + Math.floor(Math.random() * 5) + 1
+      if (p.detalles_pedido && Array.isArray(p.detalles_pedido)) {
+        return sum + p.detalles_pedido.reduce((detalleSum, detalle) => 
+          detalleSum + (detalle.cantidad || 0), 0)
+      }
+      return sum + 1 // Fallback si no hay detalles
     }, 0)
     
     // Calcular clientes activos
     const clientesActivos = clientes.length
     const nuevosClientes = clientes.filter(c => {
-      const fechaCreacion = new Date(c.fecha_creacion)
+      const fechaCreacion = new Date(c.fecha_registro || c.fecha_creacion || new Date())
       const hace30Dias = new Date()
       hace30Dias.setDate(hace30Dias.getDate() - 30)
       return fechaCreacion >= hace30Dias
     }).length
     
     // Calcular stock bajo
-    const stockBajo = productos.filter(p => (p.stock_actual || 0) <= 5).length
+    const stockBajo = productos.filter(p => (p.stock_actual || p.stock || 0) <= 5).length
     
-    return {
-      ventasTotales,
+    const estadisticas = {
+      ventasTotales: parseFloat(ventasTotales.toFixed(2)),
       totalVentas,
       productosVendidos,
       totalProductos: productos.length,
       clientesActivos,
       nuevosClientes,
       stockBajo,
-      ingresosHoy: estadisticasIngresos.hoy.totalGeneralUSD,
-      ingresosMes: estadisticasIngresos.mes.totalGeneralUSD
+      ingresosHoy: estadisticasIngresos.hoy?.totalGeneralUSD || 0,
+      ingresosMes: estadisticasIngresos.mes?.totalGeneralUSD || 0
     }
+    
+    console.log('✅ Estadísticas calculadas:', estadisticas)
+    return estadisticas
+    
   } catch (error) {
     console.error('Error calculando estadísticas:', error)
     return getEstadisticasMock()
@@ -63,15 +79,46 @@ export async function calcularEstadisticasGenerales() {
 // Función para obtener top productos
 export async function obtenerTopProductos(limite = 5) {
   try {
+    console.log('🏆 Obteniendo top productos...')
     const productos = await getProducts()
+    const pedidos = await getPedidos()
     
-    // Simular datos de ventas por producto
-    return productos.slice(0, limite).map((producto, index) => ({
-      id: producto.id,
-      nombre: producto.nombre,
-      cantidadVendida: Math.floor(Math.random() * 20) + 5,
-      totalVentas: Math.floor(Math.random() * 500) + 100
-    })).sort((a, b) => b.totalVentas - a.totalVentas)
+    // Crear mapa de productos vendidos
+    const productosVendidos = new Map()
+    
+    pedidos.forEach(pedido => {
+      if (pedido.detalles_pedido && Array.isArray(pedido.detalles_pedido)) {
+        pedido.detalles_pedido.forEach(detalle => {
+          const productoId = detalle.producto_id || detalle.id_producto
+          const cantidad = detalle.cantidad || 0
+          
+          if (productosVendidos.has(productoId)) {
+            productosVendidos.set(productoId, productosVendidos.get(productoId) + cantidad)
+          } else {
+            productosVendidos.set(productoId, cantidad)
+          }
+        })
+      }
+    })
+    
+    // Obtener productos con sus cantidades vendidas
+    const productosConVentas = productos.map(producto => {
+      const cantidadVendida = productosVendidos.get(producto.id) || 0
+      return {
+        ...producto,
+        cantidadVendida,
+        nombre: producto.nombre || producto.nombre_producto || 'Producto sin nombre'
+      }
+    })
+    
+    // Ordenar por cantidad vendida y tomar los primeros
+    const topProductos = productosConVentas
+      .sort((a, b) => b.cantidadVendida - a.cantidadVendida)
+      .slice(0, limite)
+    
+    console.log('✅ Top productos obtenidos:', topProductos.length)
+    return topProductos
+    
   } catch (error) {
     console.error('Error obteniendo top productos:', error)
     return getTopProductosMock()
@@ -81,18 +128,27 @@ export async function obtenerTopProductos(limite = 5) {
 // Función para obtener pedidos recientes
 export async function obtenerPedidosRecientes(limite = 5) {
   try {
+    console.log('📋 Obteniendo pedidos recientes...')
     const pedidos = await getPedidos()
     
-    return pedidos
-      .sort((a, b) => new Date(b.fecha_pedido) - new Date(a.fecha_pedido))
+    // Formatear pedidos con información completa
+    const pedidosFormateados = pedidos.map(pedido => ({
+      id: pedido.id,
+      numero: pedido.numero_pedido || `PED-${pedido.id}`,
+      cliente: `${pedido.cliente_nombre || ''} ${pedido.cliente_apellido || ''}`.trim() || 'Cliente',
+      total: parseFloat(pedido.total_usd || 0),
+      fecha: pedido.fecha_pedido || pedido.created_at,
+      estado: pedido.estado || 'Completado',
+      metodoPago: pedido.metodo_pago || 'No especificado'
+    }))
+    
+    const pedidosRecientes = pedidosFormateados
+      .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
       .slice(0, limite)
-      .map(pedido => ({
-        id: pedido.id,
-        cliente: `Cliente #${pedido.cliente_id}`,
-        total: pedido.total_usd || 0,
-        estado: pedido.estado_entrega || 'pendiente',
-        fecha: pedido.fecha_pedido
-      }))
+    
+    console.log('✅ Pedidos recientes obtenidos:', pedidosRecientes.length)
+    return pedidosRecientes
+    
   } catch (error) {
     console.error('Error obteniendo pedidos recientes:', error)
     return getPedidosRecientesMock()
@@ -102,16 +158,29 @@ export async function obtenerPedidosRecientes(limite = 5) {
 // Función para obtener alertas de inventario
 export async function obtenerAlertasInventario(limite = 5) {
   try {
+    console.log('⚠️ Obteniendo alertas de inventario...')
     const productos = await getProducts()
     
-    return productos
-      .filter(p => (p.stock_actual || 0) <= 5)
-      .slice(0, limite)
-      .map(producto => ({
-        id: producto.id,
-        nombre: producto.nombre,
-        stock: producto.stock_actual || 0
-      }))
+    // Filtrar productos con stock bajo
+    const productosStockBajo = productos.filter(producto => {
+      const stock = producto.stock_actual || producto.stock || 0
+      return stock <= 5 && stock > 0
+    })
+    
+    // Formatear alertas
+    const alertas = productosStockBajo.map(producto => ({
+      id: producto.id,
+      nombre: producto.nombre || producto.nombre_producto || 'Producto sin nombre',
+      stockActual: producto.stock_actual || producto.stock || 0,
+      stockMinimo: producto.stock_minimo || 5,
+      categoria: producto.categoria || 'Sin categoría',
+      precio: producto.precio_usd || producto.precio || 0
+    }))
+    
+    const alertasLimitadas = alertas.slice(0, limite)
+    console.log('✅ Alertas de inventario obtenidas:', alertasLimitadas.length)
+    return alertasLimitadas
+    
   } catch (error) {
     console.error('Error obteniendo alertas de inventario:', error)
     return getAlertasInventarioMock()

@@ -105,7 +105,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useClientesService } from '@/services/clientesService'
+import { useClientesService } from '@/services/clientService'
 import { useNotifier } from '@/composables/useNotifier'
 
 // Props

@@ -147,7 +147,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { getClientes, agregarCliente, actualizarCliente, eliminarCliente as eliminarClienteService, getEstadisticasClientes } from '../services/clientesService.js'
+import { getClientes, crearCliente, actualizarCliente, eliminarCliente as eliminarClienteService, getEstadisticasClientes } from '../services/clientService.js'
 import Swal from 'sweetalert2'
 
 // Estado reactivo
@@ -243,15 +243,19 @@ async function guardarCliente() {
       
       if (clienteActualizado) {
         Swal.fire('¡Éxito!', 'Cliente actualizado correctamente', 'success')
+        // Recargar la lista de clientes
+        await cargarClientes()
       } else {
         Swal.fire('Error', 'No se pudo actualizar el cliente', 'error')
       }
     } else {
       // Crear nuevo cliente usando el servicio
-      const nuevoCliente = await agregarCliente(clienteForm.value)
+      const nuevoCliente = await crearCliente(clienteForm.value)
       
       if (nuevoCliente) {
         Swal.fire('¡Éxito!', 'Cliente creado correctamente', 'success')
+        // Recargar la lista de clientes
+        await cargarClientes()
       } else {
         Swal.fire('Error', 'No se pudo crear el cliente', 'error')
       }

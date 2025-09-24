@@ -63,7 +63,8 @@ export async function getClientes() {
     // Mapear los campos de la base de datos a la estructura esperada
     const clientesFormateados = (data || []).map(cliente => ({
       id: cliente.id,
-      cedula: cliente.cedula_rif,
+      cedula_rif: cliente.cedula_rif, // Mantener cedula_rif para compatibilidad
+      cedula: cliente.cedula_rif, // También mantener cedula para compatibilidad
       nombre: cliente.nombre,
       apellido: cliente.apellido,
       telefono: cliente.telefono,
@@ -108,7 +109,8 @@ export async function buscarClientePorCedula(cedula) {
     if (data) {
       return {
         id: data.id,
-        cedula: data.cedula_rif,
+        cedula_rif: data.cedula_rif, // Mantener cedula_rif para compatibilidad
+        cedula: data.cedula_rif, // También mantener cedula para compatibilidad
         nombre: data.nombre,
         apellido: data.apellido,
         telefono: data.telefono,
@@ -187,9 +189,12 @@ export async function crearCliente(cliente) {
   }
 
   try {
+    console.log('👤 Creando nuevo cliente:', cliente)
+    
     // Validar que la cédula no exista
     const clienteExistente = await buscarClientePorCedula(cliente.cedula)
     if (clienteExistente) {
+      console.warn('⚠️ Cliente ya existe con cédula:', cliente.cedula)
       throw new Error('Ya existe un cliente con esta cédula')
     }
 
@@ -201,21 +206,46 @@ export async function crearCliente(cliente) {
         apellido: cliente.apellido,
         telefono: cliente.telefono,
         email: cliente.email,
-        direccion: cliente.direccion
+        direccion: cliente.direccion,
+        fecha_registro: new Date().toISOString(),
+        activo: true
       }])
       .select()
       .single()
 
     if (error) {
       console.error('Error al crear cliente:', error)
+      
+      // Si es error de duplicado, mostrar mensaje específico
+      if (error.message.includes('duplicate') || error.message.includes('unique')) {
+        throw new Error('Ya existe un cliente con esta cédula')
+      }
+      
       Swal.fire('Error', `No se pudo crear el cliente: ${error.message}`, 'error')
       throw new Error(error.message)
     }
 
+    console.log('✅ Cliente creado exitosamente:', data.id)
+    
+    // Formatear respuesta
+    const clienteFormateado = {
+      id: data.id,
+      cedula_rif: data.cedula_rif, // Mantener cedula_rif para compatibilidad
+      cedula: data.cedula_rif, // También mantener cedula para compatibilidad
+      nombre: data.nombre,
+      apellido: data.apellido,
+      telefono: data.telefono,
+      email: data.email,
+      direccion: data.direccion,
+      fecha_registro: data.fecha_registro || new Date().toISOString(),
+      estado: 'activo'
+    }
+    
     Swal.fire('¡Éxito!', 'Cliente creado correctamente', 'success')
-    return data
+    return clienteFormateado
   } catch (err) {
     console.error('Error en crearCliente:', err)
+    
     if (err.message.includes('fetch failed')) {
       console.warn('Usando datos mock debido a error de conexión')
       const nuevoCliente = {
@@ -227,6 +257,8 @@ export async function crearCliente(cliente) {
       mockClientes.push(nuevoCliente)
       return nuevoCliente
     }
+    
+    // Re-lanzar el error para que sea manejado por el componente
     throw err
   }
 }

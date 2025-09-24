@@ -29,7 +29,7 @@
                   v-model="clienteSearchQuery"
                   @input="buscarClientesEnTiempoReal"
                   @focus="mostrarResultados = true"
-                  @blur="ocultarResultados"
+                  @blur="ocultarResultadosConDelay"
                   placeholder="Escribe nombre, cédula o teléfono..."
                   ref="clientSearchInput"
                 >
@@ -70,6 +70,7 @@
                   :key="cliente.id"
                   class="search-result-item"
                   @click="seleccionarCliente(cliente)"
+                  @mousedown.prevent
                 >
                   <div class="result-info">
                     <div class="result-name">{{ cliente.nombre }} {{ cliente.apellido }}</div>
@@ -619,11 +620,11 @@
                       <div class="mixed-total-card">
                         <div class="total-item">
                           <span class="total-label">USD:</span>
-                          <span class="total-value">{{ montoAbonoUSD.toFixed(2) }}</span>
+                          <span class="total-value">{{ (montoAbonoUSD || 0).toFixed(2) }}</span>
                         </div>
                         <div class="total-item">
                           <span class="total-label">VES:</span>
-                          <span class="total-value">Bs. {{ montoAbonoVES.toFixed(2) }}</span>
+                          <span class="total-value">Bs. {{ (montoAbonoVES || 0).toFixed(2) }}</span>
                         </div>
                         <div class="total-item highlight">
                           <span class="total-label">Total Abono:</span>
@@ -796,11 +797,11 @@
                     <div class="mixed-total-card">
                       <div class="total-item">
                         <span class="total-label">USD</span>
-                        <span class="total-value">{{ montoMixtoUSD.toFixed(2) }}</span>
+                        <span class="total-value">{{ (montoMixtoUSD || 0).toFixed(2) }}</span>
                       </div>
                       <div class="total-item">
                         <span class="total-label">VES</span>
-                        <span class="total-value">Bs {{ montoMixtoVES.toFixed(2) }}</span>
+                        <span class="total-value">Bs {{ (montoMixtoVES || 0).toFixed(2) }}</span>
                       </div>
                       <div class="total-item highlight">
                         <span class="total-label">Total USD</span>
@@ -818,11 +819,11 @@
                       </div>
                       <div class="info-item">
                         <span class="info-label">Monto USD:</span>
-                        <span class="info-value">{{ montoMixtoUSD.toFixed(2) }}</span>
+                        <span class="info-value">{{ (montoMixtoUSD || 0).toFixed(2) }}</span>
                       </div>
                       <div class="info-item">
                         <span class="info-label">Monto VES:</span>
-                        <span class="info-value">Bs {{ montoMixtoVES.toFixed(2) }}</span>
+                        <span class="info-value">Bs {{ (montoMixtoVES || 0).toFixed(2) }}</span>
                       </div>
                       <div class="info-item highlight">
                         <span class="info-label">Total Mixto:</span>
@@ -980,10 +981,16 @@
                 <span class="calc-value delivery-value">{{ (venta.monto_delivery_usd || 0).toFixed(2) }}</span>
             </div>
             
-            <!-- Total -->
+            <!-- Total USD -->
             <div class="calc-row total-row">
-              <span class="calc-label">Total</span>
-              <span class="calc-value total-value">{{ totalVenta.toFixed(2) }}</span>
+              <span class="calc-label">Total USD</span>
+              <span class="calc-value total-value">${{ totalVenta.toFixed(2) }}</span>
+            </div>
+            
+            <!-- Total VES -->
+            <div class="calc-row total-row ves-row">
+              <span class="calc-label">Total VES</span>
+              <span class="calc-value total-value ves-value">Bs {{ totalVES.toFixed(2) }}</span>
             </div>
             
             <!-- Tasa BCV (Automática) -->
@@ -1027,12 +1034,12 @@
               <div class="mixed-amounts-display">
                 <div class="mixed-amount-item">
                   <span class="currency-label">USD:</span>
-                  <span class="currency-value">{{ montoMixtoUSD.toFixed(2) }}</span>
+                  <span class="currency-value">{{ (montoMixtoUSD || 0).toFixed(2) }}</span>
                   <span class="method-detail">({{ metodoPagoMixtoUSD === 'zelle' ? 'Zelle' : 'Efectivo' }})</span>
                 </div>
                 <div class="mixed-amount-item">
                   <span class="currency-label">VES:</span>
-                  <span class="currency-value">Bs. {{ montoMixtoVES.toFixed(2) }}</span>
+                  <span class="currency-value">Bs. {{ (montoMixtoVES || 0).toFixed(2) }}</span>
                   <span class="method-detail">({{ metodoPagoMixtoVES === 'pago_movil' ? 'Pago Móvil' : 'Transferencia' }})</span>
                 </div>
               </div>
@@ -4275,7 +4282,7 @@ input[type=number] {
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue';
 import { getProducts, createSale, getTasaCambio } from '../services/apiService.js';
-import { getClientePorCedula, buscarClientePorCriterio as buscarClientePorCriterioService, getClientes } from '../services/clientesService.js';
+import { buscarClientePorCedula, buscarClientesPorNombre, crearCliente, getClientes } from '../services/clientService.js';
 import { actualizarTasaBCV as actualizarTasaBCVService } from '../services/bcvService.js';
 import ProductSearch from '../components/ProductSearch.vue';
 import ClientSearch from '../components/ClientSearch.vue';
@@ -4317,6 +4324,13 @@ const clientSearchRef = ref(null);
 const descuentoPorcentaje = ref(true); // Por defecto porcentaje
 const quiereDelivery = ref(false);
 const quiereDescuento = ref(false);
+
+// Función para actualizar delivery
+function actualizarDelivery() {
+  if (venta.value.monto_delivery_usd < 0) {
+    venta.value.monto_delivery_usd = 0;
+  }
+}
 
 // Función para generar el estado inicial del formulario
 const getInitialVentaState = () => ({
@@ -4381,6 +4395,19 @@ onMounted(async () => {
   console.log('✅ Carga de datos completada');
 });
 
+// Watcher para verificar cambios en el cliente
+watch(() => venta.value.cliente_cedula, (nuevaCedula) => {
+  console.log('🔄 Cliente cedula cambió:', nuevaCedula);
+});
+
+watch(() => venta.value.cliente_nombre, (nuevoNombre) => {
+  console.log('🔄 Cliente nombre cambió:', nuevoNombre);
+});
+
+watch(() => venta.value.cliente_id, (nuevoId) => {
+  console.log('🔄 Cliente ID cambió:', nuevoId);
+});
+
 // Watchers para actualizar precios automáticamente
 watch(productoSeleccionado, (nuevoProducto) => {
   if (nuevoProducto) {
@@ -4443,7 +4470,7 @@ const total = computed(() => {
 });
 
 const totalVES = computed(() => {
-  return total.value * (venta.value.tasa_bcv || 166.58);
+  return total.value * (venta.value.tasa_bcv || 36.0);
 });
 
 // Verificar si el método de pago es en VES
@@ -4484,6 +4511,21 @@ const requiereReferenciasMixtas = computed(() => {
   const necesitaReferenciaVES = montoMixtoVES.value > 0 && 
     (metodoPagoMixtoVES.value === 'pago_movil' || metodoPagoMixtoVES.value === 'transferencia') && 
     !referenciaMixtoVES.value.trim();
+  
+  return necesitaReferenciaUSD || necesitaReferenciaVES;
+});
+
+// Validación para abono con pago mixto
+const requiereReferenciasAbonoMixto = computed(() => {
+  if (venta.value.tipo_pago !== 'Abono' || tipoPagoAbono.value !== 'mixto') return false;
+  
+  const necesitaReferenciaUSD = montoAbonoUSD.value > 0 && 
+    metodoPagoAbonoUSD.value === 'zelle' && 
+    !referenciaAbonoUSD.value.trim();
+  
+  const necesitaReferenciaVES = montoAbonoVES.value > 0 && 
+    (metodoPagoAbonoVES.value === 'pago_movil' || metodoPagoAbonoVES.value === 'transferencia') && 
+    !referenciaAbonoVES.value.trim();
   
   return necesitaReferenciaUSD || necesitaReferenciaVES;
 });
@@ -4671,7 +4713,7 @@ const esAbonoValido = computed(() => {
   if (tipoPagoAbono.value === 'simple') {
     const montoValido = montoAbonoSimple.value > 0 && totalAbonoCalculado.value <= totalVenta.value;
     const metodoValido = metodoPagoAbono.value !== '';
-    const referenciaValida = !requiereReferenciaAbono.value || venta.value.referencia_pago.trim();
+    const referenciaValida = !requiereReferenciaAbono.value || (venta.value.referencia_pago && venta.value.referencia_pago.trim());
     return montoValido && metodoValido && referenciaValida;
   } else {
     const montoValido = (montoAbonoUSD.value > 0 || montoAbonoVES.value > 0) && 
@@ -4872,7 +4914,7 @@ function agregarProducto() {
 }
 
 function agregarProductoManual() {
-  if (!productoManual.value.descripcion.trim() || productoManual.value.cantidad < 1 || productoManual.value.precio <= 0) {
+  if (!productoManual.value.descripcion || !productoManual.value.descripcion.trim() || productoManual.value.cantidad < 1 || productoManual.value.precio <= 0) {
     Swal.fire('Error', 'Completa todos los campos del producto manual.', 'error');
     return;
   }
@@ -5095,8 +5137,8 @@ async function actualizarTasaBCV() {
 }
 
 // Funciones de búsqueda de clientes
-async function buscarClientePorCedula() {
-  if (!venta.value.cliente_cedula.trim()) return;
+async function buscarClientePorCedulaLocal() {
+  if (!venta.value.cliente_cedula || !venta.value.cliente_cedula.trim()) return;
   
   try {
     // Buscar cliente por cédula
@@ -5213,6 +5255,7 @@ function buscarClientesEnTiempoReal() {
     
     if (match) {
       console.log(`✅ Cliente encontrado: ${cliente.nombre} ${cliente.apellido} (${cliente.cedula_rif})`);
+      console.log(`📋 Datos del cliente:`, cliente);
     }
     
     return match;
@@ -5223,14 +5266,40 @@ function buscarClientesEnTiempoReal() {
 }
 
 function seleccionarCliente(cliente) {
+  console.log('👤 Seleccionando cliente:', cliente);
+  console.log('📋 Campos del cliente:', {
+    id: cliente.id,
+    nombre: cliente.nombre,
+    apellido: cliente.apellido,
+    cedula_rif: cliente.cedula_rif,
+    telefono: cliente.telefono,
+    email: cliente.email,
+    direccion: cliente.direccion
+  });
+  
+  // Verificar que el cliente tenga los campos necesarios
+  if (!cliente.cedula_rif) {
+    console.error('❌ Error: El cliente no tiene cedula_rif');
+    console.log('📋 Cliente completo:', JSON.stringify(cliente, null, 2));
+    showError('Error', 'El cliente seleccionado no tiene cédula válida.');
+    return;
+  }
+  
   // Llenar los campos del formulario
-  venta.value.cliente_id = cliente.id; // Agregar cliente_id
-  venta.value.cliente_cedula = cliente.cedula_rif;
+  venta.value.cliente_id = cliente.id;
+  venta.value.cliente_cedula = cliente.cedula_rif; // Usar cedula_rif del cliente
   venta.value.cliente_nombre = cliente.nombre;
   venta.value.cliente_apellido = cliente.apellido;
   venta.value.cliente_telefono = cliente.telefono;
   venta.value.cliente_email = cliente.email;
   venta.value.cliente_direccion = cliente.direccion;
+  
+  console.log('✅ Cliente asignado a venta:', {
+    cliente_id: venta.value.cliente_id,
+    cliente_nombre: venta.value.cliente_nombre,
+    cliente_apellido: venta.value.cliente_apellido,
+    cliente_cedula: venta.value.cliente_cedula
+  });
   
   // Limpiar búsqueda y ocultar resultados
   clienteSearchQuery.value = '';
@@ -5263,6 +5332,13 @@ function quitarClienteSeleccionado() {
   
   // Mostrar confirmación
   showSuccess('Cliente Removido', 'El cliente ha sido removido de la venta');
+}
+
+function ocultarResultadosConDelay() {
+  // Delay más largo para permitir el click en los resultados
+  setTimeout(() => {
+    mostrarResultados.value = false;
+  }, 300);
 }
 
 function ocultarResultados() {
@@ -5375,18 +5451,35 @@ function nuevoCliente() {
       
       return { cedula, nombre, apellido, telefono, email, direccion };
     }
-  }).then((result) => {
+  }).then(async (result) => {
     if (result.isConfirmed) {
-      const cliente = result.value;
-      venta.value.cliente_id = null; // Nuevo cliente, sin ID aún
-      venta.value.cliente_cedula = cliente.cedula;
-      venta.value.cliente_nombre = cliente.nombre;
-      venta.value.cliente_apellido = cliente.apellido;
-      venta.value.cliente_telefono = cliente.telefono;
-      venta.value.cliente_email = cliente.email;
-      venta.value.cliente_direccion = cliente.direccion;
-      
-      Swal.fire('¡Éxito!', 'Cliente agregado correctamente', 'success');
+      try {
+        const cliente = result.value;
+        
+        // Crear el cliente en la base de datos
+        const nuevoCliente = await crearCliente(cliente);
+        
+        if (nuevoCliente) {
+          // Asignar el cliente creado al formulario de venta
+          venta.value.cliente_id = nuevoCliente.id;
+          venta.value.cliente_cedula = cliente.cedula;
+          venta.value.cliente_nombre = cliente.nombre;
+          venta.value.cliente_apellido = cliente.apellido;
+          venta.value.cliente_telefono = cliente.telefono;
+          venta.value.cliente_email = cliente.email;
+          venta.value.cliente_direccion = cliente.direccion;
+          
+          // Actualizar la lista de clientes
+          clientes.value = await getClientes();
+          
+          Swal.fire('¡Éxito!', 'Cliente creado y agregado correctamente', 'success');
+        } else {
+          Swal.fire('Error', 'No se pudo crear el cliente', 'error');
+        }
+      } catch (error) {
+        console.error('Error al crear cliente:', error);
+        Swal.fire('Error', 'Error al crear el cliente', 'error');
+      }
     }
   });
 }
@@ -5429,7 +5522,12 @@ async function handleSubmit() {
     return;
   }
   
-  if (!venta.value.cliente_cedula.trim() || !venta.value.cliente_nombre.trim()) {
+  if (!venta.value.cliente_cedula || !venta.value.cliente_cedula.trim() || !venta.value.cliente_nombre || !venta.value.cliente_nombre.trim()) {
+    console.log('❌ Validación de cliente falló:');
+    console.log('   cliente_cedula:', venta.value.cliente_cedula);
+    console.log('   cliente_nombre:', venta.value.cliente_nombre);
+    console.log('   cliente_apellido:', venta.value.cliente_apellido);
+    console.log('   cliente_id:', venta.value.cliente_id);
     showError('Error', 'Cédula y nombre del cliente son obligatorios.');
     return;
   }
@@ -5445,7 +5543,7 @@ async function handleSubmit() {
   }
   
   // Validación dinámica de referencia
-  if (requiereReferencia.value && !venta.value.referencia_pago.trim()) {
+  if (requiereReferencia.value && (!venta.value.referencia_pago || !venta.value.referencia_pago.trim())) {
       await Swal.fire({
         title: 'Error',
         text: 'La referencia es obligatoria para este método de pago.',
@@ -5459,11 +5557,11 @@ async function handleSubmit() {
   if (requiereReferenciasMixtas.value) {
     let mensajeError = 'Error en las referencias del pago mixto:';
     
-    if (montoMixtoUSD.value > 0 && metodoPagoMixtoUSD.value === 'zelle' && !referenciaMixtoUSD.value.trim()) {
+    if (montoMixtoUSD.value > 0 && metodoPagoMixtoUSD.value === 'zelle' && (!referenciaMixtoUSD.value || !referenciaMixtoUSD.value.trim())) {
       mensajeError += '\n• La referencia USD es obligatoria para Zelle';
     }
     
-    if (montoMixtoVES.value > 0 && (metodoPagoMixtoVES.value === 'pago_movil' || metodoPagoMixtoVES.value === 'transferencia') && !referenciaMixtoVES.value.trim()) {
+    if (montoMixtoVES.value > 0 && (metodoPagoMixtoVES.value === 'pago_movil' || metodoPagoMixtoVES.value === 'transferencia') && (!referenciaMixtoVES.value || !referenciaMixtoVES.value.trim())) {
       mensajeError += '\n• La referencia VES es obligatoria para Pago Móvil/Transferencia';
     }
     
@@ -5477,7 +5575,7 @@ async function handleSubmit() {
   }
   
   // Validación dinámica de comentarios por descuento
-  if (requiereComentariosDescuento.value && !venta.value.comentarios.trim()) {
+  if (requiereComentariosDescuento.value && (!venta.value.comentarios || !venta.value.comentarios.trim())) {
       await Swal.fire({
         title: 'Error',
         text: 'Los comentarios son obligatorios cuando se aplica descuento.',
@@ -5488,7 +5586,7 @@ async function handleSubmit() {
   }
   
   // Si hay descuento, usar los comentarios generales como motivo del descuento
-  if (venta.value.monto_descuento_usd > 0 && venta.value.comentarios.trim()) {
+  if (venta.value.monto_descuento_usd > 0 && venta.value.comentarios && venta.value.comentarios.trim()) {
     venta.value.comentarios_descuento = venta.value.comentarios;
   }
   
@@ -5510,7 +5608,7 @@ async function handleSubmit() {
       if (tipoPagoAbono.value === 'simple') {
         if (!metodoPagoAbono.value) mensajeError += '\n• Debe seleccionar un método de pago';
         if (montoAbonoSimple.value <= 0) mensajeError += '\n• El monto del abono debe ser mayor a 0';
-        if (requiereReferenciaAbono.value && !venta.value.referencia_pago.trim()) mensajeError += '\n• La referencia del abono es obligatoria';
+        if (requiereReferenciaAbono.value && (!venta.value.referencia_pago || !venta.value.referencia_pago.trim())) mensajeError += '\n• La referencia del abono es obligatoria';
       } else {
         if (montoAbonoUSD.value <= 0 && montoAbonoVES.value <= 0) {
           mensajeError += '\n• Debe ingresar al menos un monto (USD o VES)';

@@ -548,9 +548,43 @@ const desgloseMetodo = computed(() => {
 })
 
 // Funciones
-function cargarDatos() {
-  ingresos.value = getIngresos()
-  estadisticas.value = getEstadisticasIngresos()
+async function cargarDatos() {
+  try {
+    console.log('📊 Cargando datos de ingresos...')
+    
+    // Cargar ingresos y estadísticas de forma asíncrona
+    const [ingresosData, estadisticasData] = await Promise.all([
+      getIngresos(),
+      getEstadisticasIngresos()
+    ])
+    
+    ingresos.value = ingresosData
+    estadisticas.value = estadisticasData
+    
+    console.log('✅ Datos de ingresos cargados:', {
+      ingresos: ingresos.value.length,
+      estadisticas: estadisticas.value
+    })
+    
+  } catch (error) {
+    console.error('Error cargando datos de ingresos:', error)
+    
+    // Usar datos por defecto en caso de error
+    ingresos.value = []
+    estadisticas.value = {
+      hoy: { totalGeneralUSD: 0, totalGeneralVES: 0 },
+      semana: { totalGeneralUSD: 0, totalGeneralVES: 0 },
+      mes: { totalGeneralUSD: 0, totalGeneralVES: 0 },
+      totalIngresos: 0
+    }
+    
+    Swal.fire({
+      title: 'Error',
+      text: 'No se pudieron cargar los datos de ingresos',
+      icon: 'error',
+      confirmButtonText: 'Entendido'
+    })
+  }
 }
 
 function aplicarFiltros() {
@@ -568,8 +602,8 @@ function limpiarFiltros() {
   }
 }
 
-function actualizarDatos() {
-  cargarDatos()
+async function actualizarDatos() {
+  await cargarDatos()
   Swal.fire({
     title: '¡Actualizado!',
     text: 'Los datos han sido actualizados correctamente',

@@ -1,8 +1,13 @@
 // Servicio para gestión de ingresos
 import { ref } from 'vue'
+import { supabase } from '../lib/supabaseClient.js'
+import Swal from 'sweetalert2'
 
-// Estado global de ingresos
-const ingresos = ref([
+// Modo de desarrollo - usar datos de prueba si no hay conexión
+const USE_MOCK_DATA = false
+
+// Datos mock para fallback
+const mockIngresos = [
   {
     id: 'ING-001',
     fecha: new Date('2024-01-15').toISOString(),
@@ -63,11 +68,96 @@ const ingresos = ref([
     tipoIngreso: 'Delivery',
     descripcion: 'Cargo por delivery'
   }
-])
+]
+
+// Estado global de ingresos
+const ingresos = ref([])
 
 // Función para obtener todos los ingresos
-export function getIngresos() {
-  return ingresos.value
+export async function getIngresos() {
+  if (USE_MOCK_DATA) {
+    console.log('🔧 Usando datos de prueba para ingresos')
+    ingresos.value = mockIngresos
+    return ingresos.value
+  }
+
+  try {
+    console.log('🌐 Obteniendo ingresos desde Supabase...')
+    const { data, error } = await supabase
+      .from('ingresos')
+      .select(`
+        *,
+        pedidos(
+          id,
+          cliente_nombre,
+          cliente_apellido,
+          total_usd,
+          fecha_pedido
+        )
+      `)
+      .order('fecha', { ascending: false })
+
+    if (error) {
+      console.error('Error al cargar ingresos:', error)
+      
+      // Si hay problemas de permisos o la tabla no existe, usar datos mock
+      if (error.message.includes('401') || error.message.includes('42501') || error.message.includes('relation')) {
+        console.warn('Problemas con tabla ingresos, usando datos mock')
+        ingresos.value = mockIngresos
+        return ingresos.value
+      }
+      
+      Swal.fire({
+        title: 'Error',
+        text: `No se pudieron cargar los ingresos: ${error.message}`,
+        icon: 'error',
+        confirmButtonText: 'Usar datos de prueba',
+        showCancelButton: true,
+        cancelButtonText: 'Reintentar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          ingresos.value = mockIngresos
+        }
+      })
+      
+      return mockIngresos
+    }
+
+    // Formatear datos de Supabase
+    const ingresosFormateados = (data || []).map(ingreso => ({
+      id: ingreso.id,
+      fecha: ingreso.fecha,
+      idVenta: ingreso.pedido_id ? `VTA-${ingreso.pedido_id}` : ingreso.id_venta,
+      cliente: ingreso.pedidos ? 
+        `${ingreso.pedidos.cliente_nombre} ${ingreso.pedidos.cliente_apellido || ''}`.trim() : 
+        ingreso.cliente_nombre || 'Cliente',
+      montoUSD: parseFloat(ingreso.monto_usd) || 0,
+      montoVES: parseFloat(ingreso.monto_ves) || 0,
+      metodoPago: ingreso.metodo_pago || '',
+      referencia: ingreso.referencia || '',
+      tipoIngreso: ingreso.tipo_ingreso || 'Pago Completo de Contado',
+      descripcion: ingreso.descripcion || '',
+      tasa_bcv: ingreso.tasa_bcv || 36.0,
+      fecha_creacion: ingreso.created_at
+    }))
+
+    ingresos.value = ingresosFormateados
+    console.log('✅ Ingresos cargados:', ingresosFormateados.length)
+    return ingresos.value
+
+  } catch (err) {
+    console.error('Error de conexión:', err)
+    
+    if (err.message.includes('fetch failed') || err.message.includes('Load failed') || 
+        err.message.includes('NetworkError') || err.message.includes('TypeError')) {
+      console.warn('Error de conexión detectado, usando datos mock')
+      ingresos.value = mockIngresos
+      return ingresos.value
+    }
+    
+    ingresos.value = mockIngresos
+    return ingresos.value
+  }
 }
 
 // Función para obtener ingresos por rango de fechas
@@ -186,15 +276,79 @@ export function getDesglosePorTipo(ingresosData) {
 }
 
 // Función para agregar nuevo ingreso
-export function agregarIngreso(ingresoData) {
-  const nuevoIngreso = {
-    id: `ING-${String(ingresos.value.length + 1).padStart(3, '0')}`,
-    fecha: new Date().toISOString(),
-    ...ingresoData
+export async function agregarIngreso(ingresoData) {
+  if (USE_MOCK_DATA) {
+    const nuevoIngreso = {
+      id: `ING-${String(ingresos.value.length + 1).padStart(3, '0')}`,
+      fecha: new Date().toISOString(),
+      ...ingresoData
+    }
+    
+    ingresos.value.push(nuevoIngreso)
+    return nuevoIngreso
   }
-  
-  ingresos.value.push(nuevoIngreso)
-  return nuevoIngreso
+
+  try {
+    console.log('💾 Guardando nuevo ingreso en Supabase...')
+    
+    const { data, error } = await supabase
+      .from('ingresos')
+      .insert([
+        {
+          pedido_id: ingresoData.pedido_id,
+          cliente_nombre: ingresoData.cliente_nombre,
+          cliente_apellido: ingresoData.cliente_apellido,
+          monto_usd: ingresoData.montoUSD,
+          monto_ves: ingresoData.montoVES,
+          metodo_pago: ingresoData.metodoPago,
+          referencia: ingresoData.referencia,
+          tipo_ingreso: ingresoData.tipoIngreso,
+          descripcion: ingresoData.descripcion,
+          tasa_bcv: ingresoData.tasa_bcv || 36.0,
+          fecha: ingresoData.fecha || new Date().toISOString()
+        }
+      ])
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Error al guardar ingreso:', error)
+      throw new Error(`Error al guardar ingreso: ${error.message}`)
+    }
+
+    // Agregar al estado local
+    const nuevoIngreso = {
+      id: data.id,
+      fecha: data.fecha,
+      idVenta: data.pedido_id ? `VTA-${data.pedido_id}` : '',
+      cliente: `${data.cliente_nombre} ${data.cliente_apellido || ''}`.trim(),
+      montoUSD: parseFloat(data.monto_usd) || 0,
+      montoVES: parseFloat(data.monto_ves) || 0,
+      metodoPago: data.metodo_pago || '',
+      referencia: data.referencia || '',
+      tipoIngreso: data.tipo_ingreso || 'Pago Completo de Contado',
+      descripcion: data.descripcion || '',
+      tasa_bcv: data.tasa_bcv || 36.0,
+      fecha_creacion: data.created_at
+    }
+
+    ingresos.value.unshift(nuevoIngreso)
+    console.log('✅ Ingreso guardado:', nuevoIngreso.id)
+    return nuevoIngreso
+
+  } catch (err) {
+    console.error('Error al agregar ingreso:', err)
+    
+    // Fallback a datos mock
+    const nuevoIngreso = {
+      id: `ING-${String(ingresos.value.length + 1).padStart(3, '0')}`,
+      fecha: new Date().toISOString(),
+      ...ingresoData
+    }
+    
+    ingresos.value.push(nuevoIngreso)
+    return nuevoIngreso
+  }
 }
 
 // Función para obtener estadísticas de ingresos
@@ -272,6 +426,54 @@ export function generarCierreDeCaja(fecha) {
   }
 }
 
+// Función para exportar datos a CSV
+export function exportarDatosCSV(ingresosData) {
+  if (!ingresosData || ingresosData.length === 0) {
+    return ''
+  }
+
+  const headers = [
+    'ID',
+    'Fecha',
+    'ID Venta',
+    'Cliente',
+    'Monto USD',
+    'Monto VES',
+    'Método de Pago',
+    'Referencia',
+    'Tipo de Ingreso',
+    'Descripción'
+  ]
+
+  const csvContent = [
+    headers.join(','),
+    ...ingresosData.map(ingreso => [
+      ingreso.id,
+      ingreso.fecha,
+      ingreso.idVenta,
+      `"${ingreso.cliente}"`,
+      ingreso.montoUSD,
+      ingreso.montoVES,
+      `"${ingreso.metodoPago}"`,
+      `"${ingreso.referencia}"`,
+      `"${ingreso.tipoIngreso}"`,
+      `"${ingreso.descripcion}"`
+    ].join(','))
+  ].join('\n')
+
+  return csvContent
+}
+
+// Función para obtener ingresos por método de pago
+export function getIngresosPorMetodo(metodoPago) {
+  return ingresos.value.filter(ingreso => ingreso.metodoPago === metodoPago)
+}
+
+// Función para obtener ingresos por tipo
+export function getIngresosPorTipo(tipoIngreso) {
+  return ingresos.value.filter(ingreso => ingreso.tipoIngreso === tipoIngreso)
+}
+
 // Función para generar reporte por rango
 export function generarReportePorRango(fechaInicio, fechaFin) {
   const ingresosDelPeriodo = getIngresosPorRango(fechaInicio, fechaFin)
@@ -287,4 +489,12 @@ export function generarReportePorRango(fechaInicio, fechaFin) {
     desgloseMetodo: desgloseMetodo,
     desgloseTipo: desgloseTipo
   }
+}
+
+// Función para obtener ingresos por cliente
+export function getIngresosPorCliente(nombreCliente) {
+  const busqueda = nombreCliente.toLowerCase()
+  return ingresos.value.filter(ingreso => 
+    ingreso.cliente.toLowerCase().includes(busqueda)
+  )
 }

@@ -30,6 +30,14 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes,
+  scrollBehavior(to, from, savedPosition) {
+    // Mantener posición de scroll al navegar hacia atrás
+    if (savedPosition) {
+      return savedPosition
+    }
+    // Scroll al top para navegación normal
+    return { top: 0 }
+  }
 })
 
 // Configurar guard de autenticación

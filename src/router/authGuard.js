@@ -3,48 +3,58 @@ import { useAuthStore } from '../stores/authStore.js';
 export function setupAuthGuard(router) {
   // Guard para verificar autenticación
   router.beforeEach((to, from, next) => {
-    const authStore = useAuthStore();
-    
-    // Rutas que no requieren autenticación
-    const publicRoutes = ['/login', '/register', '/forgot-password'];
-    
-    // Si la ruta es pública, permitir acceso
-    if (publicRoutes.includes(to.path)) {
-      // Si ya está autenticado y trata de ir a login, redirigir al dashboard
-      if (to.path === '/login' && authStore.isAuthenticated) {
+    try {
+      const authStore = useAuthStore();
+      
+      // Rutas que no requieren autenticación
+      const publicRoutes = ['/login', '/register', '/forgot-password'];
+      
+      // Si la ruta es pública, permitir acceso
+      if (publicRoutes.includes(to.path)) {
+        // Si ya está autenticado y trata de ir a login, redirigir al dashboard
+        if (to.path === '/login' && authStore.isAuthenticated) {
+          next('/dashboard');
+          return;
+        }
+        next();
+        return;
+      }
+      
+      // Si no está autenticado, redirigir al login
+      if (!authStore.isAuthenticated) {
+        console.log('🔒 Usuario no autenticado, redirigiendo al login');
+        next('/login');
+        return;
+      }
+      
+      // Verificar permisos para la ruta
+      if (!authStore.canAccess(to.path)) {
+        console.log('🚫 Usuario no tiene permisos para acceder a:', to.path);
+        // Redirigir al dashboard si no tiene permisos
         next('/dashboard');
         return;
       }
+      
+      // Permitir acceso
       next();
-      return;
-    }
-    
-    // Si no está autenticado, redirigir al login
-    if (!authStore.isAuthenticated) {
-      console.log('🔒 Usuario no autenticado, redirigiendo al login');
+    } catch (error) {
+      console.error('Error en auth guard:', error);
+      // En caso de error, redirigir al login
       next('/login');
-      return;
     }
-    
-    // Verificar permisos para la ruta
-    if (!authStore.canAccess(to.path)) {
-      console.log('🚫 Usuario no tiene permisos para acceder a:', to.path);
-      // Redirigir al dashboard si no tiene permisos
-      next('/dashboard');
-      return;
-    }
-    
-    // Permitir acceso
-    next();
   });
   
   // Guard para verificar permisos después de la navegación
   router.afterEach((to, from) => {
-    const authStore = useAuthStore();
-    
-    // Log de navegación para debugging
-    console.log(`📍 Navegación: ${from.path} → ${to.path}`);
-    console.log(`👤 Usuario: ${authStore.userFullName} (${authStore.user?.rol})`);
+    try {
+      const authStore = useAuthStore();
+      
+      // Log de navegación para debugging
+      console.log(`📍 Navegación: ${from.path} → ${to.path}`);
+      console.log(`👤 Usuario: ${authStore.userFullName} (${authStore.user?.rol})`);
+    } catch (error) {
+      console.error('Error en afterEach guard:', error);
+    }
   });
 }
 

@@ -749,6 +749,9 @@ async function crearGrafico() {
 }
 
 async function cambiarPeriodo(periodo) {
+  console.log('🎯 CLICK DETECTADO - Función cambiarPeriodo ejecutada')
+  console.log('🎯 Período recibido:', periodo)
+  
   const periodos = {
     'hoy': 'Hoy',
     'semana': 'Esta Semana',
@@ -758,6 +761,7 @@ async function cambiarPeriodo(periodo) {
   periodoActual.value = periodos[periodo]
   
   console.log('🔄 Cambiando período a:', periodo, '->', periodos[periodo])
+  console.log('🔄 periodoActual.value actualizado a:', periodoActual.value)
   
   // Actualizar las estadísticas principales según el período
   await actualizarDatosPorPeriodo(periodo)
@@ -789,12 +793,20 @@ async function cambiarPeriodo(periodo) {
     }
     
     if (chartInstance) {
+      console.log('📊 Actualizando gráfico con datos:', nuevosDatos.length, 'registros')
+      console.log('📊 Primeros 3 datos:', nuevosDatos.slice(0, 3))
+      
       chartInstance.data.labels = nuevosDatos.map(d => d.fecha)
       chartInstance.data.datasets[0].data = nuevosDatos.map(d => d.ventas)
+      
+      console.log('📊 Labels del gráfico:', chartInstance.data.labels.slice(0, 5))
+      console.log('📊 Datos de ventas:', chartInstance.data.datasets[0].data.slice(0, 5))
       
       // Calcular y actualizar ingresos
       const ingresos = await calcularIngresosPorPeriodo(nuevosDatos)
       chartInstance.data.datasets[1].data = ingresos
+      
+      console.log('📊 Datos de ingresos:', ingresos.slice(0, 5))
       
       // Actualizar el eje Y dinámicamente
       const maxVentas = Math.max(...nuevosDatos.map(d => d.ventas), 0)
@@ -803,10 +815,16 @@ async function cambiarPeriodo(periodo) {
       const maxY = maxValor > 0 ? maxValor * 1.1 : 100
       const stepSize = maxValor > 0 ? Math.ceil(maxValor / 10) : 10
       
+      console.log('📊 Max ventas:', maxVentas, 'Max ingresos:', maxIngresos, 'Max valor:', maxValor)
+      
       chartInstance.options.scales.y.max = maxY
       chartInstance.options.scales.y.ticks.stepSize = stepSize
       
+      console.log('📊 Actualizando gráfico...')
       chartInstance.update()
+      console.log('✅ Gráfico actualizado')
+    } else {
+      console.log('❌ chartInstance no existe - no se puede actualizar')
     }
   } catch (error) {
     console.error('Error actualizando gráfico:', error)

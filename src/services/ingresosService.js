@@ -183,27 +183,39 @@ export async function getIngresos() {
       })
     }
     
-    // Procesar abonos adicionales
+    // Procesar abonos adicionales (solo los que NO están duplicados con el pedido inicial)
     if (abonosData) {
       abonosData.forEach(abono => {
-        const cliente = abono.pedidos ? 
-          `${abono.pedidos.cliente_nombre || ''} ${abono.pedidos.cliente_apellido || ''}`.trim() : 
-          'Cliente'
+        // Verificar si este abono ya fue procesado como parte del pedido inicial
+        const pedidoYaProcesado = pedidosData.find(p => 
+          p.id === abono.pedido_id && 
+          p.es_abono && 
+          p.fecha_pedido === abono.fecha_abono
+        )
         
-        ingresosFormateados.push({
-          id: `ABO-${abono.id}`,
-          fecha: abono.fecha_abono,
-          idVenta: `VTA-${abono.pedido_id}`,
-          cliente: cliente,
-          montoUSD: parseFloat(abono.monto_abono_usd) || 0,
-          montoVES: parseFloat(abono.monto_abono_ves) || 0,
-          metodoPago: abono.metodo_pago_abono || '',
-          referencia: abono.referencia_pago || '',
-          tipoIngreso: 'Abono a Deuda',
-          descripcion: abono.comentarios || `Abono adicional pedido ${abono.pedido_id}`,
-          tasa_bcv: parseFloat(abono.tasa_bcv) || 36.0,
-          fecha_creacion: abono.fecha_abono
-        })
+        // Solo procesar si NO es duplicado del pedido inicial
+        if (!pedidoYaProcesado) {
+          const cliente = abono.pedidos ? 
+            `${abono.pedidos.cliente_nombre || ''} ${abono.pedidos.cliente_apellido || ''}`.trim() : 
+            'Cliente'
+          
+          ingresosFormateados.push({
+            id: `ABO-${abono.id}`,
+            fecha: abono.fecha_abono,
+            idVenta: `VTA-${abono.pedido_id}`,
+            cliente: cliente,
+            montoUSD: parseFloat(abono.monto_abono_usd) || 0,
+            montoVES: parseFloat(abono.monto_abono_ves) || 0,
+            metodoPago: abono.metodo_pago_abono || '',
+            referencia: abono.referencia_pago || '',
+            tipoIngreso: 'Abono a Deuda',
+            descripcion: abono.comentarios || `Abono adicional pedido ${abono.pedido_id}`,
+            tasa_bcv: parseFloat(abono.tasa_bcv) || 36.0,
+            fecha_creacion: abono.fecha_abono
+          })
+        } else {
+          console.log(`⚠️ Abono #${abono.id} duplicado con pedido #${abono.pedido_id} - omitiendo`)
+        }
       })
     }
 
@@ -418,7 +430,12 @@ export async function agregarIngreso(ingresoData) {
 }
 
 // Función para obtener estadísticas de ingresos
-export function getEstadisticasIngresos() {
+export async function getEstadisticasIngresos() {
+  // Asegurar que los ingresos estén cargados
+  if (ingresos.value.length === 0) {
+    await getIngresos()
+  }
+  
   const hoy = new Date()
   const inicioSemana = new Date(hoy)
   inicioSemana.setDate(hoy.getDate() - hoy.getDay() + 1)
@@ -427,6 +444,12 @@ export function getEstadisticasIngresos() {
   const ingresosHoy = getIngresosDelDia(hoy)
   const ingresosSemana = getIngresosPorRango(inicioSemana, hoy)
   const ingresosMes = getIngresosPorRango(inicioMes, hoy)
+  
+  console.log('📊 Estadísticas calculadas:')
+  console.log('   Hoy:', ingresosHoy.length, 'ingresos')
+  console.log('   Semana:', ingresosSemana.length, 'ingresos')
+  console.log('   Mes:', ingresosMes.length, 'ingresos')
+  console.log('   Total:', ingresos.value.length, 'ingresos')
   
   return {
     hoy: calcularTotalesIngresos(ingresosHoy),

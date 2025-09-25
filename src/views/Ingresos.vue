@@ -558,10 +558,8 @@ async function cargarDatos() {
     console.log('📊 Cargando datos de ingresos...')
     
     // Cargar ingresos y estadísticas de forma asíncrona
-    const [ingresosData, estadisticasData] = await Promise.all([
-      getIngresos(),
-      getEstadisticasIngresos()
-    ])
+    const ingresosData = await getIngresos()
+    const estadisticasData = await getEstadisticasIngresos()
     
     ingresos.value = ingresosData
     estadisticas.value = estadisticasData

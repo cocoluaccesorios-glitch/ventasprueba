@@ -766,16 +766,24 @@ async function cambiarPeriodo(periodo) {
   try {
     console.log(`🔄 Obteniendo datos para gráfico - período: ${periodo}`)
     
-    // SIEMPRE intentar obtener datos reales primero
+    // SIEMPRE usar datos reales - NO usar datos mock
     console.log(`🔄 Obteniendo datos REALES para período: ${periodo}`)
     nuevosDatos = await obtenerDatosRealesPorPeriodo(periodo)
     console.log(`📊 Datos reales obtenidos:`, nuevosDatos ? nuevosDatos.length : 0, 'registros')
     
-    // Solo usar datos mock si NO hay datos reales
+    // Si no hay datos reales, mostrar gráfico vacío (NO usar mock)
     if (!nuevosDatos || nuevosDatos.length === 0) {
-      console.log('⚠️ No hay datos reales, usando datos mock')
-      nuevosDatos = obtenerDatosVentasPorPeriodo(periodo)
-      console.log(`📊 Datos mock generados:`, nuevosDatos.length, 'registros')
+      console.log('⚠️ No hay datos reales para este período - gráfico vacío')
+      // Generar estructura vacía para el gráfico
+      if (periodo === 'hoy') {
+        nuevosDatos = []
+        for (let i = 0; i <= 23; i++) {
+          nuevosDatos.push({
+            fecha: `${i.toString().padStart(2, '0')}:00`,
+            ventas: 0
+          })
+        }
+      }
     } else {
       console.log('✅ Usando datos REALES de la base de datos')
     }
@@ -1129,7 +1137,8 @@ async function obtenerDatosRealesPorPeriodo(periodo) {
     
     if (error) {
       console.error('❌ Error obteniendo pedidos:', error)
-      return obtenerDatosVentasPorPeriodo(periodo) // Fallback a datos mock
+      console.log('⚠️ Error en consulta Supabase - retornando array vacío')
+      return [] // NO usar datos mock
     }
     
     // Agrupar por fecha según el período
@@ -1175,7 +1184,8 @@ async function obtenerDatosRealesPorPeriodo(periodo) {
     
   } catch (error) {
     console.error('Error obteniendo datos reales por período:', error)
-    return obtenerDatosVentasPorPeriodo(periodo) // Fallback a datos mock
+    console.log('⚠️ Error en función - retornando array vacío')
+    return [] // NO usar datos mock
   }
 }
 

@@ -517,7 +517,12 @@ import Swal from 'sweetalert2'
 
 // Estado reactivo
 const ingresos = ref([])
-const estadisticas = ref({})
+const estadisticas = ref({
+  hoy: { totalGeneralUSD: 0, totalGeneralVES: 0 },
+  semana: { totalGeneralUSD: 0, totalGeneralVES: 0 },
+  mes: { totalGeneralUSD: 0, totalGeneralVES: 0 },
+  totalIngresos: 0
+})
 const filtros = ref({
   fechaInicio: '',
   fechaFin: '',

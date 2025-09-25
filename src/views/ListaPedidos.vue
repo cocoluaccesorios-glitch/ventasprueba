@@ -167,21 +167,71 @@ function verDetalle(pedido) {
           <tbody>
   `;
   
-  // Agregar productos si están disponibles
+  // Agregar productos si están disponibles (eliminar duplicados)
   if (pedido.detalles_pedido && pedido.detalles_pedido.length > 0) {
+    // Crear un mapa para eliminar duplicados basado en nombre_producto
+    const productosUnicos = new Map();
+    
     pedido.detalles_pedido.forEach(detalle => {
+      const nombre = detalle.nombre_producto || 'Producto';
+      if (productosUnicos.has(nombre)) {
+        // Si ya existe, sumar la cantidad
+        const existente = productosUnicos.get(nombre);
+        existente.cantidad += detalle.cantidad;
+        existente.subtotal = existente.cantidad * existente.precio_unitario_usd;
+      } else {
+        // Si no existe, agregarlo
+        productosUnicos.set(nombre, {
+          nombre_producto: nombre,
+          cantidad: detalle.cantidad,
+          precio_unitario_usd: detalle.precio_unitario_usd,
+          subtotal: detalle.cantidad * detalle.precio_unitario_usd
+        });
+      }
+    });
+    
+    // Mostrar productos únicos
+    productosUnicos.forEach(detalle => {
       html += `
         <tr>
-          <td>${detalle.nombre_producto || 'Producto'}</td>
+          <td>${detalle.nombre_producto}</td>
           <td>${detalle.cantidad}</td>
           <td>$${detalle.precio_unitario_usd.toFixed(2)}</td>
-          <td>$${(detalle.cantidad * detalle.precio_unitario_usd).toFixed(2)}</td>
+          <td>$${detalle.subtotal.toFixed(2)}</td>
         </tr>
       `;
     });
   } else {
     html += `<tr><td colspan="4" class="text-center text-muted">No hay productos disponibles</td></tr>`;
   }
+  
+  // Agregar filas de resumen financiero en la misma tabla
+  html += `
+            <tr class="table-light">
+              <td colspan="3"><strong>Subtotal</strong></td>
+              <td><strong>$${(pedido.subtotal_usd || 0).toFixed(2)}</strong></td>
+            </tr>
+            <tr>
+              <td colspan="3"><strong>Delivery</strong></td>
+              <td><strong>${pedido.monto_delivery_usd ? `$${pedido.monto_delivery_usd.toFixed(2)}` : '$0.00'}</strong></td>
+            </tr>
+            <tr>
+              <td colspan="3"><strong>Descuento</strong></td>
+              <td><strong>${pedido.monto_descuento_usd && pedido.subtotal_usd > 0 ? 
+                `<span style="color: #dc3545;">-$${pedido.monto_descuento_usd.toFixed(2)} (${((pedido.monto_descuento_usd / pedido.subtotal_usd) * 100).toFixed(0)}%)</span>` : 
+                'No aplica'}</strong></td>
+            </tr>
+            <tr>
+              <td colspan="3"><strong>IVA</strong></td>
+              <td><strong>${pedido.aplica_iva ? 
+                `$${(pedido.monto_iva_usd || 0).toFixed(2)} (16%)` : 
+                'No aplica'}</strong></td>
+            </tr>
+            <tr class="table-success">
+              <td colspan="3"><strong>TOTAL</strong></td>
+              <td><strong>$${(pedido.total_usd || 0).toFixed(2)}</strong></td>
+            </tr>
+  `;
   
   html += `
           </tbody>
@@ -190,85 +240,259 @@ function verDetalle(pedido) {
       
       <hr class="my-4">
       
-      <h6 class="text-primary mb-3">💰 Resumen Financiero</h6>
-      <div class="row">
-        <div class="col-md-6">
-          <p><strong>Subtotal:</strong> $${(pedido.subtotal_usd || 0).toFixed(2)}</p>
-          <p><strong>Delivery:</strong> ${pedido.monto_delivery_usd ? `$${pedido.monto_delivery_usd.toFixed(2)}` : '$0.00'}</p>
-          <p><strong>Descuento:</strong> ${pedido.monto_descuento_usd && pedido.subtotal_usd > 0 ? 
-            `${((pedido.monto_descuento_usd / pedido.subtotal_usd) * 100).toFixed(0)}% ($${pedido.monto_descuento_usd.toFixed(2)})` : 
-            'No aplica'}</p>
-          <p><strong>IVA:</strong> ${pedido.aplica_iva ? 
-            `$${(pedido.monto_iva_usd || 0).toFixed(2)} (16%)` : 
-            'No aplica'}</p>
-          <p><strong>Total:</strong> <span style="font-weight: bold; color: #28a745;">$${(pedido.total_usd || 0).toFixed(2)}</span></p>
-        </div>
-        <div class="col-md-6">
-          ${pedido.es_pago_mixto || pedido.metodo_pago === 'Mixto' ? `
-            <p><strong>Tipo de Pago:</strong> <span style="color: #007bff; font-weight: bold;">Pago Mixto</span></p>
-            ${pedido.metodo_pago_mixto_usd ? `
-              <p><strong>Método USD:</strong> ${pedido.metodo_pago_mixto_usd || 'No especificado'} 
-                ${pedido.referencia_mixto_usd ? `- Ref: ${pedido.referencia_mixto_usd}` : ''}</p>
-              <p><strong>Método VES:</strong> ${pedido.metodo_pago_mixto_ves || 'No especificado'} 
-                ${pedido.referencia_mixto_ves ? `- Ref: ${pedido.referencia_mixto_ves}` : ''}</p>
-              <p><strong>Monto USD:</strong> $${(pedido.monto_mixto_usd || 0).toFixed(2)}</p>
-              <p><strong>Monto VES:</strong> ${(pedido.monto_mixto_ves || 0).toFixed(2)} Bs</p>
-            ` : `
-              <p><strong>Estado:</strong> <span style="color: #dc3545;">⚠️ Desglose no disponible</span></p>
-              <p><strong>Motivo:</strong> Faltan columnas en la base de datos</p>
-              <p><strong>Solución:</strong> Ejecutar los comandos SQL proporcionados</p>
-              <p><strong>Total:</strong> $${(pedido.total_usd || 0).toFixed(2)} (pago completo)</p>
-            `}
-          ` : `
-            <p><strong>Método de Pago:</strong> ${pedido.metodo_pago || 'Efectivo'}</p>
-            ${pedido.referencia_pago && pedido.referencia_pago !== 'No aplica' ? `
-              <p><strong>Referencia:</strong> ${pedido.referencia_pago}</p>
-            ` : ''}
-            ${(pedido.metodo_pago && pedido.metodo_pago.toLowerCase() !== 'efectivo' && pedido.metodo_pago.toLowerCase() !== 'efectivo (usd)') ? `
-              <p><strong>Tasa BCV:</strong> ${pedido.tasa_bcv ? `${pedido.tasa_bcv} Bs/USD` : '166.58 Bs/USD'}</p>
-              <p><strong>Total en Bolívares:</strong> ${pedido.tasa_bcv ? 
+      <h6 class="text-primary mb-3">💳 Información de Pago</h6>
+      <div class="table-responsive">
+        <table class="table table-sm table-bordered">
+          <thead class="table-light">
+            <tr>
+              <th>Concepto</th>
+              <th>Detalle</th>
+            </tr>
+          </thead>
+          <tbody>
+  `;
+  
+  // Determinar el tipo de pago y mostrar la información correspondiente
+  if (pedido.es_pago_mixto || pedido.metodo_pago === 'Mixto') {
+    // PAGO MIXTO - Opción 3: Tabla Expandida
+    html += `
+            <tr class="table-info">
+              <td><strong>Tipo de Pago</strong></td>
+              <td><span style="color: #007bff; font-weight: bold;">Pago Mixto</span></td>
+            </tr>
+    `;
+    
+    if (pedido.metodo_pago_mixto_usd) {
+      html += `
+            <tr>
+              <td><strong>Método USD</strong></td>
+              <td>${pedido.metodo_pago_mixto_usd || 'No especificado'}</td>
+            </tr>
+            <tr>
+              <td><strong>Referencia USD</strong></td>
+              <td>${pedido.referencia_mixto_usd || '-'}</td>
+            </tr>
+            <tr>
+              <td><strong>Monto USD</strong></td>
+              <td>$${(pedido.monto_mixto_usd || 0).toFixed(2)}</td>
+            </tr>
+            <tr>
+              <td><strong>Método VES</strong></td>
+              <td>${pedido.metodo_pago_mixto_ves || 'No especificado'}</td>
+            </tr>
+            <tr>
+              <td><strong>Referencia VES</strong></td>
+              <td>${pedido.referencia_mixto_ves || '-'}</td>
+            </tr>
+            <tr>
+              <td><strong>Monto VES</strong></td>
+              <td>${(pedido.monto_mixto_ves || 0).toFixed(2)} Bs</td>
+            </tr>
+            <tr>
+              <td><strong>Tasa BCV</strong></td>
+              <td>${pedido.tasa_bcv ? `${pedido.tasa_bcv} Bs/USD` : '166.58 Bs/USD'}</td>
+            </tr>
+      `;
+    } else {
+      html += `
+            <tr class="table-warning">
+              <td><strong>Estado</strong></td>
+              <td><span style="color: #dc3545;">⚠️ Desglose no disponible</span></td>
+            </tr>
+            <tr>
+              <td><strong>Motivo</strong></td>
+              <td>Faltan columnas en la base de datos</td>
+            </tr>
+            <tr>
+              <td><strong>Total</strong></td>
+              <td>$${(pedido.total_usd || 0).toFixed(2)} (pago completo)</td>
+            </tr>
+      `;
+    }
+    
+  } else if (pedido.es_abono || pedido.tipo_pago_abono || pedido.metodo_pago === 'Abono') {
+    // ABONO
+    html += `
+            <tr class="table-warning">
+              <td><strong>Tipo de Pago</strong></td>
+              <td><span style="color: #ffc107; font-weight: bold;">Abono</span></td>
+            </tr>
+            <tr>
+              <td><strong>Tipo de Abono</strong></td>
+              <td>${pedido.tipo_pago_abono || 'Simple'}</td>
+            </tr>
+    `;
+    
+    if (pedido.tipo_pago_abono === 'simple') {
+      // ABONO SIMPLE
+      html += `
+            <tr>
+              <td><strong>Método de Pago</strong></td>
+              <td>${pedido.metodo_pago || 'Efectivo'}</td>
+            </tr>
+            <tr>
+              <td><strong>Referencia</strong></td>
+              <td>${pedido.referencia_pago && pedido.referencia_pago !== 'No aplica' ? pedido.referencia_pago : 'No aplica'}</td>
+            </tr>
+            <tr>
+              <td><strong>Monto Abonado</strong></td>
+              <td>$${(pedido.monto_abono_simple || 0).toFixed(2)} USD</td>
+            </tr>
+            <tr>
+              <td><strong>Saldo Pendiente</strong></td>
+              <td>$${((pedido.total_usd || 0) - (pedido.monto_abono_simple || 0)).toFixed(2)} USD</td>
+            </tr>
+      `;
+      
+      if (pedido.metodo_pago && pedido.metodo_pago.toLowerCase() !== 'efectivo' && pedido.metodo_pago.toLowerCase() !== 'efectivo (usd)') {
+        html += `
+            <tr>
+              <td><strong>Tasa BCV</strong></td>
+              <td>${pedido.tasa_bcv ? `${pedido.tasa_bcv} Bs/USD` : '166.58 Bs/USD'}</td>
+            </tr>
+            <tr>
+              <td><strong>Total en Bolívares</strong></td>
+              <td>${pedido.tasa_bcv ? 
                 `${((pedido.total_usd || 0) * pedido.tasa_bcv).toFixed(2)} Bs` : 
-                `${((pedido.total_usd || 0) * 166.58).toFixed(2)} Bs`}</p>
-            ` : `
-              <p><strong>Moneda:</strong> Dólares USD</p>
-              <p><strong>Tipo:</strong> Pago en efectivo</p>
-            `}
-          `}
-        </div>
+                `${((pedido.total_usd || 0) * 166.58).toFixed(2)} Bs`}</td>
+            </tr>
+        `;
+      }
+      
+    } else if (pedido.tipo_pago_abono === 'mixto') {
+      // ABONO MIXTO - Misma estructura que Pago Mixto
+      html += `
+            <tr>
+              <td><strong>Método USD</strong></td>
+              <td>${pedido.metodo_pago_abono_usd || 'No especificado'}</td>
+            </tr>
+            <tr>
+              <td><strong>Referencia USD</strong></td>
+              <td>${pedido.referencia_abono_usd || '-'}</td>
+            </tr>
+            <tr>
+              <td><strong>Monto Abono USD</strong></td>
+              <td>$${(pedido.monto_abono_usd || 0).toFixed(2)}</td>
+            </tr>
+            <tr>
+              <td><strong>Método VES</strong></td>
+              <td>${pedido.metodo_pago_abono_ves || 'No especificado'}</td>
+            </tr>
+            <tr>
+              <td><strong>Referencia VES</strong></td>
+              <td>${pedido.referencia_abono_ves || '-'}</td>
+            </tr>
+            <tr>
+              <td><strong>Monto Abono VES</strong></td>
+              <td>${(pedido.monto_abono_ves || 0).toFixed(2)} Bs</td>
+            </tr>
+            <tr>
+              <td><strong>Tasa BCV</strong></td>
+              <td>${pedido.tasa_bcv ? `${pedido.tasa_bcv} Bs/USD` : '166.58 Bs/USD'}</td>
+            </tr>
+      `;
+    }
+    
+  } else {
+    // PAGO SIMPLE (CONTADO)
+    html += `
+            <tr class="table-success">
+              <td><strong>Tipo de Pago</strong></td>
+              <td><span style="color: #28a745; font-weight: bold;">Contado</span></td>
+            </tr>
+            <tr>
+              <td><strong>Método de Pago</strong></td>
+              <td>${pedido.metodo_pago || 'Efectivo'}</td>
+            </tr>
+    `;
+    
+    // Mostrar Total en Bolívares primero si es pago en VES
+    if (pedido.metodo_pago && pedido.metodo_pago.toLowerCase() !== 'efectivo' && pedido.metodo_pago.toLowerCase() !== 'efectivo (usd)') {
+      html += `
+            <tr class="table-success">
+              <td><strong>Total en Bolívares</strong></td>
+              <td><span style="color: #28a745; font-weight: bold;">${pedido.tasa_bcv ? 
+                `${((pedido.total_usd || 0) * pedido.tasa_bcv).toFixed(2)} Bs` : 
+                `${((pedido.total_usd || 0) * 166.58).toFixed(2)} Bs`}</span></td>
+            </tr>
+      `;
+    }
+    
+    // Mostrar Referencia si aplica
+    if (pedido.referencia_pago && pedido.referencia_pago !== 'No aplica') {
+      html += `
+            <tr>
+              <td><strong>Referencia</strong></td>
+              <td>${pedido.referencia_pago}</td>
+            </tr>
+      `;
+    }
+    
+    // Mostrar Tasa BCV al final si es pago en VES
+    if (pedido.metodo_pago && pedido.metodo_pago.toLowerCase() !== 'efectivo' && pedido.metodo_pago.toLowerCase() !== 'efectivo (usd)') {
+      html += `
+            <tr>
+              <td><strong>Tasa BCV</strong></td>
+              <td>${pedido.tasa_bcv ? `${pedido.tasa_bcv} Bs/USD` : '166.58 Bs/USD'}</td>
+            </tr>
+      `;
+    } else {
+      html += `
+            <tr>
+              <td><strong>Moneda</strong></td>
+              <td>Dólares USD</td>
+            </tr>
+            <tr>
+              <td><strong>Tipo</strong></td>
+              <td>Pago en efectivo</td>
+            </tr>
+      `;
+    }
+  }
+  
+  html += `
+          </tbody>
+        </table>
       </div>
       
       ${pedido.es_abono || pedido.tipo_pago_abono || pedido.metodo_pago === 'Abono' ? `
         <hr class="my-4">
-        <h6 class="text-primary mb-3">💳 Información de Abono</h6>
-        <div class="row">
-          <div class="col-md-6">
-            <p><strong>Tipo de Abono:</strong> ${pedido.tipo_pago_abono || 'Simple'}</p>
-            ${(pedido.total_abono_usd && pedido.total_abono_usd > 0) ? `
-              <p><strong>Monto Abonado:</strong> ${pedido.monto_abono_simple ? 
-                `$${pedido.monto_abono_simple.toFixed(2)} USD` : 
-                `$${(pedido.monto_abono_usd || 0).toFixed(2)} USD + ${(pedido.monto_abono_ves || 0).toFixed(2)} Bs`}</p>
-              <p><strong>Total Abono:</strong> $${(pedido.total_abono_usd || 0).toFixed(2)} USD</p>
-              <p><strong>Método del Abono:</strong> ${pedido.metodo_pago_abono || 'No especificado'}</p>
-              ${pedido.referencia_pago ? `<p><strong>Referencia:</strong> ${pedido.referencia_pago}</p>` : ''}
-            ` : `
-              <p><strong>Estado:</strong> <span style="color: #dc3545;">⚠️ Datos de abono incompletos</span></p>
-              <p><strong>Problema:</strong> El abono no se guardó correctamente en la base de datos</p>
-              <p><strong>Causa:</strong> Pedido creado antes de las correcciones del sistema</p>
-              <p><strong>Solución:</strong> Crear nuevo pedido con datos correctos</p>
-            `}
-          </div>
-          <div class="col-md-6">
-            ${(pedido.total_abono_usd && pedido.total_abono_usd > 0) ? `
-              <p><strong>Saldo Pendiente:</strong> <span style="color: #dc3545; font-weight: bold;">$${((pedido.total_usd || 0) - (pedido.total_abono_usd || 0)).toFixed(2)} USD</span></p>
-              <p><strong>Fecha Límite:</strong> ${pedido.fecha_vencimiento ? 
-                new Date(pedido.fecha_vencimiento).toLocaleDateString('es-VE') : 
-                'Sin fecha límite'}</p>
-            ` : `
-              <p><strong>Saldo Pendiente:</strong> <span style="color: #dc3545; font-weight: bold;">$${(pedido.total_usd || 0).toFixed(2)} USD</span></p>
-              <p><strong>Nota:</strong> Se asume que no se ha abonado nada</p>
-              <p><strong>Acción:</strong> Crear nuevo abono con datos correctos</p>
-            `}
-          </div>
+        <h6 class="text-primary mb-3">📋 Estado del Abono</h6>
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered">
+            <thead class="table-light">
+              <tr>
+                <th>Concepto</th>
+                <th>Valor</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Total del Pedido</strong></td>
+                <td>$${(pedido.total_usd || 0).toFixed(2)} USD</td>
+              </tr>
+              <tr>
+                <td><strong>Monto Abonado</strong></td>
+                <td>$${(pedido.total_abono_usd || pedido.monto_abono_simple || 0).toFixed(2)} USD</td>
+              </tr>
+              <tr class="table-warning">
+                <td><strong>Saldo Pendiente</strong></td>
+                <td><strong>$${((pedido.total_usd || 0) - (pedido.total_abono_usd || pedido.monto_abono_simple || 0)).toFixed(2)} USD</strong></td>
+              </tr>
+              <tr>
+                <td><strong>Estado</strong></td>
+                <td>${((pedido.total_usd || 0) - (pedido.total_abono_usd || pedido.monto_abono_simple || 0)) <= 0 ? 
+                  '<span class="badge bg-success">Pagado</span>' : 
+                  '<span class="badge bg-warning">Pendiente</span>'}</td>
+              </tr>
+              ${pedido.fecha_vencimiento ? `
+                <tr>
+                  <td><strong>Fecha Límite</strong></td>
+                  <td>${new Date(pedido.fecha_vencimiento).toLocaleDateString('es-VE')}</td>
+                </tr>
+              ` : ''}
+            </tbody>
+          </table>
         </div>
       ` : ''}
       

@@ -374,7 +374,7 @@ export async function createSale(ventaData) {
       }
     }
     
-    // Guardar detalles de productos en la tabla detalles_pedido
+    // Guardar detalles de productos en la tabla detalles_pedido y actualizar stock
     if (ventaData.productos && ventaData.productos.length > 0) {
       console.log('📦 Guardando detalles de productos:', ventaData.productos);
       
@@ -398,6 +398,59 @@ export async function createSale(ventaData) {
         console.warn('⚠️ La venta se creó pero sin detalles de productos');
       } else {
         console.log('✅ Detalles de productos guardados correctamente');
+        
+        // ACTUALIZAR STOCK DE PRODUCTOS
+        console.log('📊 Actualizando stock de productos...');
+        for (const producto of ventaData.productos) {
+          // Solo actualizar stock si es un producto del inventario (tiene ID)
+          if (producto.id && producto.id !== null) {
+            try {
+              // Obtener el stock actual del producto
+              const { data: productoActual, error: productoError } = await supabase
+                .from('productos')
+                .select('stock_actual')
+                .eq('id', producto.id)
+                .single();
+              
+              if (productoError) {
+                console.error(`❌ Error obteniendo stock del producto ${producto.id}:`, productoError);
+                continue;
+              }
+              
+              // Calcular nuevo stock (stock actual - cantidad vendida)
+              const stockActual = productoActual.stock_actual || 0;
+              const nuevoStock = Math.max(0, stockActual - producto.cantidad);
+              
+              console.log(`📦 Producto ${producto.id} (${producto.nombre}):`);
+              console.log(`   Stock anterior: ${stockActual}`);
+              console.log(`   Cantidad vendida: ${producto.cantidad}`);
+              console.log(`   Stock nuevo: ${nuevoStock}`);
+              
+              // Actualizar el stock en la base de datos
+              const { error: stockError } = await supabase
+                .from('productos')
+                .update({
+                  stock_actual: nuevoStock
+                })
+                .eq('id', producto.id);
+              
+              if (stockError) {
+                console.error(`❌ Error actualizando stock del producto ${producto.id}:`, stockError);
+              } else {
+                console.log(`✅ Stock actualizado para producto ${producto.id} (${producto.nombre})`);
+                
+                // Registrar movimiento de stock
+                await registrarMovimientoStock(producto.id, 'venta', -producto.cantidad, pedidoId);
+              }
+              
+            } catch (error) {
+              console.error(`❌ Error procesando stock del producto ${producto.id}:`, error);
+            }
+          } else {
+            console.log(`⚠️ Producto manual "${producto.nombre}" - No se actualiza stock`);
+          }
+        }
+        console.log('✅ Proceso de actualización de stock completado');
       }
     } else {
       console.warn('⚠️ No hay productos para guardar en detalles_pedido');
@@ -806,6 +859,34 @@ export async function getProductos() {
     }
     
     return mockProducts; // Fallback a datos mock
+  }
+}
+
+// Función para registrar movimiento de stock
+async function registrarMovimientoStock(productoId, tipoMovimiento, cantidad, pedidoId = null) {
+  try {
+    console.log(`📊 Registrando movimiento de stock: Producto ${productoId}, Tipo: ${tipoMovimiento}, Cantidad: ${cantidad}`);
+    
+    const { error } = await supabase
+      .from('movimientos_stock')
+      .insert([
+        {
+          producto_id: productoId,
+          tipo_movimiento: tipoMovimiento,
+          cantidad: cantidad,
+          motivo: tipoMovimiento === 'venta' ? `Venta - Pedido #${pedidoId}` : 'Ajuste manual',
+          fecha: new Date().toISOString(),
+          pedido_id: pedidoId
+        }
+      ]);
+    
+    if (error) {
+      console.error('Error al registrar movimiento de stock:', error);
+    } else {
+      console.log('✅ Movimiento de stock registrado correctamente');
+    }
+  } catch (error) {
+    console.error('Error al registrar movimiento de stock:', error);
   }
 }
 

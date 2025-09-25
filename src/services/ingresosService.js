@@ -83,63 +83,129 @@ export async function getIngresos() {
 
   try {
     console.log('🌐 Obteniendo ingresos desde Supabase...')
-    const { data, error } = await supabase
-      .from('ingresos')
+    
+    // Obtener ingresos desde pedidos (pagos completos y abonos)
+    const { data: pedidosData, error: pedidosError } = await supabase
+      .from('pedidos')
       .select(`
-        *,
+        id,
+        cliente_nombre,
+        cliente_apellido,
+        total_usd,
+        fecha_pedido,
+        metodo_pago,
+        es_pago_mixto,
+        es_abono,
+        monto_mixto_usd,
+        monto_mixto_ves,
+        monto_abono_usd,
+        monto_abono_ves,
+        tasa_bcv,
+        referencia_pago,
+        tipo_pago_abono
+      `)
+      .order('fecha_pedido', { ascending: false })
+    
+    if (pedidosError) {
+      console.error('Error al cargar pedidos:', pedidosError)
+      throw pedidosError
+    }
+    
+    // Obtener abonos adicionales
+    const { data: abonosData, error: abonosError } = await supabase
+      .from('abonos')
+      .select(`
+        id,
+        pedido_id,
+        monto_abono_usd,
+        monto_abono_ves,
+        tasa_bcv,
+        metodo_pago_abono,
+        referencia_pago,
+        fecha_abono,
+        comentarios,
         pedidos(
-          id,
           cliente_nombre,
-          cliente_apellido,
-          total_usd,
-          fecha_pedido
+          cliente_apellido
         )
       `)
-      .order('fecha', { ascending: false })
-
-    if (error) {
-      console.error('Error al cargar ingresos:', error)
-      
-      // Si hay problemas de permisos o la tabla no existe, usar datos mock
-      if (error.message.includes('401') || error.message.includes('42501') || error.message.includes('relation')) {
-        console.warn('Problemas con tabla ingresos, usando datos mock')
-        ingresos.value = mockIngresos
-        return ingresos.value
-      }
-      
-      Swal.fire({
-        title: 'Error',
-        text: `No se pudieron cargar los ingresos: ${error.message}`,
-        icon: 'error',
-        confirmButtonText: 'Usar datos de prueba',
-        showCancelButton: true,
-        cancelButtonText: 'Reintentar'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          ingresos.value = mockIngresos
-        }
-      })
-      
-      return mockIngresos
+      .order('fecha_abono', { ascending: false })
+    
+    if (abonosError) {
+      console.error('Error al cargar abonos:', abonosError)
+      // Continuar sin abonos si hay error
     }
 
-    // Formatear datos de Supabase
-    const ingresosFormateados = (data || []).map(ingreso => ({
-      id: ingreso.id,
-      fecha: ingreso.fecha,
-      idVenta: ingreso.pedido_id ? `VTA-${ingreso.pedido_id}` : ingreso.id_venta,
-      cliente: ingreso.pedidos ? 
-        `${ingreso.pedidos.cliente_nombre} ${ingreso.pedidos.cliente_apellido || ''}`.trim() : 
-        ingreso.cliente_nombre || 'Cliente',
-      montoUSD: parseFloat(ingreso.monto_usd) || 0,
-      montoVES: parseFloat(ingreso.monto_ves) || 0,
-      metodoPago: ingreso.metodo_pago || '',
-      referencia: ingreso.referencia || '',
-      tipoIngreso: ingreso.tipo_ingreso || 'Pago Completo de Contado',
-      descripcion: ingreso.descripcion || '',
-      tasa_bcv: ingreso.tasa_bcv || 36.0,
-      fecha_creacion: ingreso.created_at
-    }))
+    // Procesar ingresos desde pedidos
+    const ingresosFormateados = []
+    
+    // Procesar pedidos como ingresos
+    if (pedidosData) {
+      pedidosData.forEach(pedido => {
+        const cliente = `${pedido.cliente_nombre || ''} ${pedido.cliente_apellido || ''}`.trim() || 'Cliente'
+        
+        // Calcular ingresos según el tipo de pago
+        let montoUSD = 0
+        let montoVES = 0
+        let tipoIngreso = 'Pago Completo de Contado'
+        let metodoPago = pedido.metodo_pago || ''
+        
+        if (pedido.metodo_pago === 'Contado') {
+          montoUSD = parseFloat(pedido.total_usd) || 0
+          tipoIngreso = 'Pago Completo de Contado'
+        } else if (pedido.es_pago_mixto) {
+          montoUSD = parseFloat(pedido.monto_mixto_usd) || 0
+          montoVES = parseFloat(pedido.monto_mixto_ves) || 0
+          tipoIngreso = 'Pago Mixto'
+        } else if (pedido.es_abono) {
+          montoUSD = parseFloat(pedido.monto_abono_usd) || 0
+          montoVES = parseFloat(pedido.monto_abono_ves) || 0
+          tipoIngreso = 'Abono Inicial'
+        }
+        
+        // Solo agregar si hay ingresos reales
+        if (montoUSD > 0 || montoVES > 0) {
+          ingresosFormateados.push({
+            id: `PED-${pedido.id}`,
+            fecha: pedido.fecha_pedido,
+            idVenta: `VTA-${pedido.id}`,
+            cliente: cliente,
+            montoUSD: montoUSD,
+            montoVES: montoVES,
+            metodoPago: metodoPago,
+            referencia: pedido.referencia_pago || '',
+            tipoIngreso: tipoIngreso,
+            descripcion: `Venta ${pedido.id}`,
+            tasa_bcv: parseFloat(pedido.tasa_bcv) || 36.0,
+            fecha_creacion: pedido.fecha_pedido
+          })
+        }
+      })
+    }
+    
+    // Procesar abonos adicionales
+    if (abonosData) {
+      abonosData.forEach(abono => {
+        const cliente = abono.pedidos ? 
+          `${abono.pedidos.cliente_nombre || ''} ${abono.pedidos.cliente_apellido || ''}`.trim() : 
+          'Cliente'
+        
+        ingresosFormateados.push({
+          id: `ABO-${abono.id}`,
+          fecha: abono.fecha_abono,
+          idVenta: `VTA-${abono.pedido_id}`,
+          cliente: cliente,
+          montoUSD: parseFloat(abono.monto_abono_usd) || 0,
+          montoVES: parseFloat(abono.monto_abono_ves) || 0,
+          metodoPago: abono.metodo_pago_abono || '',
+          referencia: abono.referencia_pago || '',
+          tipoIngreso: 'Abono a Deuda',
+          descripcion: abono.comentarios || `Abono adicional pedido ${abono.pedido_id}`,
+          tasa_bcv: parseFloat(abono.tasa_bcv) || 36.0,
+          fecha_creacion: abono.fecha_abono
+        })
+      })
+    }
 
     ingresos.value = ingresosFormateados
     console.log('✅ Ingresos cargados:', ingresosFormateados.length)

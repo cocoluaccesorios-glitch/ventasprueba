@@ -685,10 +685,10 @@ async function crearGrafico() {
         datasets: [
           {
             label: 'Ventas Totales ($)',
-            data: ventas,
-            borderColor: '#0d6efd',
-            backgroundColor: 'rgba(13, 110, 253, 0.1)',
-            tension: 0.4,
+          data: ventas,
+          borderColor: '#0d6efd',
+          backgroundColor: 'rgba(13, 110, 253, 0.1)',
+          tension: 0.4,
             fill: false,
             yAxisID: 'y'
           },
@@ -793,10 +793,10 @@ async function cambiarPeriodo(periodo) {
   } catch (error) {
     console.error('Error actualizando gráfico:', error)
     // Fallback a datos mock
-    const nuevosDatos = obtenerDatosVentasPorPeriodo(periodo)
-    if (chartInstance) {
-      chartInstance.data.labels = nuevosDatos.map(d => d.fecha)
-      chartInstance.data.datasets[0].data = nuevosDatos.map(d => d.ventas)
+  const nuevosDatos = obtenerDatosVentasPorPeriodo(periodo)
+  if (chartInstance) {
+    chartInstance.data.labels = nuevosDatos.map(d => d.fecha)
+    chartInstance.data.datasets[0].data = nuevosDatos.map(d => d.ventas)
       
       // Para datos mock, usar ingresos simulados (70% de las ventas)
       const ingresosMock = nuevosDatos.map(d => d.ventas * 0.7)
@@ -811,7 +811,7 @@ async function cambiarPeriodo(periodo) {
       chartInstance.options.scales.y.max = maxY
       chartInstance.options.scales.y.ticks.stepSize = stepSize
       
-      chartInstance.update()
+    chartInstance.update()
     }
   }
 }

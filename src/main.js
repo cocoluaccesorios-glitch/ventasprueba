@@ -4,12 +4,23 @@ import router from './router/index.js'
 import App from './App.vue'
 import './assets/styles.css'
 import { setupGlobalErrorHandling } from './services/errorHandlerService.js'
+import Swal from 'sweetalert2'
 
 // VERSIÓN 8.1 - MEJORAS DE ESTABILIDAD
 console.log('🚀 VERSIÓN 8.1 - MEJORAS DE ESTABILIDAD')
 
 // Configurar manejo global de errores
 setupGlobalErrorHandling()
+
+// Configurar SweetAlert2 globalmente para centrado
+Swal.mixin({
+  position: 'center',
+  customClass: {
+    container: 'swal2-container-high-z',
+    popup: 'swal2-popup-high-z'
+  },
+  zIndex: 999999
+})
 
 const app = createApp(App)
 const pinia = createPinia()

@@ -16,10 +16,10 @@
               <i class="bi bi-calculator"></i> Cierre de Caja
             </button>
             <div class="dropdown">
-              <button class="btn btn-info btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+              <button class="btn btn-info btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="true">
                 <i class="bi bi-graph-up"></i> Reportes
               </button>
-              <ul class="dropdown-menu">
+              <ul class="dropdown-menu dropdown-menu-end" style="z-index: 9999;">
                 <li><a class="dropdown-item" href="#" @click="generarReporte('hoy')">
                   <i class="bi bi-calendar-day"></i> Reporte Diario
                 </a></li>
@@ -1229,6 +1229,32 @@ onMounted(() => {
 
 .table-info-light:hover {
   background-color: rgba(13, 202, 240, 0.1) !important;
+}
+
+/* Estilos para dropdown de reportes */
+.dropdown-menu {
+  z-index: 9999 !important;
+  position: absolute !important;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+}
+
+.dropdown-menu-end {
+  right: 0 !important;
+  left: auto !important;
+}
+
+.dropdown-item {
+  padding: 0.5rem 1rem !important;
+  font-size: 0.875rem !important;
+}
+
+.dropdown-item:hover {
+  background-color: rgba(0, 123, 255, 0.1) !important;
+}
+
+.dropdown-item i {
+  margin-right: 0.5rem !important;
 }
 
 .table th {

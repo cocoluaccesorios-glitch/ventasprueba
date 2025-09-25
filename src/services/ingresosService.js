@@ -214,6 +214,13 @@ export async function getIngresos() {
             `${abono.pedidos.cliente_nombre || ''} ${abono.pedidos.cliente_apellido || ''}`.trim() : 
             'Cliente'
           
+          // Determinar si es Abono Inicial o Abono a Deuda
+          // Si el abono es del mismo día que el pedido, es Abono Inicial
+          const pedidoAsociado = pedidosData.find(p => p.id === abono.pedido_id)
+          const fechaPedido = pedidoAsociado ? new Date(pedidoAsociado.fecha_pedido).toDateString() : null
+          const fechaAbono = new Date(abono.fecha_abono).toDateString()
+          const esAbonoInicial = fechaPedido === fechaAbono
+          
           ingresosFormateados.push({
             id: `ABO-${abono.id}`,
             fecha: abono.fecha_abono,
@@ -223,13 +230,13 @@ export async function getIngresos() {
             montoVES: parseFloat(abono.monto_abono_ves) || 0,
             metodoPago: abono.metodo_pago_abono || '',
             referencia: abono.referencia_pago || '',
-            tipoIngreso: 'Abono a Deuda',
-            descripcion: abono.comentarios || `Abono adicional pedido ${abono.pedido_id}`,
+            tipoIngreso: esAbonoInicial ? 'Abono Inicial' : 'Abono a Deuda',
+            descripcion: abono.comentarios || `Abono ${esAbonoInicial ? 'inicial' : 'adicional'} pedido ${abono.pedido_id}`,
             tasa_bcv: parseFloat(abono.tasa_bcv) || 36.0,
             fecha_creacion: abono.fecha_abono
           })
           
-          console.log(`📝 Procesado ABO-${abono.id}: Referencia="${abono.referencia_pago || ''}"`)
+          console.log(`📝 Procesado ABO-${abono.id}: ${esAbonoInicial ? 'Abono Inicial' : 'Abono a Deuda'} - Referencia="${abono.referencia_pago || ''}"`)
         } else {
           console.log(`⚠️ Abono #${abono.id} duplicado con pedido #${abono.pedido_id} - omitiendo`)
         }

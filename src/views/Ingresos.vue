@@ -94,6 +94,43 @@
       </div>
     </div>
 
+    <!-- Resumen General por Moneda -->
+    <div class="row mb-4">
+      <div class="col-md-6 mb-3">
+        <div class="card bg-success text-white h-100">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <h6 class="card-title text-white-50">Total en Dólares</h6>
+                <h3 class="mb-0">${{ totalesGenerales.totalUSD.toFixed(2) }}</h3>
+                <small class="text-white-75">USD</small>
+              </div>
+              <div class="fs-1 opacity-50">
+                <i class="bi bi-currency-dollar"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-6 mb-3">
+        <div class="card bg-info text-white h-100">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <h6 class="card-title text-white-50">Total en Bolívares</h6>
+                <h3 class="mb-0">{{ totalesGenerales.totalVES.toLocaleString() }}</h3>
+                <small class="text-white-75">Bs</small>
+              </div>
+              <div class="fs-1 opacity-50">
+                <i class="bi bi-currency-exchange"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Filtros -->
     <div class="row mb-4">
       <div class="col-12">
@@ -550,6 +587,14 @@ const totalesFiltrados = computed(() => {
 
 const desgloseMetodo = computed(() => {
   return getDesglosePorMetodo(ingresosFiltrados.value)
+})
+
+const totalesGenerales = computed(() => {
+  const totales = calcularTotalesIngresos(ingresos.value)
+  return {
+    totalUSD: totales.totalGeneralUSD,
+    totalVES: totales.totalGeneralVES
+  }
 })
 
 // Funciones

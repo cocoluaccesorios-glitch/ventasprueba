@@ -179,6 +179,8 @@ export async function getIngresos() {
             tasa_bcv: parseFloat(pedido.tasa_bcv) || 36.0,
             fecha_creacion: pedido.fecha_pedido
           })
+          
+          console.log(`📝 Procesado PED-${pedido.id}: Referencia="${pedido.referencia_pago || ''}"`)
         }
       })
     }
@@ -213,6 +215,8 @@ export async function getIngresos() {
             tasa_bcv: parseFloat(abono.tasa_bcv) || 36.0,
             fecha_creacion: abono.fecha_abono
           })
+          
+          console.log(`📝 Procesado ABO-${abono.id}: Referencia="${abono.referencia_pago || ''}"`)
         } else {
           console.log(`⚠️ Abono #${abono.id} duplicado con pedido #${abono.pedido_id} - omitiendo`)
         }

@@ -15,9 +15,29 @@
             <button class="btn btn-success btn-sm" @click="generarCierreCaja">
               <i class="bi bi-calculator"></i> Cierre de Caja
             </button>
-            <button class="btn btn-info btn-sm" @click="generarReporteRango">
-              <i class="bi bi-graph-up"></i> Reporte por Rango
-            </button>
+            <div class="dropdown">
+              <button class="btn btn-info btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <i class="bi bi-graph-up"></i> Reportes
+              </button>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#" @click="generarReporte('hoy')">
+                  <i class="bi bi-calendar-day"></i> Reporte Diario
+                </a></li>
+                <li><a class="dropdown-item" href="#" @click="generarReporte('semana')">
+                  <i class="bi bi-calendar-week"></i> Reporte Semanal
+                </a></li>
+                <li><a class="dropdown-item" href="#" @click="generarReporte('mes')">
+                  <i class="bi bi-calendar-month"></i> Reporte Mensual
+                </a></li>
+                <li><a class="dropdown-item" href="#" @click="generarReporte('año')">
+                  <i class="bi bi-calendar-year"></i> Reporte Anual
+                </a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="#" @click="generarReporteRango">
+                  <i class="bi bi-calendar-range"></i> Reporte por Fechas
+                </a></li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
@@ -512,6 +532,198 @@
     </div>
   </div>
 
+  <!-- Modal Reporte por Período -->
+  <div class="modal fade" id="modalReportePeriodo" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-graph-up"></i> Reporte de Ingresos - {{ tituloReporte }}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div v-if="reportePeriodo" class="mt-4">
+            <!-- Resumen Ejecutivo -->
+            <div class="row mb-4">
+              <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                  <div class="card-body text-center py-3">
+                    <h5>${{ reportePeriodo.totales.totalGeneralUSD.toFixed(2) }}</h5>
+                    <small>Total USD</small>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card bg-info text-white">
+                  <div class="card-body text-center py-3">
+                    <h5>{{ reportePeriodo.totales.totalGeneralVES.toLocaleString() }} Bs</h5>
+                    <small>Total VES</small>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card bg-success text-white">
+                  <div class="card-body text-center py-3">
+                    <h5>{{ reportePeriodo.ingresosDetallados.length }}</h5>
+                    <small>Transacciones</small>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card bg-warning text-white">
+                  <div class="card-body text-center py-3">
+                    <h5>${{ reportePeriodo.totales.abonosADeudasUSD.toFixed(2) }}</h5>
+                    <small>Abonos a Deudas</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Tabla Detallada -->
+            <div class="card">
+              <div class="card-header bg-primary text-white">
+                <h6 class="mb-0">
+                  <i class="bi bi-list-check"></i> Detalle de Transacciones
+                </h6>
+              </div>
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="table table-hover mb-0">
+                    <thead class="table-dark">
+                      <tr>
+                        <th class="text-center">#</th>
+                        <th>Fecha</th>
+                        <th>Cliente</th>
+                        <th>Tipo de Pago</th>
+                        <th class="text-end">Monto USD</th>
+                        <th class="text-end">Monto VES</th>
+                        <th>Método de Pago</th>
+                        <th>Referencia</th>
+                        <th>Transacción</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="(ingreso, index) in reportePeriodo.ingresosDetallados" :key="ingreso.id" 
+                          :class="ingreso.montoUSD > 0 ? 'table-success-light' : 'table-info-light'">
+                        <td class="text-center">
+                          <span class="badge bg-secondary">{{ index + 1 }}</span>
+                        </td>
+                        <td>{{ formatFecha(ingreso.fecha) }}</td>
+                        <td>
+                          <strong>{{ ingreso.cliente }}</strong>
+                        </td>
+                        <td>
+                          <span :class="getTipoBadgeClass(ingreso.tipoIngreso)" class="badge">
+                            {{ ingreso.tipoIngreso }}
+                          </span>
+                        </td>
+                        <td class="text-end">
+                          <span v-if="ingreso.montoUSD > 0" class="text-success fw-bold">
+                            ${{ ingreso.montoUSD.toFixed(2) }}
+                          </span>
+                          <span v-else class="text-muted">-</span>
+                        </td>
+                        <td class="text-end">
+                          <span v-if="ingreso.montoVES > 0" class="text-info fw-bold">
+                            {{ ingreso.montoVES.toLocaleString() }} Bs
+                          </span>
+                          <span v-else class="text-muted">-</span>
+                        </td>
+                        <td>
+                          <span :class="getMetodoBadgeClass(ingreso.metodoPago)" class="badge">
+                            {{ ingreso.metodoPago }}
+                          </span>
+                        </td>
+                        <td>
+                          <span v-if="ingreso.referencia" class="text-primary fw-bold">
+                            {{ ingreso.referencia }}
+                          </span>
+                          <span v-else class="text-muted">Sin referencia</span>
+                        </td>
+                        <td>
+                          <small class="text-muted">{{ ingreso.idVenta }}</small>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Desgloses -->
+            <div class="row mt-4">
+              <div class="col-md-6">
+                <div class="card">
+                  <div class="card-header bg-secondary text-white">
+                    <h6 class="mb-0">
+                      <i class="bi bi-credit-card"></i> Desglose por Método de Pago
+                    </h6>
+                  </div>
+                  <div class="card-body">
+                    <div class="table-responsive">
+                      <table class="table table-sm">
+                        <thead>
+                          <tr>
+                            <th>Método</th>
+                            <th>Monto</th>
+                            <th>Cantidad</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr v-for="(metodo, nombre) in reportePeriodo.desgloseMetodo" :key="nombre">
+                            <td>{{ nombre }}</td>
+                            <td>
+                              {{ metodo.montoUSD > 0 ? '$' + metodo.montoUSD.toFixed(2) : metodo.montoVES.toLocaleString() + ' Bs' }}
+                            </td>
+                            <td>{{ metodo.cantidad }}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="card">
+                  <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                      <i class="bi bi-tags"></i> Desglose por Tipo de Ingreso
+                    </h6>
+                  </div>
+                  <div class="card-body">
+                    <div class="table-responsive">
+                      <table class="table table-sm">
+                        <thead>
+                          <tr>
+                            <th>Tipo</th>
+                            <th>Monto USD</th>
+                            <th>Cantidad</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr v-for="(tipo, nombre) in reportePeriodo.desgloseTipo" :key="nombre">
+                            <td>{{ nombre }}</td>
+                            <td>${{ tipo.montoUSD.toFixed(2) }}</td>
+                            <td>{{ tipo.cantidad }}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+          <button v-if="reportePeriodo" type="button" class="btn btn-success" @click="imprimirReportePeriodo">
+            <i class="bi bi-printer"></i> Imprimir
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal Reporte por Rango -->
   <div class="modal fade" id="modalReporteRango" tabindex="-1">
     <div class="modal-dialog modal-xl">
@@ -707,6 +919,11 @@ const fechaInicioReporte = ref('')
 const fechaFinReporte = ref('')
 const reporteRango = ref(null)
 
+// Reportes por período
+const reportePeriodo = ref(null)
+const tituloReporte = ref('')
+const periodoActual = ref('')
+
 // Computed properties
 const ingresosFiltrados = computed(() => {
   return filtrarIngresos(filtros.value)
@@ -809,6 +1026,54 @@ function procesarCierreCaja() {
   if (reporteCierreCaja.value.ingresosDetallados.length === 0) {
     Swal.fire('Sin datos', 'No se encontraron ingresos para la fecha seleccionada', 'info')
   }
+}
+
+function generarReporte(periodo) {
+  periodoActual.value = periodo
+  
+  const periodos = {
+    'hoy': 'Hoy',
+    'semana': 'Esta Semana',
+    'mes': 'Este Mes',
+    'año': 'Este Año'
+  }
+  
+  tituloReporte.value = periodos[periodo]
+  
+  // Generar reporte basado en el período
+  const hoy = new Date()
+  let fechaInicio, fechaFin
+  
+  switch (periodo) {
+    case 'hoy':
+      fechaInicio = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate())
+      fechaFin = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 23, 59, 59)
+      break
+    case 'semana':
+      fechaInicio = new Date(hoy)
+      fechaInicio.setDate(hoy.getDate() - hoy.getDay() + 1)
+      fechaInicio.setHours(0, 0, 0, 0)
+      fechaFin = new Date(hoy)
+      fechaFin.setHours(23, 59, 59, 999)
+      break
+    case 'mes':
+      fechaInicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1)
+      fechaFin = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0, 23, 59, 59)
+      break
+    case 'año':
+      fechaInicio = new Date(hoy.getFullYear(), 0, 1)
+      fechaFin = new Date(hoy.getFullYear(), 11, 31, 23, 59, 59)
+      break
+  }
+  
+  reportePeriodo.value = generarReportePorRango(fechaInicio.toISOString().split('T')[0], fechaFin.toISOString().split('T')[0])
+  
+  const modal = new bootstrap.Modal(document.getElementById('modalReportePeriodo'))
+  modal.show()
+}
+
+function imprimirReportePeriodo() {
+  window.print()
 }
 
 function generarReporteRango() {

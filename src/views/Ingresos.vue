@@ -344,7 +344,7 @@
             <div class="row mb-3">
               <div class="col-12">
                 <h5 class="text-primary mb-3">
-                  <i class="bi bi-calculator"></i> Cierre de Caja - {{ formatFecha(fechaCierreCaja) }}
+                  <i class="bi bi-calculator"></i> Cierre de Caja - {{ formatFechaCierreCaja(fechaCierreCaja) }}
                 </h5>
                 <p class="text-muted mb-0">Verificación física de ingresos por método de pago</p>
               </div>
@@ -1180,6 +1180,18 @@ function imprimirReporteRango() {
 
 function formatFecha(fecha) {
   return new Date(fecha).toLocaleDateString('es-VE', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  })
+}
+
+function formatFechaCierreCaja(fechaString) {
+  // Convertir string "YYYY-MM-DD" a formato DD/MM/YYYY
+  if (!fechaString) return ''
+  
+  const fecha = new Date(fechaString + 'T00:00:00')
+  return fecha.toLocaleDateString('es-VE', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric'

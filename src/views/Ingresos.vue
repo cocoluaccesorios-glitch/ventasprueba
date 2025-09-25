@@ -908,7 +908,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { 
   getIngresos, 
   filtrarIngresos, 
@@ -1280,17 +1280,25 @@ onMounted(() => {
   cargarDatos()
   
   // Cerrar dropdown al hacer clic fuera
-  document.addEventListener('click', (event) => {
+  const handleClickOutside = (event) => {
     const dropdown = document.querySelector('.dropdown')
     if (dropdown && !dropdown.contains(event.target)) {
       cerrarDropdownReportes()
     }
-  })
+  }
+  
+  document.addEventListener('click', handleClickOutside)
+  
+  // Guardar referencia para limpiar
+  window.dropdownClickHandler = handleClickOutside
 })
 
 onUnmounted(() => {
   // Limpiar event listener
-  document.removeEventListener('click', cerrarDropdownReportes)
+  if (window.dropdownClickHandler) {
+    document.removeEventListener('click', window.dropdownClickHandler)
+    delete window.dropdownClickHandler
+  }
 })
 </script>
 

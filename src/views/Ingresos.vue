@@ -24,17 +24,17 @@
     </div>
 
     <!-- Estadísticas Rápidas -->
-    <div class="row mb-4">
-      <div class="col-md-3 mb-3">
-        <div class="card bg-primary text-white h-100">
-          <div class="card-body">
+    <div class="row mb-3">
+      <div class="col-md-3 mb-2">
+        <div class="card bg-primary text-white kpi-card">
+          <div class="card-body py-3">
             <div class="d-flex justify-content-between align-items-center">
               <div>
-                <h6 class="card-title text-white-50">Ingresos Hoy</h6>
+                <h6 class="card-title text-white-50 mb-1">Ingresos Hoy</h6>
                 <h4 class="mb-0">${{ estadisticas.hoy.totalGeneralUSD.toFixed(2) }}</h4>
                 <small class="text-white-75">{{ estadisticas.hoy.totalGeneralVES.toLocaleString() }} Bs</small>
               </div>
-              <div class="fs-1 opacity-50">
+              <div class="fs-3 opacity-50">
                 <i class="bi bi-calendar-day"></i>
               </div>
             </div>
@@ -42,16 +42,16 @@
         </div>
       </div>
       
-      <div class="col-md-3 mb-3">
-        <div class="card bg-success text-white h-100">
-          <div class="card-body">
+      <div class="col-md-3 mb-2">
+        <div class="card bg-success text-white kpi-card">
+          <div class="card-body py-3">
             <div class="d-flex justify-content-between align-items-center">
               <div>
-                <h6 class="card-title text-white-50">Esta Semana</h6>
+                <h6 class="card-title text-white-50 mb-1">Esta Semana</h6>
                 <h4 class="mb-0">${{ estadisticas.semana.totalGeneralUSD.toFixed(2) }}</h4>
                 <small class="text-white-75">{{ estadisticas.semana.totalGeneralVES.toLocaleString() }} Bs</small>
               </div>
-              <div class="fs-1 opacity-50">
+              <div class="fs-3 opacity-50">
                 <i class="bi bi-calendar-week"></i>
               </div>
             </div>
@@ -59,16 +59,16 @@
         </div>
       </div>
       
-      <div class="col-md-3 mb-3">
-        <div class="card bg-info text-white h-100">
-          <div class="card-body">
+      <div class="col-md-3 mb-2">
+        <div class="card bg-info text-white kpi-card">
+          <div class="card-body py-3">
             <div class="d-flex justify-content-between align-items-center">
               <div>
-                <h6 class="card-title text-white-50">Este Mes</h6>
+                <h6 class="card-title text-white-50 mb-1">Este Mes</h6>
                 <h4 class="mb-0">${{ estadisticas.mes.totalGeneralUSD.toFixed(2) }}</h4>
                 <small class="text-white-75">{{ estadisticas.mes.totalGeneralVES.toLocaleString() }} Bs</small>
               </div>
-              <div class="fs-1 opacity-50">
+              <div class="fs-3 opacity-50">
                 <i class="bi bi-calendar-month"></i>
               </div>
             </div>
@@ -76,16 +76,16 @@
         </div>
       </div>
       
-      <div class="col-md-3 mb-3">
-        <div class="card bg-warning text-white h-100">
-          <div class="card-body">
+      <div class="col-md-3 mb-2">
+        <div class="card bg-warning text-white kpi-card">
+          <div class="card-body py-3">
             <div class="d-flex justify-content-between align-items-center">
               <div>
-                <h6 class="card-title text-white-50">Total Registros</h6>
+                <h6 class="card-title text-white-50 mb-1">Total Registros</h6>
                 <h4 class="mb-0">{{ estadisticas.totalIngresos }}</h4>
                 <small class="text-white-75">ingresos</small>
               </div>
-              <div class="fs-1 opacity-50">
+              <div class="fs-3 opacity-50">
                 <i class="bi bi-list-check"></i>
               </div>
             </div>
@@ -95,17 +95,17 @@
     </div>
 
     <!-- Resumen General por Moneda -->
-    <div class="row mb-4">
-      <div class="col-md-6 mb-3">
-        <div class="card bg-success text-white h-100">
-          <div class="card-body">
+    <div class="row mb-3">
+      <div class="col-md-6 mb-2">
+        <div class="card bg-success text-white kpi-card">
+          <div class="card-body py-3">
             <div class="d-flex justify-content-between align-items-center">
               <div>
-                <h6 class="card-title text-white-50">Total en Dólares</h6>
+                <h6 class="card-title text-white-50 mb-1">Total en Dólares</h6>
                 <h3 class="mb-0">${{ totalesGenerales.totalUSD.toFixed(2) }}</h3>
                 <small class="text-white-75">USD</small>
               </div>
-              <div class="fs-1 opacity-50">
+              <div class="fs-3 opacity-50">
                 <i class="bi bi-currency-dollar"></i>
               </div>
             </div>
@@ -113,16 +113,16 @@
         </div>
       </div>
       
-      <div class="col-md-6 mb-3">
-        <div class="card bg-info text-white h-100">
-          <div class="card-body">
+      <div class="col-md-6 mb-2">
+        <div class="card bg-info text-white kpi-card">
+          <div class="card-body py-3">
             <div class="d-flex justify-content-between align-items-center">
               <div>
-                <h6 class="card-title text-white-50">Total en Bolívares</h6>
+                <h6 class="card-title text-white-50 mb-1">Total en Bolívares</h6>
                 <h3 class="mb-0">{{ totalesGenerales.totalVES.toLocaleString() }}</h3>
                 <small class="text-white-75">Bs</small>
               </div>
-              <div class="fs-1 opacity-50">
+              <div class="fs-3 opacity-50">
                 <i class="bi bi-currency-exchange"></i>
               </div>
             </div>
@@ -788,6 +788,34 @@ onMounted(() => {
 
 .card:hover {
   box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+/* Estilos para KPI cards más compactas */
+.kpi-card {
+  min-height: auto !important;
+  height: auto !important;
+}
+
+.kpi-card .card-body {
+  padding: 1rem !important;
+}
+
+.kpi-card h4, .kpi-card h3 {
+  font-size: 1.5rem !important;
+  font-weight: 700 !important;
+}
+
+.kpi-card h6 {
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+}
+
+.kpi-card small {
+  font-size: 0.75rem !important;
+}
+
+.kpi-card .fs-3 {
+  font-size: 1.5rem !important;
 }
 
 .table th {

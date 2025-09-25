@@ -764,10 +764,16 @@ async function cambiarPeriodo(periodo) {
   
   // Actualizar datos del gráfico
   try {
+    console.log(`🔄 Obteniendo datos para gráfico - período: ${periodo}`)
+    
     // Intentar obtener datos reales primero
     let nuevosDatos = await obtenerDatosRealesPorPeriodo(periodo)
+    console.log(`📊 Datos reales obtenidos:`, nuevosDatos ? nuevosDatos.length : 0, 'registros')
+    
     if (!nuevosDatos || nuevosDatos.length === 0) {
+      console.log('⚠️ No hay datos reales, usando datos mock')
       nuevosDatos = obtenerDatosVentasPorPeriodo(periodo)
+      console.log(`📊 Datos mock generados:`, nuevosDatos.length, 'registros')
     }
     
     if (chartInstance) {
@@ -1776,14 +1782,8 @@ async function obtenerDatosRealesPorPeriodoPersonalizado(periodoPersonalizado) {
       let fechaKey = ''
       
       if (periodoPersonalizado.tipo === 'fecha_especifica') {
-        // Para fecha específica, mostrar por hora del horario comercial (6:00 AM - 8:00 PM)
-        const hora = fecha.getHours()
-        if (hora >= 6 && hora <= 20) {
-          fechaKey = fecha.toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' })
-        } else {
-          // Si está fuera del horario comercial, no incluir en el gráfico
-          return
-        }
+        // Para fecha específica, mostrar por hora (0-23)
+        fechaKey = fecha.toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' })
       } else {
         // Para rango de fechas, mostrar por día
         fechaKey = fecha.toLocaleDateString('es-VE', { month: 'short', day: 'numeric' })

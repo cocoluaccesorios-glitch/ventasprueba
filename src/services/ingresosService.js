@@ -161,6 +161,10 @@ export async function getIngresos() {
           montoUSD = parseFloat(pedido.monto_abono_usd) || 0
           montoVES = parseFloat(pedido.monto_abono_ves) || 0
           tipoIngreso = 'Abono Inicial'
+        } else {
+          // Procesar todos los demás pedidos como ingresos completos
+          montoUSD = parseFloat(pedido.total_usd) || 0
+          tipoIngreso = 'Pago Completo de Contado'
         }
         
         // Solo agregar si hay ingresos reales

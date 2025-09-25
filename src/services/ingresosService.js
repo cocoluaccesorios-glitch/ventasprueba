@@ -144,6 +144,15 @@ export async function getIngresos() {
       pedidosData.forEach(pedido => {
         const cliente = `${pedido.cliente_nombre || ''} ${pedido.cliente_apellido || ''}`.trim() || 'Cliente'
         
+        // Verificar si este pedido tiene abonos asociados
+        const tieneAbonos = abonosData && abonosData.some(abono => abono.pedido_id === pedido.id)
+        
+        // Si tiene abonos asociados, no procesar como ingreso (se procesará en abonos)
+        if (tieneAbonos) {
+          console.log(`⚠️  Pedido #${pedido.id} tiene abonos asociados, omitiendo del procesamiento de pedidos`)
+          return
+        }
+        
         // Calcular ingresos según el tipo de pago
         let montoUSD = 0
         let montoVES = 0

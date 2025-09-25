@@ -766,22 +766,18 @@ async function cambiarPeriodo(periodo) {
   try {
     console.log(`🔄 Obteniendo datos para gráfico - período: ${periodo}`)
     
-    // Para debug: forzar uso de datos mock para "hoy"
-    if (periodo === 'hoy') {
-      console.log('🔧 DEBUG: Forzando uso de datos mock para "hoy"')
+    // SIEMPRE intentar obtener datos reales primero
+    console.log(`🔄 Obteniendo datos REALES para período: ${periodo}`)
+    nuevosDatos = await obtenerDatosRealesPorPeriodo(periodo)
+    console.log(`📊 Datos reales obtenidos:`, nuevosDatos ? nuevosDatos.length : 0, 'registros')
+    
+    // Solo usar datos mock si NO hay datos reales
+    if (!nuevosDatos || nuevosDatos.length === 0) {
+      console.log('⚠️ No hay datos reales, usando datos mock')
       nuevosDatos = obtenerDatosVentasPorPeriodo(periodo)
       console.log(`📊 Datos mock generados:`, nuevosDatos.length, 'registros')
-      console.log('📊 Primeros 3 datos:', nuevosDatos.slice(0, 3))
     } else {
-      // Intentar obtener datos reales primero
-      nuevosDatos = await obtenerDatosRealesPorPeriodo(periodo)
-      console.log(`📊 Datos reales obtenidos:`, nuevosDatos ? nuevosDatos.length : 0, 'registros')
-      
-      if (!nuevosDatos || nuevosDatos.length === 0) {
-        console.log('⚠️ No hay datos reales, usando datos mock')
-        nuevosDatos = obtenerDatosVentasPorPeriodo(periodo)
-        console.log(`📊 Datos mock generados:`, nuevosDatos.length, 'registros')
-      }
+      console.log('✅ Usando datos REALES de la base de datos')
     }
     
     if (chartInstance) {
@@ -1115,6 +1111,10 @@ async function obtenerDatosRealesPorPeriodo(periodo) {
     console.log(`📅 Período ${periodo}: ${fechaInicio.toLocaleDateString()} - ${fechaFin.toLocaleDateString()}`)
     
     // Obtener pedidos del período
+    console.log('🔍 Consultando Supabase con fechas:')
+    console.log('📅 Fecha inicio:', fechaInicio.toISOString())
+    console.log('📅 Fecha fin:', fechaFin.toISOString())
+    
     const { data: pedidos, error } = await supabase
       .from('pedidos')
       .select('fecha_pedido, total_usd')
@@ -1122,8 +1122,13 @@ async function obtenerDatosRealesPorPeriodo(periodo) {
       .lte('fecha_pedido', fechaFin.toISOString())
       .order('fecha_pedido')
     
+    console.log('📊 Pedidos obtenidos de Supabase:', pedidos ? pedidos.length : 0)
+    if (pedidos && pedidos.length > 0) {
+      console.log('📊 Primeros 3 pedidos:', pedidos.slice(0, 3))
+    }
+    
     if (error) {
-      console.error('Error obteniendo pedidos:', error)
+      console.error('❌ Error obteniendo pedidos:', error)
       return obtenerDatosVentasPorPeriodo(periodo) // Fallback a datos mock
     }
     

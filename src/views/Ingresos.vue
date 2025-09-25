@@ -321,51 +321,182 @@
           </div>
           
           <div v-if="reporteCierreCaja" class="mt-4">
-            <h6>Resumen del {{ formatFecha(fechaCierreCaja) }}</h6>
-            <div class="table-responsive">
-              <table class="table table-sm">
-                <thead>
-                  <tr>
-                    <th>Transacción</th>
-                    <th>Cliente</th>
-                    <th>Monto USD</th>
-                    <th>Monto VES</th>
-                    <th>Método</th>
-                    <th>Referencia</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="ingreso in reporteCierreCaja.ingresosDetallados" :key="ingreso.id">
-                    <td>{{ ingreso.idVenta }} ({{ ingreso.tipoIngreso }})</td>
-                    <td>{{ ingreso.cliente }}</td>
-                    <td>{{ ingreso.montoUSD > 0 ? '$' + ingreso.montoUSD.toFixed(2) : '-' }}</td>
-                    <td>{{ ingreso.montoVES > 0 ? ingreso.montoVES.toLocaleString() + ' Bs' : '-' }}</td>
-                    <td>{{ ingreso.metodoPago }}</td>
-                    <td>{{ ingreso.referencia || '-' }}</td>
-                  </tr>
-                </tbody>
-              </table>
+            <div class="row mb-3">
+              <div class="col-12">
+                <h5 class="text-primary mb-3">
+                  <i class="bi bi-calculator"></i> Resumen del {{ formatFecha(fechaCierreCaja) }}
+                </h5>
+              </div>
             </div>
             
-            <div class="row mt-3">
-              <div class="col-md-6">
-                <h6>Desglose por Método</h6>
-                <div v-for="(monto, metodo) in reporteCierreCaja.desgloseMetodo" :key="metodo" class="d-flex justify-content-between">
-                  <span>{{ metodo }}:</span>
-                  <span class="fw-bold">
-                    {{ monto.montoUSD > 0 ? '$' + monto.montoUSD.toFixed(2) : monto.montoVES.toLocaleString() + ' Bs' }}
-                  </span>
+            <!-- Resumen Ejecutivo -->
+            <div class="row mb-4">
+              <div class="col-md-4">
+                <div class="card bg-success text-white">
+                  <div class="card-body text-center py-3">
+                    <h4 class="mb-1">${{ reporteCierreCaja.totales.totalGeneralUSD.toFixed(2) }}</h4>
+                    <small>Total en Dólares</small>
+                  </div>
                 </div>
               </div>
-              <div class="col-md-6">
-                <h6>Totales</h6>
-                <div class="d-flex justify-content-between">
-                  <span><strong>Total USD:</strong></span>
-                  <span class="text-success fw-bold">${{ reporteCierreCaja.totales.totalGeneralUSD.toFixed(2) }}</span>
+              <div class="col-md-4">
+                <div class="card bg-info text-white">
+                  <div class="card-body text-center py-3">
+                    <h4 class="mb-1">{{ reporteCierreCaja.totales.totalGeneralVES.toLocaleString() }} Bs</h4>
+                    <small>Total en Bolívares</small>
+                  </div>
                 </div>
-                <div class="d-flex justify-content-between">
-                  <span><strong>Total VES:</strong></span>
-                  <span class="text-info fw-bold">{{ reporteCierreCaja.totales.totalGeneralVES.toLocaleString() }} Bs</span>
+              </div>
+              <div class="col-md-4">
+                <div class="card bg-warning text-white">
+                  <div class="card-body text-center py-3">
+                    <h4 class="mb-1">{{ reporteCierreCaja.ingresosDetallados.length }}</h4>
+                    <small>Transacciones</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tabla Detallada Mejorada -->
+            <div class="card">
+              <div class="card-header bg-primary text-white">
+                <h6 class="mb-0">
+                  <i class="bi bi-list-check"></i> Detalle de Transacciones
+                </h6>
+              </div>
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="table table-hover mb-0">
+                    <thead class="table-dark">
+                      <tr>
+                        <th class="text-center">#</th>
+                        <th>Cliente</th>
+                        <th>Tipo de Pago</th>
+                        <th class="text-end">Monto USD</th>
+                        <th class="text-end">Monto VES</th>
+                        <th>Método de Pago</th>
+                        <th>Referencia</th>
+                        <th>Transacción</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="(ingreso, index) in reporteCierreCaja.ingresosDetallados" :key="ingreso.id" 
+                          :class="ingreso.montoUSD > 0 ? 'table-success-light' : 'table-info-light'">
+                        <td class="text-center">
+                          <span class="badge bg-secondary">{{ index + 1 }}</span>
+                        </td>
+                        <td>
+                          <strong>{{ ingreso.cliente }}</strong>
+                        </td>
+                        <td>
+                          <span :class="getTipoBadgeClass(ingreso.tipoIngreso)" class="badge">
+                            {{ ingreso.tipoIngreso }}
+                          </span>
+                        </td>
+                        <td class="text-end">
+                          <span v-if="ingreso.montoUSD > 0" class="text-success fw-bold">
+                            ${{ ingreso.montoUSD.toFixed(2) }}
+                          </span>
+                          <span v-else class="text-muted">-</span>
+                        </td>
+                        <td class="text-end">
+                          <span v-if="ingreso.montoVES > 0" class="text-info fw-bold">
+                            {{ ingreso.montoVES.toLocaleString() }} Bs
+                          </span>
+                          <span v-else class="text-muted">-</span>
+                        </td>
+                        <td>
+                          <span :class="getMetodoBadgeClass(ingreso.metodoPago)" class="badge">
+                            {{ ingreso.metodoPago }}
+                          </span>
+                        </td>
+                        <td>
+                          <span v-if="ingreso.referencia" class="text-primary fw-bold">
+                            {{ ingreso.referencia }}
+                          </span>
+                          <span v-else class="text-muted">Sin referencia</span>
+                        </td>
+                        <td>
+                          <small class="text-muted">{{ ingreso.idVenta }}</small>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Desglose por Método de Pago -->
+            <div class="row mt-4">
+              <div class="col-md-6">
+                <div class="card">
+                  <div class="card-header bg-secondary text-white">
+                    <h6 class="mb-0">
+                      <i class="bi bi-credit-card"></i> Desglose por Método de Pago
+                    </h6>
+                  </div>
+                  <div class="card-body">
+                    <div v-for="(monto, metodo) in reporteCierreCaja.desgloseMetodo" :key="metodo" 
+                         class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
+                      <div>
+                        <span class="fw-bold">{{ metodo }}</span>
+                        <br>
+                        <small class="text-muted">{{ monto.cantidad }} transacción(es)</small>
+                      </div>
+                      <div class="text-end">
+                        <div v-if="monto.montoUSD > 0" class="text-success fw-bold">
+                          ${{ monto.montoUSD.toFixed(2) }}
+                        </div>
+                        <div v-if="monto.montoVES > 0" class="text-info fw-bold">
+                          {{ monto.montoVES.toLocaleString() }} Bs
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col-md-6">
+                <div class="card">
+                  <div class="card-header bg-success text-white">
+                    <h6 class="mb-0">
+                      <i class="bi bi-calculator"></i> Resumen Final
+                    </h6>
+                  </div>
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3 p-3 bg-success bg-opacity-10 rounded">
+                      <div>
+                        <span class="fw-bold text-success">Total en Dólares</span>
+                        <br>
+                        <small class="text-muted">USD</small>
+                      </div>
+                      <div class="text-success fw-bold fs-4">
+                        ${{ reporteCierreCaja.totales.totalGeneralUSD.toFixed(2) }}
+                      </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-3 p-3 bg-info bg-opacity-10 rounded">
+                      <div>
+                        <span class="fw-bold text-info">Total en Bolívares</span>
+                        <br>
+                        <small class="text-muted">VES</small>
+                      </div>
+                      <div class="text-info fw-bold fs-4">
+                        {{ reporteCierreCaja.totales.totalGeneralVES.toLocaleString() }} Bs
+                      </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center p-3 bg-warning bg-opacity-10 rounded">
+                      <div>
+                        <span class="fw-bold text-warning">Total Transacciones</span>
+                        <br>
+                        <small class="text-muted">Movimientos</small>
+                      </div>
+                      <div class="text-warning fw-bold fs-4">
+                        {{ reporteCierreCaja.ingresosDetallados.length }}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -816,6 +947,23 @@ onMounted(() => {
 
 .kpi-card .fs-3 {
   font-size: 1.5rem !important;
+}
+
+/* Estilos para tabla de cierre de caja */
+.table-success-light {
+  background-color: rgba(25, 135, 84, 0.05) !important;
+}
+
+.table-info-light {
+  background-color: rgba(13, 202, 240, 0.05) !important;
+}
+
+.table-success-light:hover {
+  background-color: rgba(25, 135, 84, 0.1) !important;
+}
+
+.table-info-light:hover {
+  background-color: rgba(13, 202, 240, 0.1) !important;
 }
 
 .table th {

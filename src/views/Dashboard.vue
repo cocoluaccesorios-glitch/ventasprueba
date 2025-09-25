@@ -780,7 +780,7 @@ async function cambiarPeriodo(periodo) {
     
     // VERIFICAR: ¿Está usando datos reales o mock?
     console.log(`🔍 VERIFICACIÓN: Obteniendo datos para período: ${periodo}`)
-    nuevosDatos = await obtenerDatosRealesPorPeriodo(periodo)
+    let nuevosDatos = await obtenerDatosRealesPorPeriodo(periodo)
     console.log(`📊 RESULTADO: Datos obtenidos:`, nuevosDatos ? nuevosDatos.length : 0, 'registros')
     
     if (nuevosDatos && nuevosDatos.length > 0) {

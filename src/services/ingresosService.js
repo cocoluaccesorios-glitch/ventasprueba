@@ -475,9 +475,14 @@ export async function getEstadisticasIngresos() {
   inicioSemana.setDate(hoy.getDate() - hoy.getDay() + 1)
   const inicioMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1)
   
-  const ingresosHoy = getIngresosDelDia(hoy)
-  const ingresosSemana = getIngresosPorRango(inicioSemana, hoy)
-  const ingresosMes = getIngresosPorRango(inicioMes, hoy)
+  // Convertir fechas a formato string para getIngresosPorRango
+  const hoyString = hoy.toISOString().split('T')[0]
+  const inicioSemanaString = inicioSemana.toISOString().split('T')[0]
+  const inicioMesString = inicioMes.toISOString().split('T')[0]
+  
+  const ingresosHoy = getIngresosDelDia(hoyString)
+  const ingresosSemana = getIngresosPorRango(inicioSemanaString, hoyString)
+  const ingresosMes = getIngresosPorRango(inicioMesString, hoyString)
   
   console.log('📊 Estadísticas calculadas:')
   console.log('   Hoy:', ingresosHoy.length, 'ingresos')

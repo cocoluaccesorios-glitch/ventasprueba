@@ -835,9 +835,28 @@ async function obtenerEstadisticasRealesPorPeriodo(periodo) {
     
     // Filtrar pedidos según el período
     const fechaInicio = obtenerFechaInicioPeriodo(periodo)
-    const pedidosFiltrados = pedidos.filter(p => 
-      new Date(p.fecha_pedido) >= fechaInicio
-    )
+    const fechaFin = obtenerFechaFinPeriodo(periodo)
+    
+    console.log(`📅 Filtrando pedidos para ${periodo}:`)
+    console.log('📅 Fecha inicio:', fechaInicio.toISOString())
+    console.log('📅 Fecha fin:', fechaFin.toISOString())
+    console.log('📅 Total pedidos antes del filtro:', pedidos.length)
+    
+    const pedidosFiltrados = pedidos.filter(p => {
+      const fechaPedido = new Date(p.fecha_pedido)
+      const esValido = fechaPedido >= fechaInicio && fechaPedido <= fechaFin
+      
+      if (periodo === 'hoy' && esValido) {
+        console.log('✅ Pedido de hoy encontrado:', {
+          id: p.id,
+          fecha_pedido: p.fecha_pedido,
+          total_usd: p.total_usd,
+          hora: fechaPedido.getHours()
+        })
+      }
+      
+      return esValido
+    })
     
     console.log(`📅 Pedidos encontrados para ${periodo}:`, pedidosFiltrados.length)
     
@@ -981,14 +1000,8 @@ async function calcularIngresosPorPeriodo(datosVentas) {
       
       switch (periodo) {
         case 'hoy':
-          // Para hoy, agrupar por hora del horario comercial (6:00 AM - 8:00 PM)
-          const hora = fecha.getHours()
-          if (hora >= 6 && hora <= 20) {
-            clave = fecha.toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' })
-          } else {
-            // Si está fuera del horario comercial, no incluir en el gráfico
-            return
-          }
+          // Para hoy, agrupar por hora (0-23)
+          clave = fecha.toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' })
           break
         case 'semana':
           clave = fecha.toLocaleDateString('es-VE', { weekday: 'short', day: 'numeric' })
@@ -1109,14 +1122,8 @@ async function obtenerDatosRealesPorPeriodo(periodo) {
       
       switch (periodo) {
         case 'hoy':
-          // Para hoy, agrupar por hora del horario comercial (6:00 AM - 8:00 PM)
-          const hora = fecha.getHours()
-          if (hora >= 6 && hora <= 20) {
-            fechaKey = fecha.toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' })
-          } else {
-            // Si está fuera del horario comercial, no incluir en el gráfico
-            return
-          }
+          // Para hoy, agrupar por hora (0-23)
+          fechaKey = fecha.toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' })
           break
         case 'semana':
           // Para semana, agrupar por día de la semana
@@ -1159,8 +1166,8 @@ function generarDatosCompletosParaPeriodo(periodo, fechaInicio, fechaFin, datosE
   
   switch (periodo) {
     case 'hoy':
-      // Generar horas del horario comercial (6:00 AM - 8:00 PM)
-      for (let hora = 6; hora <= 20; hora++) {
+      // Generar todas las horas del día (0-23)
+      for (let hora = 0; hora <= 23; hora++) {
         const horaKey = `${hora.toString().padStart(2, '0')}:00`
         datos.push({
           fecha: horaKey,
@@ -1215,7 +1222,10 @@ function obtenerFechaInicioPeriodo(periodo) {
   
   switch (periodo) {
     case 'hoy':
-      return new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate())
+      const inicioHoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate())
+      inicioHoy.setHours(0, 0, 0, 0)
+      console.log('📅 Fecha inicio hoy:', inicioHoy.toISOString())
+      return inicioHoy
     case 'semana':
       const inicioSemana = new Date(ahora)
       const diaSemana = ahora.getDay()

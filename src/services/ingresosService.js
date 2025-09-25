@@ -244,26 +244,35 @@ export async function getIngresos() {
 
 // Función para obtener ingresos por rango de fechas
 export function getIngresosPorRango(fechaInicio, fechaFin) {
-  // Convertir fechas a UTC considerando zona horaria local
+  // Validar que las fechas sean válidas
+  if (!fechaInicio || !fechaFin) {
+    console.error('❌ Fechas inválidas:', { fechaInicio, fechaFin })
+    return []
+  }
+  
+  // Convertir fechas a hora local (no UTC)
   const inicio = new Date(fechaInicio + 'T00:00:00')
   const fin = new Date(fechaFin + 'T23:59:59')
   
-  // Ajustar a UTC para comparación con datos de BD
-  const inicioUTC = new Date(inicio.getTime() - (inicio.getTimezoneOffset() * 60000))
-  const finUTC = new Date(fin.getTime() - (fin.getTimezoneOffset() * 60000))
+  // Validar que las fechas convertidas sean válidas
+  if (isNaN(inicio.getTime()) || isNaN(fin.getTime())) {
+    console.error('❌ Fechas convertidas inválidas:', { inicio, fin })
+    return []
+  }
   
   console.log(`🔍 Filtrando ingresos entre:`, {
     fechaInicio: fechaInicio,
     fechaFin: fechaFin,
     inicioLocal: inicio.toLocaleString('es-VE'),
     finLocal: fin.toLocaleString('es-VE'),
-    inicioUTC: inicioUTC.toISOString(),
-    finUTC: finUTC.toISOString()
+    inicioISO: inicio.toISOString(),
+    finISO: fin.toISOString()
   })
   
   return ingresos.value.filter(ingreso => {
     const fechaIngreso = new Date(ingreso.fecha)
-    const esValido = fechaIngreso >= inicioUTC && fechaIngreso <= finUTC
+    // Comparar en hora local, no UTC
+    const esValido = fechaIngreso >= inicio && fechaIngreso <= fin
     
     if (esValido) {
       console.log(`✅ Ingreso incluido:`, {

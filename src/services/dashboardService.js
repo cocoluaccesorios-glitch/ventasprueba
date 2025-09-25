@@ -378,6 +378,7 @@ export function obtenerDatosVentasPorPeriodo(periodo = 'mes') {
   switch (periodo) {
     case 'hoy':
       // Datos por hora del día actual - Generar datos de ejemplo para hoy
+      console.log('🔧 DEBUG: Generando datos mock para "hoy"')
       for (let i = 0; i <= 23; i++) {
         const horaKey = `${i.toString().padStart(2, '0')}:00`
         // Generar ventas aleatorias para demostración (solo si no hay datos reales)
@@ -386,7 +387,9 @@ export function obtenerDatosVentasPorPeriodo(periodo = 'mes') {
           fecha: horaKey,
           ventas: ventasAleatorias
         })
+        console.log(`🔧 DEBUG: Hora ${horaKey} -> $${ventasAleatorias}`)
       }
+      console.log('🔧 DEBUG: Total datos generados para "hoy":', datos.length)
       break
       
     case 'semana':

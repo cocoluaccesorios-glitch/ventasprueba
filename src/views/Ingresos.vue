@@ -15,11 +15,11 @@
             <button class="btn btn-success btn-sm" @click="generarCierreCaja">
               <i class="bi bi-calculator"></i> Cierre de Caja
             </button>
-            <div class="dropdown">
+            <div class="dropdown" style="position: relative; z-index: 10000;">
               <button class="btn btn-info btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="true">
                 <i class="bi bi-graph-up"></i> Reportes
             </button>
-              <ul class="dropdown-menu dropdown-menu-end" style="z-index: 9999;">
+              <ul class="dropdown-menu dropdown-menu-end" style="z-index: 10001 !important; position: absolute !important;">
                 <li><a class="dropdown-item" href="#" @click="generarReporte('hoy')">
                   <i class="bi bi-calendar-day"></i> Reporte Diario
                 </a></li>
@@ -1305,12 +1305,13 @@ onMounted(() => {
   background-color: rgba(13, 202, 240, 0.1) !important;
 }
 
-/* Estilos para dropdown de reportes */
+/* Estilos para dropdown de reportes - SOLUCIÓN AGRESIVA */
 .dropdown-menu {
-  z-index: 9999 !important;
+  z-index: 10001 !important;
   position: absolute !important;
   box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
   border: 1px solid rgba(0, 0, 0, 0.15) !important;
+  background-color: white !important;
 }
 
 .dropdown-menu-end {
@@ -1321,14 +1322,38 @@ onMounted(() => {
 .dropdown-item {
   padding: 0.5rem 1rem !important;
   font-size: 0.875rem !important;
+  color: #212529 !important;
 }
 
 .dropdown-item:hover {
   background-color: rgba(0, 123, 255, 0.1) !important;
+  color: #212529 !important;
 }
 
 .dropdown-item i {
   margin-right: 0.5rem !important;
+}
+
+/* Asegurar que el contenedor del dropdown tenga contexto de apilamiento */
+.dropdown {
+  position: relative !important;
+  z-index: 10000 !important;
+}
+
+/* Solución adicional para elementos que puedan interferir */
+.card-header {
+  z-index: 1 !important;
+}
+
+.btn-group {
+  z-index: 1 !important;
+}
+
+/* Forzar el dropdown de reportes específicamente */
+.dropdown:has(.btn-info) .dropdown-menu {
+  z-index: 10002 !important;
+  position: fixed !important;
+  transform: translateX(-50%) !important;
 }
 
 .table th {

@@ -7,6 +7,7 @@ import EditarPedido from '../views/EditarPedido.vue'
 import Inventario from '../views/Inventario.vue'
 import GestionClientes from '../views/GestionClientes.vue'
 import Ingresos from '../views/Ingresos.vue'
+import GestionDeudas from '../views/GestionDeudas.vue'
 import Login from '../views/Login.vue'
 
 const routes = [
@@ -22,6 +23,7 @@ const routes = [
   { path: '/inventario', name: 'Inventario', component: Inventario, meta: { requiresAuth: true } },
   { path: '/clientes', name: 'GestionClientes', component: GestionClientes, meta: { requiresAuth: true } },
   { path: '/ingresos', name: 'Ingresos', component: Ingresos, meta: { requiresAuth: true } },
+  { path: '/deudas', name: 'GestionDeudas', component: GestionDeudas, meta: { requiresAuth: true } },
   
   // Redirección por defecto
   { path: '/:pathMatch(.*)*', redirect: '/dashboard' }

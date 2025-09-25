@@ -40,6 +40,11 @@
               <i class="bi bi-cash-stack"></i> Ingresos
             </router-link>
           </li>
+          <li class="nav-item">
+            <router-link class="nav-link" to="/deudas">
+              <i class="bi bi-credit-card-2-back"></i> Deudas
+            </router-link>
+          </li>
         </ul>
         
         <!-- Usuario y logout -->

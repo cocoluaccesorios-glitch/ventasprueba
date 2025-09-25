@@ -344,8 +344,9 @@
             <div class="row mb-3">
               <div class="col-12">
                 <h5 class="text-primary mb-3">
-                  <i class="bi bi-calculator"></i> Resumen del {{ formatFecha(fechaCierreCaja) }}
+                  <i class="bi bi-calculator"></i> Cierre de Caja - {{ formatFecha(fechaCierreCaja) }}
                 </h5>
+                <p class="text-muted mb-0">Verificación física de ingresos por método de pago</p>
               </div>
             </div>
             
@@ -370,8 +371,65 @@
               <div class="col-md-4">
                 <div class="card bg-warning text-white">
                   <div class="card-body text-center py-3">
-                    <h4 class="mb-1">{{ reporteCierreCaja.ingresosDetallados.length }}</h4>
+                    <h4 class="mb-1">{{ reporteCierreCaja.cantidadTransacciones }}</h4>
                     <small>Transacciones</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- VERIFICACIÓN POR CUENTAS - NUEVA SECCIÓN -->
+            <div class="row mb-4">
+              <div class="col-12">
+                <h6 class="text-success mb-3">
+                  <i class="bi bi-check-circle"></i> Verificación por Cuentas
+                </h6>
+                <div class="row">
+                  <div v-for="(cuenta, nombreCuenta) in reporteCierreCaja.resumenCuentas" :key="nombreCuenta" class="col-md-6 mb-3">
+                    <div class="card border-success">
+                      <div class="card-header bg-success text-white">
+                        <h6 class="mb-0">
+                          <i class="bi bi-wallet2"></i> {{ nombreCuenta }}
+                        </h6>
+                      </div>
+                      <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                          <span class="fw-bold">Total:</span>
+                          <span class="fw-bold text-success fs-5">
+                            {{ nombreCuenta.includes('USD') ? '$' + cuenta.monto.toFixed(2) : cuenta.monto.toLocaleString() + ' Bs' }}
+                          </span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                          <span class="text-muted">Transacciones:</span>
+                          <span class="badge bg-primary">{{ cuenta.transacciones.length }}</span>
+                        </div>
+                        
+                        <!-- Detalle de transacciones -->
+                        <div v-if="cuenta.transacciones.length > 0" class="mt-3">
+                          <small class="text-muted">Detalle:</small>
+                          <div class="table-responsive">
+                            <table class="table table-sm table-borderless">
+                              <thead>
+                                <tr>
+                                  <th class="text-muted">Cliente</th>
+                                  <th class="text-muted text-end">Monto</th>
+                                  <th class="text-muted">Ref.</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <tr v-for="transaccion in cuenta.transacciones" :key="transaccion.cliente + transaccion.monto">
+                                  <td class="small">{{ transaccion.cliente }}</td>
+                                  <td class="text-end small fw-bold">
+                                    {{ nombreCuenta.includes('USD') ? '$' + transaccion.monto.toFixed(2) : transaccion.monto.toLocaleString() + ' Bs' }}
+                                  </td>
+                                  <td class="small text-primary">{{ transaccion.referencia || '-' }}</td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -446,74 +504,51 @@
               </div>
             </div>
             
-            <!-- Desglose por Método de Pago -->
+            <!-- CHECKLIST DE VERIFICACIÓN -->
             <div class="row mt-4">
-              <div class="col-md-6">
-                <div class="card">
-                  <div class="card-header bg-secondary text-white">
+              <div class="col-12">
+                <div class="card border-warning">
+                  <div class="card-header bg-warning text-dark">
                     <h6 class="mb-0">
-                      <i class="bi bi-credit-card"></i> Desglose por Método de Pago
+                      <i class="bi bi-clipboard-check"></i> Checklist de Verificación Física
                     </h6>
                   </div>
                   <div class="card-body">
-                    <div v-for="(monto, metodo) in reporteCierreCaja.desgloseMetodo" :key="metodo" 
-                         class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
-                      <div>
-                        <span class="fw-bold">{{ metodo }}</span>
-                        <br>
-                        <small class="text-muted">{{ monto.cantidad }} transacción(es)</small>
-                      </div>
-                      <div class="text-end">
-                        <div v-if="monto.montoUSD > 0" class="text-success fw-bold">
-                          ${{ monto.montoUSD.toFixed(2) }}
+                    <p class="text-muted mb-3">
+                      <i class="bi bi-info-circle"></i> 
+                      Marca cada cuenta como verificada después de contar físicamente el dinero
+                    </p>
+                    
+                    <div class="row">
+                      <div v-for="(cuenta, nombreCuenta) in reporteCierreCaja.resumenCuentas" :key="nombreCuenta" class="col-md-6 mb-3">
+                        <div class="d-flex align-items-center p-3 border rounded">
+                          <div class="form-check me-3">
+                            <input class="form-check-input" type="checkbox" :id="'verificar-' + nombreCuenta">
+                            <label class="form-check-label" :for="'verificar-' + nombreCuenta">
+                              <strong>{{ nombreCuenta }}</strong>
+                            </label>
+                          </div>
+                          <div class="ms-auto text-end">
+                            <div class="fw-bold text-success">
+                              {{ nombreCuenta.includes('USD') ? '$' + cuenta.monto.toFixed(2) : cuenta.monto.toLocaleString() + ' Bs' }}
+                            </div>
+                            <small class="text-muted">{{ cuenta.transacciones.length }} transacciones</small>
+                          </div>
                         </div>
-                        <div v-if="monto.montoVES > 0" class="text-info fw-bold">
-                          {{ monto.montoVES.toLocaleString() }} Bs
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="col-md-6">
-                <div class="card">
-                  <div class="card-header bg-success text-white">
-                    <h6 class="mb-0">
-                      <i class="bi bi-calculator"></i> Resumen Final
-                    </h6>
-                  </div>
-                  <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3 p-3 bg-success bg-opacity-10 rounded">
-                      <div>
-                        <span class="fw-bold text-success">Total en Dólares</span>
-                        <br>
-                        <small class="text-muted">USD</small>
-                      </div>
-                      <div class="text-success fw-bold fs-4">
-                        ${{ reporteCierreCaja.totales.totalGeneralUSD.toFixed(2) }}
                       </div>
                     </div>
                     
-                    <div class="d-flex justify-content-between align-items-center mb-3 p-3 bg-info bg-opacity-10 rounded">
-                      <div>
-                        <span class="fw-bold text-info">Total en Bolívares</span>
-                        <br>
-                        <small class="text-muted">VES</small>
-                      </div>
-                      <div class="text-info fw-bold fs-4">
-                        {{ reporteCierreCaja.totales.totalGeneralVES.toLocaleString() }} Bs
-                      </div>
-                    </div>
-                    
-                    <div class="d-flex justify-content-between align-items-center p-3 bg-warning bg-opacity-10 rounded">
-                      <div>
-                        <span class="fw-bold text-warning">Total Transacciones</span>
-                        <br>
-                        <small class="text-muted">Movimientos</small>
-                      </div>
-                      <div class="text-warning fw-bold fs-4">
-                        {{ reporteCierreCaja.ingresosDetallados.length }}
+                    <div class="mt-3 p-3 bg-light rounded">
+                      <div class="row text-center">
+                        <div class="col-md-4">
+                          <div class="fw-bold text-success">Total USD: ${{ reporteCierreCaja.totales.totalGeneralUSD.toFixed(2) }}</div>
+                        </div>
+                        <div class="col-md-4">
+                          <div class="fw-bold text-info">Total VES: {{ reporteCierreCaja.totales.totalGeneralVES.toLocaleString() }} Bs</div>
+                        </div>
+                        <div class="col-md-4">
+                          <div class="fw-bold text-warning">Transacciones: {{ reporteCierreCaja.cantidadTransacciones }}</div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -891,7 +926,8 @@ import {
   calcularTotalesIngresos,
   getDesglosePorMetodo,
   generarCierreDeCaja,
-  generarReportePorRango
+  generarReportePorRango,
+  generarReporteCierreCaja
 } from '../services/ingresosService.js'
 import Swal from 'sweetalert2'
 
@@ -1021,7 +1057,8 @@ function procesarCierreCaja() {
     return
   }
   
-  reporteCierreCaja.value = generarCierreDeCaja(fechaCierreCaja.value)
+  // Usar la nueva función específica para cierre de caja
+  reporteCierreCaja.value = generarReporteCierreCaja(fechaCierreCaja.value)
   
   if (reporteCierreCaja.value.ingresosDetallados.length === 0) {
     Swal.fire('Sin datos', 'No se encontraron ingresos para la fecha seleccionada', 'info')

@@ -591,3 +591,129 @@ export function getIngresosPorCliente(nombreCliente) {
     ingreso.cliente.toLowerCase().includes(busqueda)
   )
 }
+
+// =====================================================
+// FUNCIONES PARA CIERRE DE CAJA
+// =====================================================
+
+/**
+ * Generar reporte específico para cierre de caja
+ * Incluye desglose detallado por método de pago para verificación física
+ */
+export function generarReporteCierreCaja(fecha) {
+  console.log(`💰 Generando reporte de cierre de caja para: ${fecha}`)
+  
+  // Obtener ingresos del día
+  const ingresosDelDia = getIngresosPorRango(fecha, fecha)
+  
+  // Calcular totales generales
+  const totales = calcularTotalesIngresos(ingresosDelDia)
+  
+  // Desglose detallado por método de pago
+  const desgloseMetodo = getDesgloseDetalladoPorMetodo(ingresosDelDia)
+  
+  // Desglose por tipo de ingreso
+  const desgloseTipo = getDesglosePorTipo(ingresosDelDia)
+  
+  // Resumen por cuenta/método para verificación física
+  const resumenCuentas = getResumenCuentas(ingresosDelDia)
+  
+  return {
+    fecha: fecha,
+    ingresosDetallados: ingresosDelDia,
+    totales: totales,
+    desgloseMetodo: desgloseMetodo,
+    desgloseTipo: desgloseTipo,
+    resumenCuentas: resumenCuentas,
+    cantidadTransacciones: ingresosDelDia.length
+  }
+}
+
+/**
+ * Obtener desglose detallado por método de pago
+ */
+function getDesgloseDetalladoPorMetodo(ingresos) {
+  const desglose = {}
+  
+  ingresos.forEach(ingreso => {
+    const metodo = ingreso.metodoPago || 'Sin método'
+    
+    if (!desglose[metodo]) {
+      desglose[metodo] = {
+        cantidad: 0,
+        montoUSD: 0,
+        montoVES: 0,
+        transacciones: []
+      }
+    }
+    
+    desglose[metodo].cantidad++
+    desglose[metodo].montoUSD += ingreso.montoUSD || 0
+    desglose[metodo].montoVES += ingreso.montoVES || 0
+    desglose[metodo].transacciones.push({
+      cliente: ingreso.cliente,
+      montoUSD: ingreso.montoUSD || 0,
+      montoVES: ingreso.montoVES || 0,
+      referencia: ingreso.referencia || '',
+      tipoIngreso: ingreso.tipoIngreso,
+      fecha: ingreso.fecha
+    })
+  })
+  
+  return desglose
+}
+
+/**
+ * Obtener resumen por cuentas para verificación física
+ */
+function getResumenCuentas(ingresos) {
+  const cuentas = {
+    'Efectivo USD': { monto: 0, transacciones: [] },
+    'Zelle USD': { monto: 0, transacciones: [] },
+    'Pago Móvil VES': { monto: 0, transacciones: [] },
+    'Punto de Venta VES': { monto: 0, transacciones: [] },
+    'Transferencia VES': { monto: 0, transacciones: [] },
+    'Efectivo VES': { monto: 0, transacciones: [] }
+  }
+  
+  ingresos.forEach(ingreso => {
+    const metodo = ingreso.metodoPago || 'Sin método'
+    let cuenta = ''
+    
+    // Mapear métodos a cuentas específicas
+    if (metodo.includes('Efectivo') && (ingreso.montoUSD > 0)) {
+      cuenta = 'Efectivo USD'
+    } else if (metodo.includes('Zelle')) {
+      cuenta = 'Zelle USD'
+    } else if (metodo.includes('Pago Móvil')) {
+      cuenta = 'Pago Móvil VES'
+    } else if (metodo.includes('Punto de Venta')) {
+      cuenta = 'Punto de Venta VES'
+    } else if (metodo.includes('Transferencia')) {
+      cuenta = 'Transferencia VES'
+    } else if (metodo.includes('Efectivo') && (ingreso.montoVES > 0)) {
+      cuenta = 'Efectivo VES'
+    }
+    
+    if (cuenta && cuentas[cuenta]) {
+      cuentas[cuenta].monto += cuenta.includes('USD') ? ingreso.montoUSD : ingreso.montoVES
+      cuentas[cuenta].transacciones.push({
+        cliente: ingreso.cliente,
+        monto: cuenta.includes('USD') ? ingreso.montoUSD : ingreso.montoVES,
+        referencia: ingreso.referencia || '',
+        tipoIngreso: ingreso.tipoIngreso,
+        fecha: ingreso.fecha
+      })
+    }
+  })
+  
+  // Filtrar cuentas vacías
+  const cuentasActivas = {}
+  Object.keys(cuentas).forEach(cuenta => {
+    if (cuentas[cuenta].monto > 0) {
+      cuentasActivas[cuenta] = cuentas[cuenta]
+    }
+  })
+  
+  return cuentasActivas
+}

@@ -131,7 +131,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="ingreso in ingresosFiltrados" :key="ingreso.id">
+                  <tr v-for="ingreso in ingresosPaginados" :key="ingreso.id">
                     <td>
                       <span class="badge bg-secondary">{{ ingreso.id }}</span>
                     </td>
@@ -171,6 +171,94 @@
                   </tr>
                 </tbody>
               </table>
+            </div>
+            
+            <!-- Controles de Paginación -->
+            <div v-if="mostrarPaginacion" class="row mt-3">
+              <div class="col-md-6">
+                <div class="d-flex align-items-center">
+                  <label class="form-label me-2 mb-0">Mostrar:</label>
+                  <select 
+                    v-model="elementosPorPagina" 
+                    @change="cambiarElementosPorPagina(elementosPorPagina)"
+                    class="form-select form-select-sm me-3"
+                    style="width: auto;"
+                  >
+                    <option v-for="opcion in opcionesPagina" :key="opcion" :value="opcion">
+                      {{ opcion }}
+                    </option>
+                  </select>
+                  <small class="text-muted">{{ infoPaginacion.texto }}</small>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <nav aria-label="Paginación de ingresos">
+                  <ul class="pagination pagination-sm justify-content-end mb-0">
+                    <!-- Primera página -->
+                    <li class="page-item" :class="{ disabled: paginaActual === 1 }">
+                      <button 
+                        class="page-link" 
+                        @click="irPrimeraPagina"
+                        :disabled="paginaActual === 1"
+                        title="Primera página"
+                      >
+                        <i class="bi bi-chevron-double-left"></i>
+                      </button>
+                    </li>
+                    
+                    <!-- Página anterior -->
+                    <li class="page-item" :class="{ disabled: paginaActual === 1 }">
+                      <button 
+                        class="page-link" 
+                        @click="irPaginaAnterior"
+                        :disabled="paginaActual === 1"
+                        title="Página anterior"
+                      >
+                        <i class="bi bi-chevron-left"></i>
+                      </button>
+                    </li>
+                    
+                    <!-- Números de página -->
+                    <li 
+                      v-for="pagina in Math.min(5, totalPaginas)" 
+                      :key="pagina"
+                      class="page-item"
+                      :class="{ active: pagina === paginaActual }"
+                    >
+                      <button 
+                        class="page-link" 
+                        @click="cambiarPagina(pagina)"
+                      >
+                        {{ pagina }}
+                      </button>
+                    </li>
+                    
+                    <!-- Página siguiente -->
+                    <li class="page-item" :class="{ disabled: paginaActual === totalPaginas }">
+                      <button 
+                        class="page-link" 
+                        @click="irPaginaSiguiente"
+                        :disabled="paginaActual === totalPaginas"
+                        title="Página siguiente"
+                      >
+                        <i class="bi bi-chevron-right"></i>
+                      </button>
+                    </li>
+                    
+                    <!-- Última página -->
+                    <li class="page-item" :class="{ disabled: paginaActual === totalPaginas }">
+                      <button 
+                        class="page-link" 
+                        @click="irUltimaPagina"
+                        :disabled="paginaActual === totalPaginas"
+                        title="Última página"
+                      >
+                        <i class="bi bi-chevron-double-right"></i>
+                      </button>
+                    </li>
+                  </ul>
+                </nav>
+              </div>
             </div>
             
             <!-- Totales -->
@@ -834,6 +922,11 @@ const filtros = ref({
   referencia: ''
 })
 
+// Variables de paginación
+const elementosPorPagina = ref(10)
+const paginaActual = ref(1)
+const opcionesPagina = [10, 25, 50, 100]
+
 // Modales
 const fechaCierreCaja = ref('')
 const reporteCierreCaja = ref(null)
@@ -857,6 +950,34 @@ const totalesFiltrados = computed(() => {
 
 const desgloseMetodo = computed(() => {
   return getDesglosePorMetodo(ingresosFiltrados.value)
+})
+
+// Propiedades computadas para paginación
+const totalPaginas = computed(() => {
+  return Math.ceil(ingresosFiltrados.value.length / elementosPorPagina.value)
+})
+
+const ingresosPaginados = computed(() => {
+  const inicio = (paginaActual.value - 1) * elementosPorPagina.value
+  const fin = inicio + elementosPorPagina.value
+  return ingresosFiltrados.value.slice(inicio, fin)
+})
+
+const mostrarPaginacion = computed(() => {
+  return ingresosFiltrados.value.length > elementosPorPagina.value
+})
+
+const infoPaginacion = computed(() => {
+  const inicio = (paginaActual.value - 1) * elementosPorPagina.value + 1
+  const fin = Math.min(paginaActual.value * elementosPorPagina.value, ingresosFiltrados.value.length)
+  const total = ingresosFiltrados.value.length
+  
+  return {
+    inicio,
+    fin,
+    total,
+    texto: `Mostrando ${inicio}-${fin} de ${total} ingresos`
+  }
 })
 
 
@@ -891,6 +1012,40 @@ async function cargarDatos() {
 
 function aplicarFiltros() {
   // Los filtros se aplican automáticamente por el computed
+  // Resetear a la primera página cuando se aplican filtros
+  paginaActual.value = 1
+}
+
+// Funciones de paginación
+function cambiarPagina(pagina) {
+  if (pagina >= 1 && pagina <= totalPaginas.value) {
+    paginaActual.value = pagina
+  }
+}
+
+function cambiarElementosPorPagina(nuevoValor) {
+  elementosPorPagina.value = nuevoValor
+  paginaActual.value = 1 // Resetear a la primera página
+}
+
+function irPrimeraPagina() {
+  paginaActual.value = 1
+}
+
+function irUltimaPagina() {
+  paginaActual.value = totalPaginas.value
+}
+
+function irPaginaAnterior() {
+  if (paginaActual.value > 1) {
+    paginaActual.value--
+  }
+}
+
+function irPaginaSiguiente() {
+  if (paginaActual.value < totalPaginas.value) {
+    paginaActual.value++
+  }
 }
 
 function limpiarFiltros() {
@@ -1210,5 +1365,36 @@ onMounted(() => {
     box-shadow: none !important;
     border: 1px solid #dee2e6 !important;
   }
+}
+
+/* Estilos para paginación */
+.pagination-sm .page-link {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+.pagination .page-item.disabled .page-link {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination .page-item.active .page-link {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+.pagination .page-link:hover {
+  background-color: #e9ecef;
+  border-color: #dee2e6;
+}
+
+/* Estilos para el selector de elementos por página */
+.form-select-sm {
+  min-width: 70px;
+}
+
+/* Mejorar la información de paginación */
+.text-muted {
+  font-size: 0.875rem;
 }
 </style>

@@ -18,7 +18,7 @@
             <div class="dropdown">
               <button class="btn btn-info btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="true">
                 <i class="bi bi-graph-up"></i> Reportes
-              </button>
+            </button>
               <ul class="dropdown-menu dropdown-menu-end" style="z-index: 9999;">
                 <li><a class="dropdown-item" href="#" @click="generarReporte('hoy')">
                   <i class="bi bi-calendar-day"></i> Reporte Diario
@@ -37,119 +37,12 @@
                   <i class="bi bi-calendar-range"></i> Reporte por Fechas
                 </a></li>
               </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Estadísticas Rápidas -->
-    <div class="row mb-3">
-      <div class="col-md-3 mb-2">
-        <div class="card bg-primary text-white kpi-card">
-          <div class="card-body py-3">
-            <div class="d-flex justify-content-between align-items-center">
-              <div>
-                <h6 class="card-title text-white-50 mb-1">Ingresos Hoy</h6>
-                <h4 class="mb-0">${{ estadisticas.hoy.totalGeneralUSD.toFixed(2) }}</h4>
-                <small class="text-white-75">{{ estadisticas.hoy.totalGeneralVES.toLocaleString() }} Bs</small>
-              </div>
-              <div class="fs-3 opacity-50">
-                <i class="bi bi-calendar-day"></i>
               </div>
             </div>
           </div>
         </div>
       </div>
       
-      <div class="col-md-3 mb-2">
-        <div class="card bg-success text-white kpi-card">
-          <div class="card-body py-3">
-            <div class="d-flex justify-content-between align-items-center">
-              <div>
-                <h6 class="card-title text-white-50 mb-1">Esta Semana</h6>
-                <h4 class="mb-0">${{ estadisticas.semana.totalGeneralUSD.toFixed(2) }}</h4>
-                <small class="text-white-75">{{ estadisticas.semana.totalGeneralVES.toLocaleString() }} Bs</small>
-              </div>
-              <div class="fs-3 opacity-50">
-                <i class="bi bi-calendar-week"></i>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div class="col-md-3 mb-2">
-        <div class="card bg-info text-white kpi-card">
-          <div class="card-body py-3">
-            <div class="d-flex justify-content-between align-items-center">
-              <div>
-                <h6 class="card-title text-white-50 mb-1">Este Mes</h6>
-                <h4 class="mb-0">${{ estadisticas.mes.totalGeneralUSD.toFixed(2) }}</h4>
-                <small class="text-white-75">{{ estadisticas.mes.totalGeneralVES.toLocaleString() }} Bs</small>
-              </div>
-              <div class="fs-3 opacity-50">
-                <i class="bi bi-calendar-month"></i>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div class="col-md-3 mb-2">
-        <div class="card bg-warning text-white kpi-card">
-          <div class="card-body py-3">
-            <div class="d-flex justify-content-between align-items-center">
-              <div>
-                <h6 class="card-title text-white-50 mb-1">Total Registros</h6>
-                <h4 class="mb-0">{{ estadisticas.totalIngresos }}</h4>
-                <small class="text-white-75">ingresos</small>
-              </div>
-              <div class="fs-3 opacity-50">
-                <i class="bi bi-list-check"></i>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Resumen General por Moneda -->
-    <div class="row mb-3">
-      <div class="col-md-6 mb-2">
-        <div class="card bg-success text-white kpi-card">
-          <div class="card-body py-3">
-            <div class="d-flex justify-content-between align-items-center">
-              <div>
-                <h6 class="card-title text-white-50 mb-1">Total en Dólares</h6>
-                <h3 class="mb-0">${{ totalesGenerales.totalUSD.toFixed(2) }}</h3>
-                <small class="text-white-75">USD</small>
-              </div>
-              <div class="fs-3 opacity-50">
-                <i class="bi bi-currency-dollar"></i>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div class="col-md-6 mb-2">
-        <div class="card bg-info text-white kpi-card">
-          <div class="card-body py-3">
-            <div class="d-flex justify-content-between align-items-center">
-              <div>
-                <h6 class="card-title text-white-50 mb-1">Total en Bolívares</h6>
-                <h3 class="mb-0">{{ totalesGenerales.totalVES.toLocaleString() }}</h3>
-                <small class="text-white-75">Bs</small>
-              </div>
-              <div class="fs-3 opacity-50">
-                <i class="bi bi-currency-exchange"></i>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
 
     <!-- Filtros -->
     <div class="row mb-4">
@@ -407,10 +300,10 @@
                         <!-- Detalle de transacciones -->
                         <div v-if="cuenta.transacciones.length > 0" class="mt-3">
                           <small class="text-muted">Detalle:</small>
-                          <div class="table-responsive">
+            <div class="table-responsive">
                             <table class="table table-sm table-borderless">
-                              <thead>
-                                <tr>
+                <thead>
+                  <tr>
                                   <th class="text-muted">Cliente</th>
                                   <th class="text-muted text-end">Monto</th>
                                   <th class="text-muted">Ref.</th>
@@ -454,7 +347,7 @@
                         <th class="text-end">Monto VES</th>
                         <th>Método de Pago</th>
                         <th>Referencia</th>
-                        <th>Transacción</th>
+                    <th>Transacción</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -627,16 +520,16 @@
                       <tr>
                         <th class="text-center">#</th>
                         <th>Fecha</th>
-                        <th>Cliente</th>
+                    <th>Cliente</th>
                         <th>Tipo de Pago</th>
                         <th class="text-end">Monto USD</th>
                         <th class="text-end">Monto VES</th>
                         <th>Método de Pago</th>
-                        <th>Referencia</th>
+                    <th>Referencia</th>
                         <th>Transacción</th>
-                      </tr>
-                    </thead>
-                    <tbody>
+                  </tr>
+                </thead>
+                <tbody>
                       <tr v-for="(ingreso, index) in reportePeriodo.ingresosDetallados" :key="ingreso.id" 
                           :class="ingreso.montoUSD > 0 ? 'table-success-light' : 'table-info-light'">
                         <td class="text-center">
@@ -677,9 +570,9 @@
                         <td>
                           <small class="text-muted">{{ ingreso.idVenta }}</small>
                         </td>
-                      </tr>
-                    </tbody>
-                  </table>
+                  </tr>
+                </tbody>
+              </table>
                 </div>
               </div>
             </div>
@@ -723,7 +616,7 @@
                     <h6 class="mb-0">
                       <i class="bi bi-tags"></i> Desglose por Tipo de Ingreso
                     </h6>
-                  </div>
+                </div>
                   <div class="card-body">
                     <div class="table-responsive">
                       <table class="table table-sm">
@@ -921,7 +814,6 @@
 import { ref, computed, onMounted } from 'vue'
 import { 
   getIngresos, 
-  getEstadisticasIngresos, 
   filtrarIngresos, 
   calcularTotalesIngresos,
   getDesglosePorMetodo,
@@ -933,12 +825,6 @@ import Swal from 'sweetalert2'
 
 // Estado reactivo
 const ingresos = ref([])
-const estadisticas = ref({
-  hoy: { totalGeneralUSD: 0, totalGeneralVES: 0 },
-  semana: { totalGeneralUSD: 0, totalGeneralVES: 0 },
-  mes: { totalGeneralUSD: 0, totalGeneralVES: 0 },
-  totalIngresos: 0
-})
 const filtros = ref({
   fechaInicio: '',
   fechaFin: '',
@@ -973,29 +859,19 @@ const desgloseMetodo = computed(() => {
   return getDesglosePorMetodo(ingresosFiltrados.value)
 })
 
-const totalesGenerales = computed(() => {
-  const totales = calcularTotalesIngresos(ingresos.value)
-  return {
-    totalUSD: totales.totalGeneralUSD,
-    totalVES: totales.totalGeneralVES
-  }
-})
 
 // Funciones
 async function cargarDatos() {
   try {
     console.log('📊 Cargando datos de ingresos...')
     
-    // Cargar ingresos y estadísticas de forma asíncrona
+    // Cargar ingresos de forma asíncrona
     const ingresosData = await getIngresos()
-    const estadisticasData = await getEstadisticasIngresos()
     
     ingresos.value = ingresosData
-    estadisticas.value = estadisticasData
     
     console.log('✅ Datos de ingresos cargados:', {
-      ingresos: ingresos.value.length,
-      estadisticas: estadisticas.value
+      ingresos: ingresos.value.length
     })
     
   } catch (error) {
@@ -1003,12 +879,6 @@ async function cargarDatos() {
     
     // Usar datos por defecto en caso de error
     ingresos.value = []
-    estadisticas.value = {
-      hoy: { totalGeneralUSD: 0, totalGeneralVES: 0 },
-      semana: { totalGeneralUSD: 0, totalGeneralVES: 0 },
-      mes: { totalGeneralUSD: 0, totalGeneralVES: 0 },
-      totalIngresos: 0
-    }
     
     Swal.fire({
       title: 'Error',

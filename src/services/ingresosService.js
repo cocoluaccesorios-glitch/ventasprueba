@@ -244,23 +244,44 @@ export async function getIngresos() {
 
 // Función para obtener ingresos por rango de fechas
 export function getIngresosPorRango(fechaInicio, fechaFin) {
-  const inicio = new Date(fechaInicio)
-  const fin = new Date(fechaFin)
-  fin.setHours(23, 59, 59, 999)
+  // Convertir fechas a UTC considerando zona horaria local
+  const inicio = new Date(fechaInicio + 'T00:00:00')
+  const fin = new Date(fechaFin + 'T23:59:59')
+  
+  // Ajustar a UTC para comparación con datos de BD
+  const inicioUTC = new Date(inicio.getTime() - (inicio.getTimezoneOffset() * 60000))
+  const finUTC = new Date(fin.getTime() - (fin.getTimezoneOffset() * 60000))
+  
+  console.log(`🔍 Filtrando ingresos entre:`, {
+    fechaInicio: fechaInicio,
+    fechaFin: fechaFin,
+    inicioLocal: inicio.toLocaleString('es-VE'),
+    finLocal: fin.toLocaleString('es-VE'),
+    inicioUTC: inicioUTC.toISOString(),
+    finUTC: finUTC.toISOString()
+  })
   
   return ingresos.value.filter(ingreso => {
     const fechaIngreso = new Date(ingreso.fecha)
-    return fechaIngreso >= inicio && fechaIngreso <= fin
+    const esValido = fechaIngreso >= inicioUTC && fechaIngreso <= finUTC
+    
+    if (esValido) {
+      console.log(`✅ Ingreso incluido:`, {
+        fecha: ingreso.fecha,
+        fechaLocal: fechaIngreso.toLocaleString('es-VE'),
+        cliente: ingreso.cliente,
+        monto: ingreso.montoUSD
+      })
+    }
+    
+    return esValido
   })
 }
 
 // Función para obtener ingresos del día
 export function getIngresosDelDia(fecha) {
-  const dia = new Date(fecha)
-  const inicioDia = new Date(dia.setHours(0, 0, 0, 0))
-  const finDia = new Date(dia.setHours(23, 59, 59, 999))
-  
-  return getIngresosPorRango(inicioDia, finDia)
+  // Usar la misma fecha para inicio y fin (día completo)
+  return getIngresosPorRango(fecha, fecha)
 }
 
 // Función para calcular totales de ingresos

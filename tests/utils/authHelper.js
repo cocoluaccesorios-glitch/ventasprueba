@@ -29,17 +29,18 @@ export class AuthHelper {
 
     try {
       // Esperar a que aparezca el formulario de login
-      await this.page.waitForSelector('input[id="username"], input[type="text"]', { timeout: 15000 });
+      await this.page.waitForSelector('textbox, input[type="text"], input[type="password"]', { timeout: 15000 });
       
-      // Llenar credenciales usando los IDs correctos
-      const usernameInput = await this.page.locator('input[id="username"]');
+      // Llenar credenciales usando selectores más genéricos
+      // Buscar por el texto "Usuario" y "Contraseña"
+      const usernameInput = await this.page.locator('textbox').first();
       await usernameInput.fill(username);
       
-      const passwordInput = await this.page.locator('input[id="password"]');
+      const passwordInput = await this.page.locator('textbox').nth(1);
       await passwordInput.fill(password);
       
       // Hacer clic en el botón de login
-      await this.page.click('button[type="submit"]');
+      await this.page.click('button:has-text("Iniciar Sesión")');
       
       // Esperar a que se complete el login
       await this.page.waitForLoadState('networkidle', { timeout: 15000 });

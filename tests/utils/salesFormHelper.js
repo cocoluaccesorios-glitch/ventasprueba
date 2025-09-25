@@ -24,20 +24,24 @@ export class SalesFormHelper {
    * Busca y selecciona un cliente
    */
   async selectCliente(cliente) {
+    console.log(`👤 Seleccionando cliente: ${cliente.nombre} ${cliente.apellido}`);
+    
     try {
-      // Buscar cliente
-      const clienteInput = await this.page.locator('input[placeholder*="nombre, cédula"], input[placeholder*="cliente"]').first();
+      // Buscar cliente usando múltiples selectores posibles
+      const clienteInput = await this.page.locator('input[placeholder*="nombre, cédula"], input[placeholder*="cliente"], .client-search-input, input[type="text"]').first();
       await clienteInput.fill(cliente.nombre);
       
       // Esperar a que aparezcan resultados
-      await this.page.waitForSelector('.cliente-item, .search-result, [data-testid="cliente-item"]', { timeout: 5000 });
+      await this.page.waitForSelector('.search-result-item, .cliente-item, .search-result, [data-testid="cliente-item"], .search-results-dropdown', { timeout: 5000 });
       
       // Seleccionar cliente de la lista
       const clienteOption = await this.page.locator(`text=${cliente.nombre}`).first();
       await clienteOption.click();
       
       // Esperar a que se seleccione
-      await this.page.waitForSelector('.cliente-seleccionado, .selected-client', { timeout: 3000 });
+      await this.page.waitForSelector('.cliente-seleccionado, .selected-client, .selected-client-display', { timeout: 3000 });
+      
+      console.log('✅ Cliente seleccionado');
     } catch (error) {
       console.log('Error seleccionando cliente:', error.message);
       throw error;

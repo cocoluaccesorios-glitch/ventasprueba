@@ -15,7 +15,7 @@
             <button class="btn btn-success btn-sm" @click="generarCierreCaja">
               <i class="bi bi-calculator"></i> Cierre de Caja
             </button>
-            <div class="dropdown" style="position: relative;">
+            <div class="dropdown-custom" ref="dropdownReportes">
               <button 
                 class="btn btn-info btn-sm dropdown-toggle" 
                 type="button" 
@@ -25,9 +25,9 @@
                 <i class="bi bi-graph-up"></i> Reportes
               </button>
               <ul 
-                v-show="mostrarDropdownReportes"
-                class="dropdown-menu dropdown-menu-end" 
-                style="z-index: 10001 !important; position: absolute !important; display: block !important;"
+                v-if="mostrarDropdownReportes"
+                class="dropdown-menu-custom" 
+                ref="dropdownMenu"
               >
                 <li><a class="dropdown-item" href="#" @click="generarReporteConCierre('hoy')">
                   <i class="bi bi-calendar-day"></i> Reporte Diario
@@ -938,6 +938,8 @@ const opcionesPagina = [10, 25, 50, 100]
 
 // Estado del dropdown de reportes
 const mostrarDropdownReportes = ref(false)
+const dropdownReportes = ref(null)
+const dropdownMenu = ref(null)
 
 // Modales
 const fechaCierreCaja = ref('')
@@ -1060,9 +1062,39 @@ function irPaginaSiguiente() {
   }
 }
 
-// Funciones para controlar dropdown de reportes
-function toggleDropdownReportes() {
+// Funciones para controlar dropdown de reportes - solución personalizada
+function toggleDropdownReportes(event) {
+  event.preventDefault()
+  event.stopPropagation()
   mostrarDropdownReportes.value = !mostrarDropdownReportes.value
+  
+  if (mostrarDropdownReportes.value) {
+    // Posicionar el dropdown correctamente
+    setTimeout(() => {
+      positionDropdown()
+    }, 10)
+  }
+}
+
+function positionDropdown() {
+  const button = dropdownReportes.value?.querySelector('button')
+  const menu = dropdownMenu.value
+  
+  if (button && menu) {
+    const rect = button.getBoundingClientRect()
+    
+    // Forzar estilos con máxima prioridad
+    menu.style.setProperty('position', 'fixed', 'important')
+    menu.style.setProperty('top', `${rect.bottom + window.scrollY}px`, 'important')
+    menu.style.setProperty('right', `${window.innerWidth - rect.right}px`, 'important')
+    menu.style.setProperty('left', 'auto', 'important')
+    menu.style.setProperty('z-index', '2147483648', 'important')
+    menu.style.setProperty('background-color', 'white', 'important')
+    menu.style.setProperty('border', '1px solid rgba(0, 0, 0, 0.15)', 'important')
+    menu.style.setProperty('box-shadow', '0 0.5rem 1rem rgba(0, 0, 0, 0.15)', 'important')
+    
+    console.log('🎯 Dropdown posicionado con z-index extremo:', menu.style.zIndex)
+  }
 }
 
 function cerrarDropdownReportes() {
@@ -1070,13 +1102,17 @@ function cerrarDropdownReportes() {
 }
 
 function generarReporteConCierre(periodo) {
-  generarReporte(periodo)
   cerrarDropdownReportes()
+  setTimeout(() => {
+    generarReporte(periodo)
+  }, 100)
 }
 
 function generarReporteRangoConCierre() {
-  generarReporteRango()
   cerrarDropdownReportes()
+  setTimeout(() => {
+    generarReporteRango()
+  }, 100)
 }
 
 function limpiarFiltros() {
@@ -1276,28 +1312,102 @@ function getTipoBadgeClass(tipo) {
 }
 
 // Lifecycle
-onMounted(() => {
-  cargarDatos()
+onMounted(async () => {
+  await cargarDatos()
   
-  // Cerrar dropdown al hacer clic fuera
+  // Esperar un poco para que forceModalZIndex termine de ejecutarse
+  setTimeout(() => {
+    forceDropdownZIndex()
+  }, 1000)
+  
+  // Event listeners para cerrar dropdown
   const handleClickOutside = (event) => {
-    const dropdown = document.querySelector('.dropdown')
-    if (dropdown && !dropdown.contains(event.target)) {
+    if (dropdownReportes.value && !dropdownReportes.value.contains(event.target)) {
       cerrarDropdownReportes()
     }
   }
   
-  document.addEventListener('click', handleClickOutside)
+  const handleEscapeKey = (event) => {
+    if (event.key === 'Escape' && mostrarDropdownReportes.value) {
+      cerrarDropdownReportes()
+    }
+  }
   
-  // Guardar referencia para limpiar
+  const handleScroll = () => {
+    if (mostrarDropdownReportes.value) {
+      positionDropdown()
+    }
+  }
+  
+  const handleResize = () => {
+    if (mostrarDropdownReportes.value) {
+      positionDropdown()
+    }
+  }
+  
+  document.addEventListener('click', handleClickOutside)
+  document.addEventListener('keydown', handleEscapeKey)
+  window.addEventListener('scroll', handleScroll)
+  window.addEventListener('resize', handleResize)
+  
+  // Guardar referencias para limpiar
   window.dropdownClickHandler = handleClickOutside
+  window.dropdownEscapeHandler = handleEscapeKey
+  window.dropdownScrollHandler = handleScroll
+  window.dropdownResizeHandler = handleResize
 })
 
+// Función para forzar z-index del dropdown después de forceModalZIndex
+function forceDropdownZIndex() {
+  const dropdownMenu = document.querySelector('.dropdown-menu-custom')
+  if (dropdownMenu) {
+    dropdownMenu.style.setProperty('z-index', '2147483648', 'important')
+    dropdownMenu.style.setProperty('position', 'fixed', 'important')
+    console.log('🔥 Z-index forzado para dropdown:', dropdownMenu.style.zIndex)
+  }
+  
+  // También forzar en el CSS global
+  const style = document.createElement('style')
+  style.textContent = `
+    .dropdown-menu-custom {
+      z-index: 2147483648 !important;
+      position: fixed !important;
+    }
+  `
+  document.head.appendChild(style)
+}
+
+// Función para esperar a que Bootstrap esté disponible
+function waitForBootstrap() {
+  return new Promise((resolve) => {
+    const checkBootstrap = () => {
+      if (window.bootstrap && window.bootstrap.Dropdown) {
+        resolve()
+      } else {
+        setTimeout(checkBootstrap, 100)
+      }
+    }
+    checkBootstrap()
+  })
+}
+
 onUnmounted(() => {
-  // Limpiar event listener
+  // Limpiar event listeners
   if (window.dropdownClickHandler) {
     document.removeEventListener('click', window.dropdownClickHandler)
     delete window.dropdownClickHandler
+  }
+  if (window.dropdownEscapeHandler) {
+    document.removeEventListener('keydown', window.dropdownEscapeHandler)
+    delete window.dropdownEscapeHandler
+  }
+  if (window.dropdownScrollHandler) {
+    window.removeEventListener('scroll', window.dropdownScrollHandler)
+    delete window.dropdownScrollHandler
+  }
+  if (window.dropdownResizeHandler) {
+    window.removeEventListener('resize', window.dropdownResizeHandler)
+    delete window.dropdownResizeHandler
   }
 })
 </script>
@@ -1357,95 +1467,58 @@ onUnmounted(() => {
   background-color: rgba(13, 202, 240, 0.1) !important;
 }
 
-/* Estilos para dropdown de reportes - SOLUCIÓN AGRESIVA */
-.dropdown-menu {
-  z-index: 10001 !important;
-  position: absolute !important;
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
-  border: 1px solid rgba(0, 0, 0, 0.15) !important;
-  background-color: white !important;
+/* Estilos para dropdown personalizado - Z-INDEX EXTREMO */
+.dropdown-custom {
+  position: relative;
+  display: inline-block;
 }
 
-.dropdown-menu-end {
-  right: 0 !important;
-  left: auto !important;
-}
-
-.dropdown-item {
-  padding: 0.5rem 1rem !important;
-  font-size: 0.875rem !important;
-  color: #212529 !important;
-}
-
-.dropdown-item:hover {
-  background-color: rgba(0, 123, 255, 0.1) !important;
-  color: #212529 !important;
-}
-
-.dropdown-item i {
-  margin-right: 0.5rem !important;
-}
-
-/* Asegurar que el contenedor del dropdown tenga contexto de apilamiento */
-.dropdown {
-  position: relative !important;
-  z-index: 10000 !important;
-}
-
-/* Solución adicional para elementos que puedan interferir */
-.card-header {
-  z-index: 1 !important;
-}
-
-.btn-group {
-  z-index: 1 !important;
-}
-
-/* Estilos específicos para dropdown personalizado de reportes */
-.dropdown .btn.show {
-  background-color: #0dcaf0 !important;
-  border-color: #0dcaf0 !important;
-}
-
-.dropdown .dropdown-menu {
-  z-index: 10001 !important;
-  position: absolute !important;
-  display: block !important;
-  top: 100% !important;
-  right: 0 !important;
-  left: auto !important;
-  min-width: 200px !important;
+.dropdown-menu-custom {
+  position: fixed !important;
+  z-index: 2147483648 !important; /* Más alto que forceModalZIndex */
+  top: 100%;
+  right: 0;
+  left: auto;
+  min-width: 200px;
   background-color: white !important;
   border: 1px solid rgba(0, 0, 0, 0.15) !important;
   border-radius: 0.375rem !important;
   box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
-  margin-top: 0.125rem !important;
+  margin-top: 0.125rem;
+  padding: 0.5rem 0;
+  list-style: none;
+  margin: 0;
 }
 
-.dropdown .dropdown-item {
-  display: block !important;
-  width: 100% !important;
-  padding: 0.5rem 1rem !important;
-  clear: both !important;
-  font-weight: 400 !important;
-  color: #212529 !important;
-  text-align: inherit !important;
-  text-decoration: none !important;
-  white-space: nowrap !important;
-  background-color: transparent !important;
-  border: 0 !important;
+.dropdown-menu-custom .dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 1rem;
+  clear: both;
+  font-weight: 400;
+  color: #212529;
+  text-align: inherit;
+  text-decoration: none;
+  white-space: nowrap;
+  background-color: transparent;
+  border: 0;
+  transition: background-color 0.15s ease-in-out;
 }
 
-.dropdown .dropdown-item:hover {
-  background-color: rgba(0, 123, 255, 0.1) !important;
-  color: #212529 !important;
+.dropdown-menu-custom .dropdown-item:hover {
+  background-color: rgba(0, 123, 255, 0.1);
+  color: #212529;
 }
 
-.dropdown .dropdown-divider {
-  height: 0 !important;
-  margin: 0.5rem 0 !important;
-  overflow: hidden !important;
-  border-top: 1px solid rgba(0, 0, 0, 0.15) !important;
+.dropdown-menu-custom .dropdown-item i {
+  margin-right: 0.5rem;
+}
+
+.dropdown-menu-custom .dropdown-divider {
+  height: 0;
+  margin: 0.5rem 0;
+  overflow: hidden;
+  border-top: 1px solid rgba(0, 0, 0, 0.15);
 }
 
 .table th {

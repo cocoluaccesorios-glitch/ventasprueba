@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Dropdown Fix</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .dropdown {
+            position: relative;
+        }
+
+        .dropdown-menu {
+            z-index: 10001;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            left: auto;
+            min-width: 200px;
+            background-color: white;
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            border-radius: 0.375rem;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            margin-top: 0.125rem;
+        }
+
+        .dropdown-item {
+            display: block;
+            width: 100%;
+            padding: 0.5rem 1rem;
+            clear: both;
+            font-weight: 400;
+            color: #212529;
+            text-align: inherit;
+            text-decoration: none;
+            white-space: nowrap;
+            background-color: transparent;
+            border: 0;
+        }
+
+        .dropdown-item:hover {
+            background-color: rgba(0, 123, 255, 0.1);
+            color: #212529;
+        }
+
+        .dropdown-item i {
+            margin-right: 0.5rem;
+        }
+
+        .dropdown-divider {
+            height: 0;
+            margin: 0.5rem 0;
+            overflow: hidden;
+            border-top: 1px solid rgba(0, 0, 0, 0.15);
+        }
+        
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #e9ecef;
+        }
+        
+        .success {
+            background-color: #d1edff;
+            border-left: 4px solid #0d6efd;
+        }
+        
+        .error {
+            background-color: #f8d7da;
+            border-left: 4px solid #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h2><i class="bi bi-bug"></i> Test de Dropdown de Reportes</h2>
+        <p>Esta página prueba la funcionalidad del dropdown de reportes corregido.</p>
+        
+        <div class="mb-4">
+            <h4>Dropdown de Reportes:</h4>
+            <div class="dropdown" id="dropdownReportes">
+                <button 
+                    class="btn btn-info btn-sm dropdown-toggle" 
+                    type="button" 
+                    id="dropdownButton"
+                >
+                    <i class="bi bi-graph-up"></i> Reportes
+                </button>
+                <ul 
+                    id="dropdownMenu"
+                    class="dropdown-menu dropdown-menu-end" 
+                    style="display: none;"
+                >
+                    <li><a class="dropdown-item" href="#" data-periodo="hoy">
+                        <i class="bi bi-calendar-day"></i> Reporte Diario
+                    </a></li>
+                    <li><a class="dropdown-item" href="#" data-periodo="semana">
+                        <i class="bi bi-calendar-week"></i> Reporte Semanal
+                    </a></li>
+                    <li><a class="dropdown-item" href="#" data-periodo="mes">
+                        <i class="bi bi-calendar-month"></i> Reporte Mensual
+                    </a></li>
+                    <li><a class="dropdown-item" href="#" data-periodo="año">
+                        <i class="bi bi-calendar-year"></i> Reporte Anual
+                    </a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#" data-periodo="rango">
+                        <i class="bi bi-calendar-range"></i> Reporte por Fechas
+                    </a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="status" id="status">
+            <strong>Estado:</strong> <span id="statusText">Esperando interacción...</span>
+        </div>
+        
+        <div class="mt-4">
+            <h5>Instrucciones de Prueba:</h5>
+            <ol>
+                <li>Haz clic en el botón "Reportes" para abrir el dropdown</li>
+                <li>Haz clic fuera del dropdown para cerrarlo</li>
+                <li>Presiona la tecla Escape para cerrarlo</li>
+                <li>Selecciona una opción del dropdown</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        let mostrarDropdown = false;
+        const dropdownButton = document.getElementById('dropdownButton');
+        const dropdownMenu = document.getElementById('dropdownMenu');
+        const dropdownContainer = document.getElementById('dropdownReportes');
+        const statusText = document.getElementById('statusText');
+        const statusDiv = document.getElementById('status');
+
+        function updateStatus(message, type = 'info') {
+            statusText.textContent = message;
+            statusDiv.className = `status ${type}`;
+        }
+
+        function toggleDropdown(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            mostrarDropdown = !mostrarDropdown;
+            
+            if (mostrarDropdown) {
+                dropdownMenu.style.display = 'block';
+                dropdownButton.classList.add('show');
+                dropdownButton.setAttribute('aria-expanded', 'true');
+                updateStatus('Dropdown abierto', 'success');
+            } else {
+                dropdownMenu.style.display = 'none';
+                dropdownButton.classList.remove('show');
+                dropdownButton.setAttribute('aria-expanded', 'false');
+                updateStatus('Dropdown cerrado', 'info');
+            }
+        }
+
+        function cerrarDropdown() {
+            mostrarDropdown = false;
+            dropdownMenu.style.display = 'none';
+            dropdownButton.classList.remove('show');
+            dropdownButton.setAttribute('aria-expanded', 'false');
+            updateStatus('Dropdown cerrado automáticamente', 'info');
+        }
+
+        function handleClickOutside(event) {
+            if (dropdownContainer && !dropdownContainer.contains(event.target)) {
+                cerrarDropdown();
+            }
+        }
+
+        function handleEscapeKey(event) {
+            if (event.key === 'Escape' && mostrarDropdown) {
+                cerrarDropdown();
+            }
+        }
+
+        function handleDropdownItemClick(event) {
+            event.preventDefault();
+            const periodo = event.target.closest('.dropdown-item').dataset.periodo;
+            cerrarDropdown();
+            updateStatus(`Seleccionado: ${periodo}`, 'success');
+        }
+
+        // Event listeners
+        dropdownButton.addEventListener('click', toggleDropdown);
+        document.addEventListener('click', handleClickOutside);
+        document.addEventListener('keydown', handleEscapeKey);
+        
+        // Event listeners para items del dropdown
+        document.querySelectorAll('.dropdown-item').forEach(item => {
+            item.addEventListener('click', handleDropdownItemClick);
+        });
+
+        updateStatus('Test inicializado correctamente', 'success');
+    </script>
+</body>
+</html>

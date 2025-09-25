@@ -1,0 +1,48 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - navigation [ref=e3]:
+    - generic [ref=e4]:
+      - link "Logo Cocolú Ventas" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - img "Logo" [ref=e6] [cursor=pointer]
+        - text: Cocolú Ventas
+      - button [ref=e7] [cursor=pointer]
+      - text:           
+  - main [ref=e9]:
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - generic [ref=e14]: 
+          - heading "Cocolú Ventas" [level=2] [ref=e15]
+        - paragraph [ref=e16]: Sistema de Gestión de Ventas
+      - generic [ref=e17]:
+        - generic [ref=e18]:
+          - generic [ref=e19]:
+            - generic [ref=e20]: 
+            - text: Usuario
+          - textbox " Usuario" [ref=e21]
+        - generic [ref=e22]:
+          - generic [ref=e23]:
+            - generic [ref=e24]: 
+            - text: Contraseña
+          - generic [ref=e25]:
+            - textbox " Contraseña" [ref=e26]
+            - button "" [ref=e27] [cursor=pointer]:
+              - generic [ref=e28] [cursor=pointer]: 
+        - generic [ref=e30] [cursor=pointer]:
+          - checkbox "Recordar mi sesión" [ref=e31] [cursor=pointer]
+          - generic [ref=e32]: Recordar mi sesión
+        - button " Iniciar Sesión" [ref=e33] [cursor=pointer]:
+          - generic [ref=e34] [cursor=pointer]: 
+          - text: Iniciar Sesión
+      - generic [ref=e36]:
+        - heading "Credenciales de Prueba:" [level=6] [ref=e37]
+        - generic [ref=e38]:
+          - strong [ref=e39]: "Admin:"
+          - text: admin / admin123
+        - generic [ref=e40]:
+          - strong [ref=e41]: "Vendedor:"
+          - text: vendedor / vendedor123
+```

@@ -159,19 +159,49 @@ export async function getIngresos() {
         let tipoIngreso = 'Pago Completo de Contado'
         let metodoPago = pedido.metodo_pago || ''
         
+        // Verificar si el método de pago es en VES
+        const esMetodoVES = metodoPago && metodoPago.includes('(VES)')
+        
         if (pedido.metodo_pago === 'Contado') {
           montoUSD = parseFloat(pedido.total_usd) || 0
           tipoIngreso = 'Pago Completo de Contado'
         } else if (pedido.es_pago_mixto) {
-          montoUSD = parseFloat(pedido.monto_mixto_usd) || 0
-          montoVES = parseFloat(pedido.monto_mixto_ves) || 0
-          tipoIngreso = 'Pago Mixto'
+          // CORRECCIÓN: Los pagos mixtos deben generar 2 ingresos independientes
+          // No procesamos aquí, se procesarán por separado más abajo
+          return
         } else if (pedido.es_abono) {
-          montoUSD = parseFloat(pedido.monto_abono_usd) || 0
-          montoVES = parseFloat(pedido.monto_abono_ves) || 0
-          tipoIngreso = 'Abono Inicial'
+          // CORRECCIÓN: Los abonos mixtos también deben generar 2 ingresos independientes
+          // Solo procesamos abonos simples aquí
+          if (pedido.tipo_pago_abono === 'simple') {
+            const esMetodoVESAbono = pedido.metodo_pago_abono && pedido.metodo_pago_abono.includes('(VES)')
+            
+            if (esMetodoVESAbono) {
+              // Abono simple en VES
+              const montoVESAbono = parseFloat(pedido.monto_abono_simple) || 0
+              montoVES = montoVESAbono
+              montoUSD = 0
+              metodoPago = pedido.metodo_pago_abono || 'Pago Móvil (VES)'
+            } else {
+              // Abono simple en USD
+              montoUSD = parseFloat(pedido.monto_abono_simple) || 0
+              montoVES = 0
+              metodoPago = pedido.metodo_pago_abono || 'Efectivo (USD)'
+            }
+            tipoIngreso = 'Abono Inicial'
+          } else {
+            // Abono mixto - no procesamos aquí, se procesará por separado
+            return
+          }
+        } else if (esMetodoVES) {
+          // CORRECCIÓN: Si es método de pago en VES, el monto debe estar en VES
+          // El total_usd contiene el valor convertido, pero para mostrar correctamente
+          // necesitamos mostrar el monto original en VES
+          const totalVES = parseFloat(pedido.total_usd) * (pedido.tasa_bcv || 36.0)
+          montoVES = totalVES
+          montoUSD = 0
+          tipoIngreso = 'Pago Completo de Contado' // Correcto para pagos VES de contado
         } else {
-          // Procesar todos los demás pedidos como ingresos completos
+          // Procesar todos los demás pedidos como ingresos completos en USD
           montoUSD = parseFloat(pedido.total_usd) || 0
           tipoIngreso = 'Pago Completo de Contado'
         }
@@ -194,6 +224,92 @@ export async function getIngresos() {
           })
           
           console.log(`📝 Procesado PED-${pedido.id}: Referencia="${pedido.referencia_pago || ''}"`)
+        }
+      })
+    }
+    
+    // Procesar pagos mixtos como ingresos separados
+    if (pedidosData) {
+      pedidosData.forEach(pedido => {
+        if (pedido.es_pago_mixto && pedido.monto_mixto_usd > 0 && pedido.monto_mixto_ves > 0) {
+          const cliente = `${pedido.cliente_nombre || ''} ${pedido.cliente_apellido || ''}`.trim() || 'Cliente'
+          
+          // Ingreso en USD
+          ingresosFormateados.push({
+            id: `PED-${pedido.id}-USD`,
+            fecha: pedido.fecha_pedido,
+            idVenta: `VTA-${pedido.id}`,
+            cliente: cliente,
+            montoUSD: parseFloat(pedido.monto_mixto_usd) || 0,
+            montoVES: 0,
+            metodoPago: pedido.metodo_pago_mixto_usd || 'Efectivo (USD)',
+            referencia: pedido.referencia_mixto_usd || '',
+            tipoIngreso: 'Pago Mixto USD',
+            descripcion: `Pago mixto USD - Venta ${pedido.id}`,
+            tasa_bcv: pedido.tasa_bcv || 36.0,
+            fecha_creacion: pedido.created_at
+          })
+          
+          // Ingreso en VES
+          ingresosFormateados.push({
+            id: `PED-${pedido.id}-VES`,
+            fecha: pedido.fecha_pedido,
+            idVenta: `VTA-${pedido.id}`,
+            cliente: cliente,
+            montoUSD: 0,
+            montoVES: parseFloat(pedido.monto_mixto_ves) || 0,
+            metodoPago: pedido.metodo_pago_mixto_ves || 'Pago Móvil (VES)',
+            referencia: pedido.referencia_mixto_ves || '',
+            tipoIngreso: 'Pago Mixto VES',
+            descripcion: `Pago mixto VES - Venta ${pedido.id}`,
+            tasa_bcv: pedido.tasa_bcv || 36.0,
+            fecha_creacion: pedido.created_at
+          })
+          
+          console.log(`💰 Pago mixto procesado para pedido #${pedido.id}: $${pedido.monto_mixto_usd} USD + ${pedido.monto_mixto_ves} Bs`)
+        }
+      })
+    }
+    
+    // Procesar abonos mixtos como ingresos separados
+    if (pedidosData) {
+      pedidosData.forEach(pedido => {
+        if (pedido.es_abono && pedido.tipo_pago_abono === 'mixto' && pedido.monto_abono_usd > 0 && pedido.monto_abono_ves > 0) {
+          const cliente = `${pedido.cliente_nombre || ''} ${pedido.cliente_apellido || ''}`.trim() || 'Cliente'
+          
+          // Ingreso en USD del abono mixto
+          ingresosFormateados.push({
+            id: `PED-${pedido.id}-ABO-USD`,
+            fecha: pedido.fecha_pedido,
+            idVenta: `VTA-${pedido.id}`,
+            cliente: cliente,
+            montoUSD: parseFloat(pedido.monto_abono_usd) || 0,
+            montoVES: 0,
+            metodoPago: pedido.metodo_pago_abono_usd || 'Efectivo (USD)',
+            referencia: pedido.referencia_abono_usd || '',
+            tipoIngreso: 'Abono Inicial USD',
+            descripcion: `Abono mixto USD - Venta ${pedido.id}`,
+            tasa_bcv: pedido.tasa_bcv || 36.0,
+            fecha_creacion: pedido.created_at
+          })
+          
+          // Ingreso en VES del abono mixto
+          ingresosFormateados.push({
+            id: `PED-${pedido.id}-ABO-VES`,
+            fecha: pedido.fecha_pedido,
+            idVenta: `VTA-${pedido.id}`,
+            cliente: cliente,
+            montoUSD: 0,
+            montoVES: parseFloat(pedido.monto_abono_ves) || 0,
+            metodoPago: pedido.metodo_pago_abono_ves || 'Pago Móvil (VES)',
+            referencia: pedido.referencia_abono_ves || '',
+            tipoIngreso: 'Abono Inicial VES',
+            descripcion: `Abono mixto VES - Venta ${pedido.id}`,
+            tasa_bcv: pedido.tasa_bcv || 36.0,
+            fecha_creacion: pedido.created_at
+          })
+          
+          console.log(`💰 Abono mixto procesado para pedido #${pedido.id}: $${pedido.monto_abono_usd} USD + ${pedido.monto_abono_ves} Bs`)
         }
       })
     }

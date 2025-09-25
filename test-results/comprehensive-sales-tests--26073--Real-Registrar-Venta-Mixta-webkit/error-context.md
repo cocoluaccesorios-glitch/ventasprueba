@@ -1,0 +1,87 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - navigation [ref=e3]:
+    - generic [ref=e4]:
+      - link "Logo Cocolú Ventas" [ref=e5]:
+        - /url: /
+        - img "Logo" [ref=e6]
+        - text: Cocolú Ventas
+      - generic [ref=e7]:
+        - list [ref=e8]:
+          - listitem [ref=e9]:
+            - link " Dashboard" [ref=e10]:
+              - /url: /
+              - generic [ref=e11]: 
+              - text: Dashboard
+          - listitem [ref=e12]:
+            - link " Nueva Venta" [ref=e13]:
+              - /url: /ventas
+              - generic [ref=e14]: 
+              - text: Nueva Venta
+          - listitem [ref=e15]:
+            - link " Ver Pedidos" [ref=e16]:
+              - /url: /pedidos
+              - generic [ref=e17]: 
+              - text: Ver Pedidos
+          - listitem [ref=e18]:
+            - link " Inventario" [ref=e19]:
+              - /url: /inventario
+              - generic [ref=e20]: 
+              - text: Inventario
+          - listitem [ref=e21]:
+            - link " Clientes" [ref=e22]:
+              - /url: /clientes
+              - generic [ref=e23]: 
+              - text: Clientes
+          - listitem [ref=e24]:
+            - link " Ingresos" [ref=e25]:
+              - /url: /ingresos
+              - generic [ref=e26]: 
+              - text: Ingresos
+          - listitem [ref=e27]:
+            - link " Deudas" [ref=e28]:
+              - /url: /deudas
+              - generic [ref=e29]: 
+              - text: Deudas
+        - list [ref=e30]:
+          - listitem [ref=e31]:
+            - button [ref=e32] [cursor=pointer]
+            - text:    
+  - main [ref=e34]:
+    - generic [ref=e36]:
+      - generic [ref=e37]:
+        - generic [ref=e38]:
+          - generic [ref=e39]: 
+          - heading "Cocolú Ventas" [level=2] [ref=e40]
+        - paragraph [ref=e41]: Sistema de Gestión de Ventas
+      - generic [ref=e42]:
+        - generic [ref=e43]:
+          - generic [ref=e44]:
+            - generic [ref=e45]: 
+            - text: Usuario
+          - textbox " Usuario" [ref=e46]
+        - generic [ref=e47]:
+          - generic [ref=e48]:
+            - generic [ref=e49]: 
+            - text: Contraseña
+          - generic [ref=e50]:
+            - textbox " Contraseña" [ref=e51]
+            - button "" [ref=e52] [cursor=pointer]:
+              - generic [ref=e53] [cursor=pointer]: 
+        - generic [ref=e55] [cursor=pointer]:
+          - checkbox "Recordar mi sesión" [ref=e56] [cursor=pointer]
+          - generic [ref=e57]: Recordar mi sesión
+        - button " Iniciar Sesión" [ref=e58] [cursor=pointer]:
+          - generic [ref=e59] [cursor=pointer]: 
+          - text: Iniciar Sesión
+      - generic [ref=e61]:
+        - heading "Credenciales de Prueba:" [level=6] [ref=e62]
+        - generic [ref=e63]:
+          - strong [ref=e64]: "Admin:"
+          - text: admin / admin123
+        - generic [ref=e65]:
+          - strong [ref=e66]: "Vendedor:"
+          - text: vendedor / vendedor123
+```

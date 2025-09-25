@@ -766,14 +766,22 @@ async function cambiarPeriodo(periodo) {
   try {
     console.log(`🔄 Obteniendo datos para gráfico - período: ${periodo}`)
     
-    // Intentar obtener datos reales primero
-    let nuevosDatos = await obtenerDatosRealesPorPeriodo(periodo)
-    console.log(`📊 Datos reales obtenidos:`, nuevosDatos ? nuevosDatos.length : 0, 'registros')
-    
-    if (!nuevosDatos || nuevosDatos.length === 0) {
-      console.log('⚠️ No hay datos reales, usando datos mock')
+    // Para debug: forzar uso de datos mock para "hoy"
+    if (periodo === 'hoy') {
+      console.log('🔧 DEBUG: Forzando uso de datos mock para "hoy"')
       nuevosDatos = obtenerDatosVentasPorPeriodo(periodo)
       console.log(`📊 Datos mock generados:`, nuevosDatos.length, 'registros')
+      console.log('📊 Primeros 3 datos:', nuevosDatos.slice(0, 3))
+    } else {
+      // Intentar obtener datos reales primero
+      nuevosDatos = await obtenerDatosRealesPorPeriodo(periodo)
+      console.log(`📊 Datos reales obtenidos:`, nuevosDatos ? nuevosDatos.length : 0, 'registros')
+      
+      if (!nuevosDatos || nuevosDatos.length === 0) {
+        console.log('⚠️ No hay datos reales, usando datos mock')
+        nuevosDatos = obtenerDatosVentasPorPeriodo(periodo)
+        console.log(`📊 Datos mock generados:`, nuevosDatos.length, 'registros')
+      }
     }
     
     if (chartInstance) {

@@ -548,21 +548,29 @@ console.log('🎯 Dashboard.vue cargado correctamente')
 
 // Función para obtener datos de ventas
 async function obtenerDatosVentas() {
+  console.log('🚨 FUNCIÓN obtenerDatosVentas - ESTA FUNCIÓN USA DATOS MOCK!')
+  console.log('🚨 PERÍODO ACTUAL:', periodoActual.value)
+  
   // Obtener datos según el período actual
   const periodo = periodoActual.value.toLowerCase().replace('este ', '').replace('esta ', '')
+  console.log('🚨 PERÍODO PROCESADO:', periodo)
   
-  // Intentar obtener datos reales primero
+  // SIEMPRE usar datos reales - NO usar datos mock
   try {
+    console.log('🔍 Intentando obtener datos reales...')
     const datosReales = await obtenerDatosRealesPorPeriodo(periodo)
     if (datosReales && datosReales.length > 0) {
+      console.log('✅ Datos reales encontrados:', datosReales.length)
       return datosReales
+    } else {
+      console.log('❌ No hay datos reales - retornando array vacío')
+      return []
     }
   } catch (error) {
-    console.warn('Error obteniendo datos reales, usando datos mock:', error)
+    console.error('❌ Error obteniendo datos reales:', error)
+    console.log('❌ Retornando array vacío en lugar de datos mock')
+    return []
   }
-  
-  // Fallback a datos mock
-  return obtenerDatosVentasPorPeriodo(periodo)
 }
 
 // Funciones
@@ -770,15 +778,17 @@ async function cambiarPeriodo(periodo) {
   try {
     console.log(`🔄 Obteniendo datos para gráfico - período: ${periodo}`)
     
-    // SIEMPRE usar datos reales - NO usar datos mock
-    console.log(`🔄 Obteniendo datos REALES para período: ${periodo}`)
+    // VERIFICAR: ¿Está usando datos reales o mock?
+    console.log(`🔍 VERIFICACIÓN: Obteniendo datos para período: ${periodo}`)
     nuevosDatos = await obtenerDatosRealesPorPeriodo(periodo)
-    console.log(`📊 Datos reales obtenidos:`, nuevosDatos ? nuevosDatos.length : 0, 'registros')
+    console.log(`📊 RESULTADO: Datos obtenidos:`, nuevosDatos ? nuevosDatos.length : 0, 'registros')
     
-    // Si no hay datos reales, mostrar gráfico vacío (NO usar mock)
-    if (!nuevosDatos || nuevosDatos.length === 0) {
-      console.log('⚠️ No hay datos reales para este período - gráfico vacío')
-      // Generar estructura vacía para el gráfico
+    if (nuevosDatos && nuevosDatos.length > 0) {
+      console.log('✅ DATOS REALES encontrados - usando datos de Supabase')
+      console.log('📊 Primeros 3 datos reales:', nuevosDatos.slice(0, 3))
+    } else {
+      console.log('❌ NO HAY DATOS REALES - generando estructura vacía')
+      // Generar estructura vacía para el gráfico (NO datos inventados)
       if (periodo === 'hoy') {
         nuevosDatos = []
         for (let i = 0; i <= 23; i++) {
@@ -787,9 +797,8 @@ async function cambiarPeriodo(periodo) {
             ventas: 0
           })
         }
+        console.log('📊 Estructura vacía generada:', nuevosDatos.length, 'horas con valor 0')
       }
-    } else {
-      console.log('✅ Usando datos REALES de la base de datos')
     }
     
     if (chartInstance) {

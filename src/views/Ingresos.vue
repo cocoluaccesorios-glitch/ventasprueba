@@ -15,29 +15,38 @@
             <button class="btn btn-success btn-sm" @click="generarCierreCaja">
               <i class="bi bi-calculator"></i> Cierre de Caja
             </button>
-            <div class="dropdown" style="position: relative; z-index: 10000;">
-              <button class="btn btn-info btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="true">
+            <div class="dropdown" style="position: relative;">
+              <button 
+                class="btn btn-info btn-sm dropdown-toggle" 
+                type="button" 
+                @click="toggleDropdownReportes"
+                :class="{ 'show': mostrarDropdownReportes }"
+              >
                 <i class="bi bi-graph-up"></i> Reportes
-            </button>
-              <ul class="dropdown-menu dropdown-menu-end" style="z-index: 10001 !important; position: absolute !important;">
-                <li><a class="dropdown-item" href="#" @click="generarReporte('hoy')">
+              </button>
+              <ul 
+                v-show="mostrarDropdownReportes"
+                class="dropdown-menu dropdown-menu-end" 
+                style="z-index: 10001 !important; position: absolute !important; display: block !important;"
+              >
+                <li><a class="dropdown-item" href="#" @click="generarReporteConCierre('hoy')">
                   <i class="bi bi-calendar-day"></i> Reporte Diario
                 </a></li>
-                <li><a class="dropdown-item" href="#" @click="generarReporte('semana')">
+                <li><a class="dropdown-item" href="#" @click="generarReporteConCierre('semana')">
                   <i class="bi bi-calendar-week"></i> Reporte Semanal
                 </a></li>
-                <li><a class="dropdown-item" href="#" @click="generarReporte('mes')">
+                <li><a class="dropdown-item" href="#" @click="generarReporteConCierre('mes')">
                   <i class="bi bi-calendar-month"></i> Reporte Mensual
                 </a></li>
-                <li><a class="dropdown-item" href="#" @click="generarReporte('año')">
+                <li><a class="dropdown-item" href="#" @click="generarReporteConCierre('año')">
                   <i class="bi bi-calendar-year"></i> Reporte Anual
                 </a></li>
                 <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="#" @click="generarReporteRango">
+                <li><a class="dropdown-item" href="#" @click="generarReporteRangoConCierre">
                   <i class="bi bi-calendar-range"></i> Reporte por Fechas
                 </a></li>
               </ul>
-              </div>
+            </div>
             </div>
           </div>
         </div>
@@ -927,6 +936,9 @@ const elementosPorPagina = ref(10)
 const paginaActual = ref(1)
 const opcionesPagina = [10, 25, 50, 100]
 
+// Estado del dropdown de reportes
+const mostrarDropdownReportes = ref(false)
+
 // Modales
 const fechaCierreCaja = ref('')
 const reporteCierreCaja = ref(null)
@@ -1046,6 +1058,25 @@ function irPaginaSiguiente() {
   if (paginaActual.value < totalPaginas.value) {
     paginaActual.value++
   }
+}
+
+// Funciones para controlar dropdown de reportes
+function toggleDropdownReportes() {
+  mostrarDropdownReportes.value = !mostrarDropdownReportes.value
+}
+
+function cerrarDropdownReportes() {
+  mostrarDropdownReportes.value = false
+}
+
+function generarReporteConCierre(periodo) {
+  generarReporte(periodo)
+  cerrarDropdownReportes()
+}
+
+function generarReporteRangoConCierre() {
+  generarReporteRango()
+  cerrarDropdownReportes()
 }
 
 function limpiarFiltros() {
@@ -1247,6 +1278,19 @@ function getTipoBadgeClass(tipo) {
 // Lifecycle
 onMounted(() => {
   cargarDatos()
+  
+  // Cerrar dropdown al hacer clic fuera
+  document.addEventListener('click', (event) => {
+    const dropdown = document.querySelector('.dropdown')
+    if (dropdown && !dropdown.contains(event.target)) {
+      cerrarDropdownReportes()
+    }
+  })
+})
+
+onUnmounted(() => {
+  // Limpiar event listener
+  document.removeEventListener('click', cerrarDropdownReportes)
 })
 </script>
 
@@ -1349,11 +1393,51 @@ onMounted(() => {
   z-index: 1 !important;
 }
 
-/* Forzar el dropdown de reportes específicamente */
-.dropdown:has(.btn-info) .dropdown-menu {
-  z-index: 10002 !important;
-  position: fixed !important;
-  transform: translateX(-50%) !important;
+/* Estilos específicos para dropdown personalizado de reportes */
+.dropdown .btn.show {
+  background-color: #0dcaf0 !important;
+  border-color: #0dcaf0 !important;
+}
+
+.dropdown .dropdown-menu {
+  z-index: 10001 !important;
+  position: absolute !important;
+  display: block !important;
+  top: 100% !important;
+  right: 0 !important;
+  left: auto !important;
+  min-width: 200px !important;
+  background-color: white !important;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+  border-radius: 0.375rem !important;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+  margin-top: 0.125rem !important;
+}
+
+.dropdown .dropdown-item {
+  display: block !important;
+  width: 100% !important;
+  padding: 0.5rem 1rem !important;
+  clear: both !important;
+  font-weight: 400 !important;
+  color: #212529 !important;
+  text-align: inherit !important;
+  text-decoration: none !important;
+  white-space: nowrap !important;
+  background-color: transparent !important;
+  border: 0 !important;
+}
+
+.dropdown .dropdown-item:hover {
+  background-color: rgba(0, 123, 255, 0.1) !important;
+  color: #212529 !important;
+}
+
+.dropdown .dropdown-divider {
+  height: 0 !important;
+  margin: 0.5rem 0 !important;
+  overflow: hidden !important;
+  border-top: 1px solid rgba(0, 0, 0, 0.15) !important;
 }
 
 .table th {

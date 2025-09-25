@@ -1160,6 +1160,11 @@ async function obtenerDatosRealesPorPeriodo(periodo) {
     console.log('📊 Pedidos obtenidos de Supabase:', pedidos ? pedidos.length : 0)
     if (pedidos && pedidos.length > 0) {
       console.log('📊 Primeros 3 pedidos:', pedidos.slice(0, 3))
+      console.log('📊 Total de pedidos:', pedidos.length)
+      
+      // Calcular total del día
+      const totalDia = pedidos.reduce((sum, p) => sum + (p.total_usd || 0), 0)
+      console.log('💰 Total del día:', totalDia)
     }
     
     if (error) {
